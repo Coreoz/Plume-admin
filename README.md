@@ -3,7 +3,7 @@ Plume Admin
 
 Configuration
 -------------
-To generate secret, [LastPass generator](https://lastpass.com/generatepassword.php) can be used with a password length of about 50 characters.
+To generate JWT secret, [LastPass generator](https://lastpass.com/generatepassword.php) can be used with a password length of about 30 characters.
 ```
 admin.jwt-secret = "long_generated_password_to_secure_jwt_tokens"
 # default values
