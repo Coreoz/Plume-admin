@@ -9,15 +9,15 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 import com.coreoz.plume.db.hibernate.HibernateIdGenerator;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.experimental.Accessors;
 
 @Getter
 @Setter
+@Accessors(chain = true)
 @ToString
 @Entity
 @Table(name = "pl_bo_user")
@@ -25,7 +25,6 @@ public class AdminUser {
 
 	@Id
 	@GeneratedValue(generator = HibernateIdGenerator.NAME)
-	@JsonSerialize(using = ToStringSerializer.class)
 	private Long id;
 	@Column(name = "id_role")
 	private Long idRole;

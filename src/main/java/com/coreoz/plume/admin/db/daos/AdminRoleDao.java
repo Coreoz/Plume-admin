@@ -13,7 +13,7 @@ public class AdminRoleDao extends CrudDao<AdminRole> {
 
 	@Inject
 	public AdminRoleDao(TransactionManager transactionManager) {
-		super(QAdminRole.adminRole, transactionManager);
+		super(QAdminRole.adminRole, transactionManager, QAdminRole.adminRole.label.asc());
 	}
 
 }

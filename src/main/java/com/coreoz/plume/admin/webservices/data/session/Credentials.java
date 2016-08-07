@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 public class Credentials {
 	
-	private String identifier;
+	private String userName;
 	private String password;
 
 }
