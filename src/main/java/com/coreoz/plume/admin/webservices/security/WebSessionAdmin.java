@@ -2,6 +2,8 @@ package com.coreoz.plume.admin.webservices.security;
 
 import java.util.Set;
 
+import com.coreoz.plume.admin.security.permission.WebSessionPermission;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -14,7 +16,7 @@ import lombok.experimental.Accessors;
 @Setter
 @Accessors(chain = true)
 @ToString
-public class SessionBasicInformation implements SessionInformation {
+public class WebSessionAdmin implements WebSessionPermission {
 
 	private long userId;
 	private String username;
