@@ -21,9 +21,9 @@ import com.coreoz.plume.admin.services.user.AdminUserService;
 import com.coreoz.plume.admin.webservices.data.user.AdminUserDetails;
 import com.coreoz.plume.admin.webservices.data.user.AdminUserParameters;
 import com.coreoz.plume.admin.webservices.errors.AdminWsError;
+import com.coreoz.plume.admin.webservices.security.RestrictToAdmin;
 import com.coreoz.plume.jersey.errors.Validators;
 import com.coreoz.plume.jersey.errors.WsException;
-import com.coreoz.plume.jersey.security.RestrictTo;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
@@ -34,7 +34,7 @@ import io.swagger.annotations.ApiOperation;
 @Api(value = "Manage admin users")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@RestrictTo(AdminPermissions.MANAGE_USERS)
+@RestrictToAdmin(AdminPermissions.MANAGE_USERS)
 @Singleton
 public class UsersWs {
 
@@ -46,7 +46,7 @@ public class UsersWs {
 	}
 
 	@GET
-	@ApiOperation(value = "Fetch add admin users")
+	@ApiOperation(value = "Fetch all admin users")
 	public List<AdminUserDetails> fetchAll() {
 		return adminUserService
 				.findAll()
@@ -74,10 +74,10 @@ public class UsersWs {
 	}
 
 	@DELETE
-	@Path("{userId}")
-	@ApiOperation(value = "Supprime un utilisateur")
-	public void delete(@PathParam("userId") long userId) {
-		adminUserService.delete(userId);
+	@Path("{idUser}")
+	@ApiOperation(value = "Delete a user")
+	public void delete(@PathParam("idUser") long idUser) {
+		adminUserService.delete(idUser);
 	}
 
 	private void validateAdminUserParameters(AdminUserParameters parameters) {

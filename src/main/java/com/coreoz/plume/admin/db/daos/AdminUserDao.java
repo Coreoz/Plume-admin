@@ -2,6 +2,7 @@ package com.coreoz.plume.admin.db.daos;
 
 import java.util.Optional;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import com.coreoz.plume.admin.db.entities.AdminUser;
@@ -13,6 +14,7 @@ import com.querydsl.jpa.hibernate.HibernateUpdateClause;
 @Singleton
 public class AdminUserDao extends CrudDao<AdminUser> {
 
+	@Inject
 	public AdminUserDao(TransactionManager transactionManager) {
 		super(QAdminUser.adminUser, transactionManager, QAdminUser.adminUser.userName.asc());
 	}
@@ -21,16 +23,16 @@ public class AdminUserDao extends CrudDao<AdminUser> {
 		return Optional.ofNullable(searchOne(QAdminUser.adminUser.userName.eq(userName)));
 	}
 
-	public boolean existsWithUsername(Long userId, String newUserName) {
+	public boolean existsWithUsername(Long idUser, String newUserName) {
 		return searchCount(
-			userId != null ? QAdminUser.adminUser.id.ne(userId) : null,
+			idUser != null ? QAdminUser.adminUser.id.ne(idUser) : null,
 			QAdminUser.adminUser.userName.eq(newUserName)
 		) > 0;
 	}
 
-	public boolean existsWithEmail(Long userId, String newUserEmail) {
+	public boolean existsWithEmail(Long idUser, String newUserEmail) {
 		return searchCount(
-			userId != null ? QAdminUser.adminUser.id.ne(userId) : null,
+			idUser != null ? QAdminUser.adminUser.id.ne(idUser) : null,
 			QAdminUser.adminUser.email.eq(newUserEmail)
 		) > 0;
 	}

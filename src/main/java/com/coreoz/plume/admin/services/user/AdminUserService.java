@@ -68,12 +68,12 @@ public class AdminUserService extends CrudService<AdminUser> {
 		);
 	}
 
-	public boolean existsWithUsername(Long userId, String newUserName) {
-		return adminUserDao.existsWithUsername(userId, newUserName);
+	public boolean existsWithUsername(Long idUser, String newUserName) {
+		return adminUserDao.existsWithUsername(idUser, newUserName);
 	}
 
-	public boolean existsWithEmail(Long userId, String newUserEmail) {
-		return adminUserDao.existsWithEmail(userId, newUserEmail);
+	public boolean existsWithEmail(Long idUser, String newUserEmail) {
+		return adminUserDao.existsWithEmail(idUser, newUserEmail);
 	}
 
 }
