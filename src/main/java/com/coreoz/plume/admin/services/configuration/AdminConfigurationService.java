@@ -23,7 +23,7 @@ public class AdminConfigurationService {
 	}
 
 	public long sessionDurationInMillis() {
-		return config.getDuration("session-duration", TimeUnit.MILLISECONDS);
+		return config.getDuration("admin.session-duration", TimeUnit.MILLISECONDS);
 	}
 
 	public int loginMaxAttempts() {
