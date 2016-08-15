@@ -10,12 +10,10 @@ import javax.ws.rs.core.MediaType;
 
 import com.coreoz.plume.admin.security.login.LoginFailAttemptsManager;
 import com.coreoz.plume.admin.services.configuration.AdminConfigurationService;
-import com.coreoz.plume.admin.services.time.TimeProvider;
 import com.coreoz.plume.admin.services.user.AdminUserService;
-import com.coreoz.plume.admin.webservices.data.session.Credentials;
-import com.coreoz.plume.admin.webservices.data.session.SessionBo;
+import com.coreoz.plume.admin.webservices.data.session.AdminCredentials;
 import com.coreoz.plume.admin.webservices.errors.AdminWsError;
-import com.coreoz.plume.admin.webservices.security.WebSessionAdmin;
+import com.coreoz.plume.admin.webservices.security.WebSessionProvider;
 import com.coreoz.plume.admin.websession.WebSessionSigner;
 import com.coreoz.plume.jersey.errors.WsException;
 import com.google.common.collect.ImmutableList;
@@ -31,33 +29,32 @@ import io.swagger.annotations.ApiOperation;
 public class SessionWs {
 
 	private final AdminUserService adminUserService;
-	private final WebSessionSigner<WebSessionAdmin> sessionSigner;
-	private final TimeProvider timeProvider;
+	private final WebSessionSigner sessionSigner;
+	private final WebSessionProvider webSessionProvider;
 
 	private final LoginFailAttemptsManager failAttemptsManager;
 
-	private final long maxTimeSessionDurationInMilliseconds;
 	private final long blockedDurationInSeconds;
 
 	@Inject
 	public SessionWs(AdminUserService adminUserService,
-			WebSessionSigner<WebSessionAdmin> sessionSigner, TimeProvider timeProvider,
-			AdminConfigurationService configurationService) {
+			WebSessionSigner sessionSigner,
+			AdminConfigurationService configurationService,
+			WebSessionProvider webSessionProvider) {
 		this.adminUserService = adminUserService;
 		this.sessionSigner = sessionSigner;
-		this.timeProvider = timeProvider;
+		this.webSessionProvider = webSessionProvider;
 
 		this.failAttemptsManager = new LoginFailAttemptsManager(
 			configurationService.loginMaxAttempts(),
 			configurationService.loginBlockedDuration()
 		);
 		this.blockedDurationInSeconds = configurationService.loginBlockedDuration().getSeconds();
-		this.maxTimeSessionDurationInMilliseconds = configurationService.sessionDurationInMillis();
 	}
 
 	@POST
 	@ApiOperation(value = "Authenticate a user and create a session token")
-	public SessionBo authenticate(Credentials credentials) {
+	public String authenticate(AdminCredentials credentials) {
 		if(credentials.getUserName() != null && failAttemptsManager.isBlocked(credentials.getUserName())) {
 			throw new WsException(
 				AdminWsError.TOO_MANY_WRONG_ATTEMPS,
@@ -66,24 +63,14 @@ public class SessionWs {
 		}
 
 		return adminUserService
-				.authenticate(credentials.getUserName(), credentials.getPassword())
-				.map(user ->
-					SessionBo.of(
-						sessionSigner.serializeSession(
-							new WebSessionAdmin()
-								.setExpirationTime(timeProvider.currentTime() + maxTimeSessionDurationInMilliseconds)
-								.setPermissions(user.getPermissions())
-								.setUserId(user.getUser().getId())
-								.setUsername(user.getUser().getUserName())
-						),
-						user.getUser().getFirstName() + " " + user.getUser().getLastName(),
-						user.getPermissions()
-					)
-				)
-				.orElseThrow(() -> {
-					failAttemptsManager.addAttempt(credentials.getUserName());
-					return new WsException(AdminWsError.WRONG_LOGIN_OR_PASSWORD);
-				});
+			.authenticate(credentials.getUserName(), credentials.getPassword())
+			.map(user ->
+				sessionSigner.serializeSession(webSessionProvider.toWebSession(user))
+			)
+			.orElseThrow(() -> {
+				failAttemptsManager.addAttempt(credentials.getUserName());
+				return new WsException(AdminWsError.WRONG_LOGIN_OR_PASSWORD);
+			});
 	}
 
 }

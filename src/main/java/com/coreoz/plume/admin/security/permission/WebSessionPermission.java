@@ -7,6 +7,6 @@ import com.coreoz.plume.admin.websession.WebSession;
 public interface WebSessionPermission extends WebSession {
 
 	Set<String> getPermissions();
-	String getUsername();
+	String getUserName();
 
 }

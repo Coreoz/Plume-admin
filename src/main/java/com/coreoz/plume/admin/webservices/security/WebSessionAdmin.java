@@ -18,8 +18,9 @@ import lombok.experimental.Accessors;
 @ToString
 public class WebSessionAdmin implements WebSessionPermission {
 
-	private long userId;
-	private String username;
+	private long idUser;
+	private String userName;
+	private String fullName;
 	private Set<String> permissions;
 	private long expirationTime;
 

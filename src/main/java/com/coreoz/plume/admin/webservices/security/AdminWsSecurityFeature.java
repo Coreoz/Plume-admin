@@ -7,23 +7,19 @@ import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.FeatureContext;
 
 import com.coreoz.plume.admin.security.permission.AdminWebSessionWsSecurityFeature;
-import com.coreoz.plume.admin.services.configuration.AdminConfigurationService;
-import com.coreoz.plume.admin.services.time.TimeProvider;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.coreoz.plume.admin.websession.WebSessionSigner;
 
 @Singleton
 public class AdminWsSecurityFeature implements DynamicFeature {
 
-	private final AdminWebSessionWsSecurityFeature<WebSessionAdmin> wsSecurityFeature;
+	private final AdminWebSessionWsSecurityFeature wsSecurityFeature;
 
 	@Inject
-	public AdminWsSecurityFeature(AdminConfigurationService configurationService,
-			ObjectMapper objectMapper, TimeProvider timeProvider) {
-		wsSecurityFeature = new AdminWebSessionWsSecurityFeature<>(
-			configurationService,
-			objectMapper,
-			timeProvider,
-			WebSessionAdmin.class
+	public AdminWsSecurityFeature(WebSessionSigner webSessionSigner,
+			WebSessionProvider webSessionProvider) {
+		wsSecurityFeature = new AdminWebSessionWsSecurityFeature(
+			webSessionSigner,
+			webSessionProvider.webSessionClass()
 		);
 	}
 
