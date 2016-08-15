@@ -11,9 +11,10 @@ import lombok.experimental.Accessors;
 
 @Setter
 @Getter
-@Accessors(fluent = true)
+@Accessors(chain = true)
 public class RoleWithPermissions {
 	@JsonSerialize(using = ToStringSerializer.class)
-	private Long roleId;
+	private Long idRole;
+	private String label;
 	private Set<String> permissions;
 }

@@ -1,32 +1,33 @@
 package com.coreoz.plume.admin.db.entities;
 
+import java.io.Serializable;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import com.coreoz.plume.db.hibernate.HibernateIdGenerator;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.experimental.Accessors;
 
 @Getter
 @Setter
+@Accessors(chain = true)
 @ToString
+@EqualsAndHashCode
 @Entity
-@Table(name = "pl_bo_role_permission")
-public class AdminRolePermission {
+@Table(name = "plm_role_permission")
+public class AdminRolePermission implements Serializable {
+
+	private static final long serialVersionUID = -236137818170344047L;
 
 	@Id
-	@GeneratedValue(generator = HibernateIdGenerator.NAME)
-	@JsonSerialize(using = ToStringSerializer.class)
-	private Long id;
 	@Column(name = "id_role")
 	private Long idRole;
+	@Id
 	private String permission;
 
 }

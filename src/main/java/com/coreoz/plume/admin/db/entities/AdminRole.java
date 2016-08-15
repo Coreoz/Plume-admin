@@ -12,12 +12,14 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.experimental.Accessors;
 
 @Getter
 @Setter
+@Accessors(chain = true)
 @ToString
 @Entity
-@Table(name = "pl_bo_role_permission")
+@Table(name = "plm_role")
 public class AdminRole {
 
 	@Id

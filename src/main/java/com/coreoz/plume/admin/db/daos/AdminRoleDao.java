@@ -16,4 +16,11 @@ public class AdminRoleDao extends CrudDao<AdminRole> {
 		super(QAdminRole.adminRole, transactionManager, QAdminRole.adminRole.label.asc());
 	}
 
+	public boolean existsWithLabel(Long idRole, String label) {
+		return searchCount(
+			idRole != null ? QAdminRole.adminRole.id.ne(idRole) : null,
+			QAdminRole.adminRole.label.eq(label)
+		) > 0;
+	}
+
 }
