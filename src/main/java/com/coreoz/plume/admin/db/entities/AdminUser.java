@@ -20,7 +20,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 @ToString
 @Entity
-@Table(name = "pl_bo_user")
+@Table(name = "plm_user")
 public class AdminUser {
 
 	@Id
