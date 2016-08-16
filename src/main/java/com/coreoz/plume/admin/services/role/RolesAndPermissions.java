@@ -9,7 +9,7 @@ import lombok.experimental.Accessors;
 
 @Setter
 @Getter
-@Accessors(fluent = true)
+@Accessors(chain = true)
 public class RolesAndPermissions {
 	private Set<String> permissionsAvailable;
 	private List<RoleWithPermissions> rolesWithPermissions;

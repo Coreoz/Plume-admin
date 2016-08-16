@@ -9,7 +9,6 @@ public class AdminPermissionServiceBasic implements AdminPermissionService {
 	private final Set<String> permissionsAvailable = ImmutableSet.of(
 			AdminPermissions.MANAGE_USERS,
 			AdminPermissions.MANAGE_ROLES,
-			AdminPermissions.SEE_ROLES,
 			AdminPermissions.GENERIC_ACCESS
 		);
 

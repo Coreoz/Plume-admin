@@ -7,6 +7,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import com.coreoz.plume.admin.db.daos.AdminRoleDao;
+import com.coreoz.plume.admin.db.daos.AdminRoleDao.RolePermissionDetails;
 import com.coreoz.plume.admin.db.daos.AdminRolePermissionDao;
 import com.coreoz.plume.admin.db.entities.AdminRole;
 import com.coreoz.plume.admin.db.entities.AdminRolePermission;
@@ -45,21 +46,22 @@ public class AdminRoleService extends CrudService<AdminRole> {
 
 	public RolesAndPermissions findRoleWithPermissions() {
 		return new RolesAndPermissions()
-			.permissionsAvailable(adminPermissionService.permissionsAvailable())
-			.rolesWithPermissions(
-				adminRolePermissionDao
-					.findAll()
+			.setPermissionsAvailable(adminPermissionService.permissionsAvailable())
+			.setRolesWithPermissions(
+				adminRoleDao
+					.findAllWithPermission()
 					.stream()
-					.collect(Collectors.groupingBy(AdminRolePermission::getIdRole))
+					.collect(Collectors.groupingBy(RolePermissionDetails::getRoleId))
 					.entrySet()
 					.stream()
 					.map(rolePermissions -> new RoleWithPermissions()
 						.setIdRole(rolePermissions.getKey())
+						.setLabel(rolePermissions.getValue().get(0).getRoleLabel())
 						.setPermissions(
 							rolePermissions
 								.getValue()
 								.stream()
-								.map(AdminRolePermission::getPermission)
+								.map(RolePermissionDetails::getPermission)
 								.collect(Collectors.toSet())
 						)
 					)

@@ -1,6 +1,5 @@
 package com.coreoz.plume.admin.webservices;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -17,9 +16,11 @@ import javax.ws.rs.core.MediaType;
 
 import com.coreoz.plume.admin.db.entities.AdminUser;
 import com.coreoz.plume.admin.services.permissions.AdminPermissions;
+import com.coreoz.plume.admin.services.role.AdminRoleService;
 import com.coreoz.plume.admin.services.user.AdminUserService;
 import com.coreoz.plume.admin.webservices.data.user.AdminUserDetails;
 import com.coreoz.plume.admin.webservices.data.user.AdminUserParameters;
+import com.coreoz.plume.admin.webservices.data.user.AdminUsersDetails;
 import com.coreoz.plume.admin.webservices.errors.AdminWsError;
 import com.coreoz.plume.admin.webservices.security.RestrictToAdmin;
 import com.coreoz.plume.jersey.errors.Validators;
@@ -39,20 +40,25 @@ import io.swagger.annotations.ApiOperation;
 public class UsersWs {
 
 	private final AdminUserService adminUserService;
+	private final AdminRoleService roleService;
 
 	@Inject
-	public UsersWs(AdminUserService adminUserService) {
+	public UsersWs(AdminUserService adminUserService, AdminRoleService roleService) {
 		this.adminUserService = adminUserService;
+		this.roleService = roleService;
 	}
 
 	@GET
 	@ApiOperation(value = "Fetch all admin users")
-	public List<AdminUserDetails> fetchAll() {
-		return adminUserService
+	public AdminUsersDetails fetchAll() {
+		return AdminUsersDetails.of(
+			adminUserService
 				.findAll()
 				.stream()
 				.map(this::toUserBoDetails)
-				.collect(Collectors.toList());
+				.collect(Collectors.toList()),
+			roleService.findAll()
+		);
 	}
 
 	@PUT

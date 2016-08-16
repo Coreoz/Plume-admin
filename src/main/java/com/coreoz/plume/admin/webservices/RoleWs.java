@@ -1,7 +1,5 @@
 package com.coreoz.plume.admin.webservices;
 
-import java.util.List;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
@@ -13,7 +11,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import com.coreoz.plume.admin.db.entities.AdminRole;
 import com.coreoz.plume.admin.services.permissions.AdminPermissions;
 import com.coreoz.plume.admin.services.role.AdminRoleService;
 import com.coreoz.plume.admin.services.role.RoleWithPermissions;
@@ -41,14 +38,6 @@ public class RoleWs {
 		this.roleService = roleService;
 	}
 
-	@GET
-	@ApiOperation(value = "Fetch all available roles")
-	@RestrictToAdmin(AdminPermissions.SEE_ROLES)
-	public List<AdminRole> roles() {
-		return roleService.findAll();
-	}
-
-	@Path("permissions")
 	@GET
 	@ApiOperation(value = "Fetch all permissions available and the association between roles"
 			+ " and permissions")
