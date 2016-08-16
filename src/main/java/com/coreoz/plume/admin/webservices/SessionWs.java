@@ -15,6 +15,7 @@ import com.coreoz.plume.admin.webservices.data.session.AdminCredentials;
 import com.coreoz.plume.admin.webservices.errors.AdminWsError;
 import com.coreoz.plume.admin.webservices.security.WebSessionProvider;
 import com.coreoz.plume.admin.websession.WebSessionSigner;
+import com.coreoz.plume.jersey.errors.Validators;
 import com.coreoz.plume.jersey.errors.WsException;
 import com.google.common.collect.ImmutableList;
 
@@ -24,7 +25,6 @@ import io.swagger.annotations.ApiOperation;
 @Path("/admin/session")
 @Api(value = "Manage the administration session")
 @Consumes(MediaType.APPLICATION_JSON)
-@Produces(MediaType.APPLICATION_JSON)
 @Singleton
 public class SessionWs {
 
@@ -53,8 +53,12 @@ public class SessionWs {
 	}
 
 	@POST
+	@Produces(MediaType.TEXT_PLAIN)
 	@ApiOperation(value = "Authenticate a user and create a session token")
 	public String authenticate(AdminCredentials credentials) {
+		Validators.checkRequired("users.USERNAME", credentials.getUserName());
+		Validators.checkRequired("users.PASSWORD", credentials.getPassword());
+
 		if(credentials.getUserName() != null && failAttemptsManager.isBlocked(credentials.getUserName())) {
 			throw new WsException(
 				AdminWsError.TOO_MANY_WRONG_ATTEMPS,
