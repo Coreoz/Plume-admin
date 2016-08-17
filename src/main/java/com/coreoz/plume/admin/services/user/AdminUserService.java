@@ -65,6 +65,7 @@ public class AdminUserService extends CrudService<AdminUser> {
 				.setEmail(parameters.getEmail())
 				.setFirstName(parameters.getFirstName())
 				.setLastName(parameters.getLastName())
+				.setPassword(parameters.getPassword())
 		);
 	}
 
