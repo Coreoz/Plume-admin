@@ -45,6 +45,7 @@ public class AdminUserService extends CrudService<AdminUser> {
 	}
 
 	public void update(AdminUserParameters parameters) {
+		String newPassword = Strings.emptyToNull(parameters.getPassword());
 		adminUserDao.update(
 			parameters.getId(),
 			parameters.getIdRole(),
@@ -52,7 +53,7 @@ public class AdminUserService extends CrudService<AdminUser> {
 			parameters.getEmail(),
 			parameters.getFirstName(),
 			parameters.getLastName(),
-			Strings.emptyToNull(parameters.getPassword())
+			newPassword == null ? null : hashService.hashPassword(newPassword)
 		);
 	}
 
@@ -65,7 +66,7 @@ public class AdminUserService extends CrudService<AdminUser> {
 				.setEmail(parameters.getEmail())
 				.setFirstName(parameters.getFirstName())
 				.setLastName(parameters.getLastName())
-				.setPassword(parameters.getPassword())
+				.setPassword(hashService.hashPassword(parameters.getPassword()))
 		);
 	}
 
