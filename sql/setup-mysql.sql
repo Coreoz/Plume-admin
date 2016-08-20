@@ -34,5 +34,5 @@ CREATE TABLE  `plm_role_permission` (
 INSERT INTO plm_role VALUES(1, 'Administrator');
 INSERT INTO plm_user VALUES(1, 1, NOW(), 'Admin', 'Admin', 'admin@admin', 'admin', '$2a$11$FfgtfoHeNo/m9jGj9D5rTO0zDDI4LkMXnXHai744Ee32P3CHoBVqm');
 INSERT INTO plm_role_permission VALUES(1, 'MANAGE_USERS');
-INSERT INTO plm_role_permission VALUES(1, 'SEE_ROLES');
 INSERT INTO plm_role_permission VALUES(1, 'MANAGE_ROLES');
+INSERT INTO plm_role_permission VALUES(1, 'GENERIC_ACCESS');
