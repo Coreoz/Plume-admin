@@ -35,18 +35,18 @@ public class AdminRoleDao extends CrudDao<AdminRole> {
 				.select(
 					QAdminRole.adminRole.id,
 					QAdminRole.adminRole.label,
-					QAdminRolePermission.adminRolePermission.permission
+					QAdminRolePermission.adminRolePermission.id.permission
 				)
-				.from(QAdminRolePermission.adminRolePermission)
-				.join(QAdminRole.adminRole)
-				.on(QAdminRolePermission.adminRolePermission.idRole.eq(QAdminRole.adminRole.id))
+				.from(QAdminRole.adminRole)
+				.leftJoin(QAdminRolePermission.adminRolePermission)
+				.on(QAdminRolePermission.adminRolePermission.id.idRole.eq(QAdminRole.adminRole.id))
 				.fetch()
 		)
 		.stream()
 		.map(row -> RolePermissionDetails.of(
 			row.get(QAdminRole.adminRole.id),
 			row.get(QAdminRole.adminRole.label),
-			row.get(QAdminRolePermission.adminRolePermission.permission)
+			row.get(QAdminRolePermission.adminRolePermission.id.permission)
 		))
 		.collect(Collectors.toList());
 	}

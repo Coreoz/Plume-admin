@@ -3,6 +3,7 @@ package com.coreoz.plume.admin.db.entities;
 import java.io.Serializable;
 
 import javax.persistence.Column;
+import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -17,17 +18,25 @@ import lombok.experimental.Accessors;
 @Setter
 @Accessors(chain = true)
 @ToString
-@EqualsAndHashCode
 @Entity
 @Table(name = "plm_role_permission")
-public class AdminRolePermission implements Serializable {
-
-	private static final long serialVersionUID = -236137818170344047L;
+public class AdminRolePermission {
 
 	@Id
-	@Column(name = "id_role")
-	private Long idRole;
-	@Id
-	private String permission;
+	private AdminRolePermissionId id;
+
+	@Getter
+	@Setter
+	@ToString
+	@Accessors(chain = true)
+	@Embeddable
+	@EqualsAndHashCode
+	public static class AdminRolePermissionId implements Serializable {
+		private static final long serialVersionUID = -225702535241410480L;
+
+		@Column(name = "id_role")
+		private Long idRole;
+		private String permission;
+	}
 
 }

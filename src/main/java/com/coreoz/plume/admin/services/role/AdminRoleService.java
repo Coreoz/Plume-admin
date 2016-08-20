@@ -10,7 +10,6 @@ import com.coreoz.plume.admin.db.daos.AdminRoleDao;
 import com.coreoz.plume.admin.db.daos.AdminRoleDao.RolePermissionDetails;
 import com.coreoz.plume.admin.db.daos.AdminRolePermissionDao;
 import com.coreoz.plume.admin.db.entities.AdminRole;
-import com.coreoz.plume.admin.db.entities.AdminRolePermission;
 import com.coreoz.plume.admin.services.permissions.AdminPermissionService;
 import com.coreoz.plume.db.TransactionManager;
 import com.coreoz.plume.db.crud.CrudService;
@@ -40,7 +39,7 @@ public class AdminRoleService extends CrudService<AdminRole> {
 		return adminRolePermissionDao
 				.findRolePermissions(idRole)
 				.stream()
-				.map(AdminRolePermission::getPermission)
+				.map(rolePermission -> rolePermission.getId().getPermission())
 				.collect(Collectors.toList());
 	}
 
@@ -62,6 +61,7 @@ public class AdminRoleService extends CrudService<AdminRole> {
 								.getValue()
 								.stream()
 								.map(RolePermissionDetails::getPermission)
+								.filter(permission -> permission != null)
 								.collect(Collectors.toSet())
 						)
 					)
