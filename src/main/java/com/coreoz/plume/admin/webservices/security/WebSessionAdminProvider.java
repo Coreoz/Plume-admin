@@ -5,8 +5,8 @@ import javax.inject.Singleton;
 
 import com.coreoz.plume.admin.security.permission.WebSessionPermission;
 import com.coreoz.plume.admin.services.configuration.AdminConfigurationService;
-import com.coreoz.plume.admin.services.time.TimeProvider;
 import com.coreoz.plume.admin.services.user.AuthenticatedUser;
+import com.coreoz.plume.services.time.TimeProvider;
 
 @Singleton
 public class WebSessionAdminProvider implements WebSessionProvider {

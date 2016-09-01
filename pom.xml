@@ -139,6 +139,10 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.coreoz</groupId>
+			<artifactId>plume-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.coreoz</groupId>
 			<artifactId>plume-conf</artifactId>
 		</dependency>
 		<dependency>

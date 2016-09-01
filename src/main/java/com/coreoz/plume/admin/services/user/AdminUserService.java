@@ -9,9 +9,9 @@ import com.coreoz.plume.admin.db.daos.AdminUserDao;
 import com.coreoz.plume.admin.db.entities.AdminUser;
 import com.coreoz.plume.admin.services.hash.HashService;
 import com.coreoz.plume.admin.services.role.AdminRoleService;
-import com.coreoz.plume.admin.services.time.TimeProvider;
 import com.coreoz.plume.admin.webservices.data.user.AdminUserParameters;
 import com.coreoz.plume.db.crud.CrudService;
+import com.coreoz.plume.services.time.TimeProvider;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 

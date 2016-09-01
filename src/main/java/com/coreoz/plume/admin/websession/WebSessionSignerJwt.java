@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 import com.auth0.jwt.JWTSigner;
 import com.auth0.jwt.JWTVerifier;
 import com.coreoz.plume.admin.services.configuration.AdminConfigurationService;
-import com.coreoz.plume.admin.services.time.TimeProvider;
+import com.coreoz.plume.services.time.TimeProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Singleton
