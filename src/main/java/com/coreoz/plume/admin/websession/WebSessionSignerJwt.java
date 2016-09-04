@@ -1,26 +1,30 @@
 package com.coreoz.plume.admin.websession;
 
+import java.security.Key;
 import java.util.Map;
 
+import javax.crypto.spec.SecretKeySpec;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.auth0.jwt.JWTSigner;
-import com.auth0.jwt.JWTVerifier;
 import com.coreoz.plume.admin.services.configuration.AdminConfigurationService;
 import com.coreoz.plume.services.time.TimeProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 
 @Singleton
 public class WebSessionSignerJwt implements WebSessionSigner {
 
 	private static final Logger logger = LoggerFactory.getLogger(WebSessionSignerJwt.class);
 
-	private final JWTVerifier jwtVerifier;
-	private final JWTSigner jwtSigner;
+	private final Key signingKey;
+	private final SignatureAlgorithm signatureAlgorithm;
 
 	private final ObjectMapper objectMapper;
 	private final TimeProvider timeProvider;
@@ -28,9 +32,11 @@ public class WebSessionSignerJwt implements WebSessionSigner {
 	@Inject
 	public WebSessionSignerJwt(AdminConfigurationService conf,
 			ObjectMapper objectMapper, TimeProvider timeProvider) {
-		this.jwtVerifier = new JWTVerifier(conf.jwtSecret());
-		this.jwtSigner = new JWTSigner(conf.jwtSecret());
-
+		this.signatureAlgorithm = SignatureAlgorithm.HS512;
+		this.signingKey = new SecretKeySpec(
+			conf.jwtSecret().getBytes(),
+			signatureAlgorithm.getJcaName()
+		);
 		this.objectMapper = objectMapper;
 		this.timeProvider = timeProvider;
 	}
@@ -38,7 +44,11 @@ public class WebSessionSignerJwt implements WebSessionSigner {
 	@Override
 	public <T extends WebSession> T parseSession(String webSesionSerialized, Class<T> sessionClass) {
 		try {
-			Map<String, Object> sessionAsMap = jwtVerifier.verify(webSesionSerialized);
+			Claims sessionAsMap = Jwts
+				.parser()
+				.setSigningKey(signingKey)
+				.parseClaimsJws(webSesionSerialized)
+				.getBody();
 			T expiringInformation = objectMapper.convertValue(sessionAsMap, sessionClass);
 			if (expiringInformation.getExpirationTime() < timeProvider.currentTime()) {
 				return null;
@@ -53,7 +63,11 @@ public class WebSessionSignerJwt implements WebSessionSigner {
 	@Override
 	@SuppressWarnings("unchecked")
 	public String serializeSession(Object sessionInformation) {
-		return jwtSigner.sign(objectMapper.convertValue(sessionInformation, Map.class));
+		return Jwts
+			.builder()
+			.signWith(signatureAlgorithm, signingKey)
+			.setClaims(objectMapper.convertValue(sessionInformation, Map.class))
+			.compact();
 	}
 
 }
