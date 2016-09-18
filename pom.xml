@@ -139,7 +139,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.coreoz</groupId>
-			<artifactId>plume-core</artifactId>
+			<artifactId>plume-services</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.coreoz</groupId>
