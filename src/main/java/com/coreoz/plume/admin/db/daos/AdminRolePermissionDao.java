@@ -9,15 +9,15 @@ import javax.persistence.EntityManager;
 
 import com.coreoz.plume.admin.db.entities.AdminRolePermission;
 import com.coreoz.plume.admin.db.entities.AdminRolePermission.AdminRolePermissionId;
+import com.coreoz.plume.db.hibernate.TransactionManagerHibernate;
+import com.coreoz.plume.db.hibernate.crud.CrudDaoHibernate;
 import com.coreoz.plume.admin.db.entities.QAdminRolePermission;
-import com.coreoz.plume.db.TransactionManager;
-import com.coreoz.plume.db.crud.CrudDao;
 
 @Singleton
-public class AdminRolePermissionDao extends CrudDao<AdminRolePermission> {
+public class AdminRolePermissionDao extends CrudDaoHibernate<AdminRolePermission> {
 
 	@Inject
-	public AdminRolePermissionDao(TransactionManager transactionManager) {
+	public AdminRolePermissionDao(TransactionManagerHibernate transactionManager) {
 		super(QAdminRolePermission.adminRolePermission, transactionManager);
 	}
 

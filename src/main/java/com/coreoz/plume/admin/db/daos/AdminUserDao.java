@@ -7,15 +7,15 @@ import javax.inject.Singleton;
 
 import com.coreoz.plume.admin.db.entities.AdminUser;
 import com.coreoz.plume.admin.db.entities.QAdminUser;
-import com.coreoz.plume.db.TransactionManager;
-import com.coreoz.plume.db.crud.CrudDao;
+import com.coreoz.plume.db.hibernate.TransactionManagerHibernate;
+import com.coreoz.plume.db.hibernate.crud.CrudDaoHibernate;
 import com.querydsl.jpa.hibernate.HibernateUpdateClause;
 
 @Singleton
-public class AdminUserDao extends CrudDao<AdminUser> {
+public class AdminUserDao extends CrudDaoHibernate<AdminUser> {
 
 	@Inject
-	public AdminUserDao(TransactionManager transactionManager) {
+	public AdminUserDao(TransactionManagerHibernate transactionManager) {
 		super(QAdminUser.adminUser, transactionManager, QAdminUser.adminUser.userName.asc());
 	}
 

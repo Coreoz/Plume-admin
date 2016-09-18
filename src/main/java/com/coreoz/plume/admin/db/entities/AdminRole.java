@@ -5,7 +5,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import com.coreoz.plume.db.hibernate.HibernateIdGenerator;
+import com.coreoz.plume.db.hibernate.utils.HibernateIdGenerator;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 

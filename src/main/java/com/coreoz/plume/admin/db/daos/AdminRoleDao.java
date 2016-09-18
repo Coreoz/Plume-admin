@@ -9,16 +9,16 @@ import javax.inject.Singleton;
 import com.coreoz.plume.admin.db.entities.AdminRole;
 import com.coreoz.plume.admin.db.entities.QAdminRole;
 import com.coreoz.plume.admin.db.entities.QAdminRolePermission;
-import com.coreoz.plume.db.TransactionManager;
-import com.coreoz.plume.db.crud.CrudDao;
+import com.coreoz.plume.db.hibernate.TransactionManagerHibernate;
+import com.coreoz.plume.db.hibernate.crud.CrudDaoHibernate;
 
 import lombok.Value;
 
 @Singleton
-public class AdminRoleDao extends CrudDao<AdminRole> {
+public class AdminRoleDao extends CrudDaoHibernate<AdminRole> {
 
 	@Inject
-	public AdminRoleDao(TransactionManager transactionManager) {
+	public AdminRoleDao(TransactionManagerHibernate transactionManager) {
 		super(QAdminRole.adminRole, transactionManager, QAdminRole.adminRole.label.asc());
 	}
 

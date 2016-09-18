@@ -11,8 +11,8 @@ import com.coreoz.plume.admin.db.daos.AdminRoleDao.RolePermissionDetails;
 import com.coreoz.plume.admin.db.daos.AdminRolePermissionDao;
 import com.coreoz.plume.admin.db.entities.AdminRole;
 import com.coreoz.plume.admin.services.permissions.AdminPermissionService;
-import com.coreoz.plume.db.TransactionManager;
 import com.coreoz.plume.db.crud.CrudService;
+import com.coreoz.plume.db.hibernate.TransactionManagerHibernate;
 
 @Singleton
 public class AdminRoleService extends CrudService<AdminRole> {
@@ -20,13 +20,13 @@ public class AdminRoleService extends CrudService<AdminRole> {
 	private final AdminRoleDao adminRoleDao;
 	private final AdminRolePermissionDao adminRolePermissionDao;
 	private final AdminPermissionService adminPermissionService;
-	private final TransactionManager transactionManager;
+	private final TransactionManagerHibernate transactionManager;
 
 	@Inject
 	public AdminRoleService(AdminRoleDao adminRoleDao,
 			AdminRolePermissionDao adminRolePermissionDao,
 			AdminPermissionService adminPermissionService,
-			TransactionManager transactionManager) {
+			TransactionManagerHibernate transactionManager) {
 		super(adminRoleDao);
 
 		this.adminRoleDao = adminRoleDao;

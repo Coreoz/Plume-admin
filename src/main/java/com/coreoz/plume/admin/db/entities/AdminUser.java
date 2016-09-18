@@ -8,7 +8,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import com.coreoz.plume.db.hibernate.HibernateIdGenerator;
+import com.coreoz.plume.db.hibernate.utils.HibernateIdGenerator;
 
 import lombok.Getter;
 import lombok.Setter;
