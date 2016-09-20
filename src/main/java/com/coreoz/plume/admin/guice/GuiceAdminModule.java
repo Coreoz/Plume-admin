@@ -12,14 +12,14 @@ import com.coreoz.plume.admin.webservices.security.WebSessionAdminProvider;
 import com.coreoz.plume.admin.webservices.security.WebSessionProvider;
 import com.coreoz.plume.admin.websession.WebSessionSigner;
 import com.coreoz.plume.admin.websession.WebSessionSignerJwt;
-import com.coreoz.plume.guice.GuiceCoreModule;
+import com.coreoz.plume.guice.GuiceServicesModule;
 import com.google.inject.AbstractModule;
 
 public class GuiceAdminModule extends AbstractModule {
 
 	@Override
 	protected void configure() {
-		install(new GuiceCoreModule());
+		install(new GuiceServicesModule());
 
 		bind(HashService.class).to(BCryptHashService.class);
 		bind(WebSessionSigner.class).to(WebSessionSignerJwt.class);
