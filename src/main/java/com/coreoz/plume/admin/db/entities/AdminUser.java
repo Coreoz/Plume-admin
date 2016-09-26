@@ -8,6 +8,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.GenericGenerator;
+
 import com.coreoz.plume.db.hibernate.utils.HibernateIdGenerator;
 
 import lombok.Getter;
@@ -25,6 +27,7 @@ public class AdminUser {
 
 	@Id
 	@GeneratedValue(generator = HibernateIdGenerator.NAME)
+	@GenericGenerator(name = HibernateIdGenerator.NAME, strategy = "com.coreoz.plume.db.hibernate.utils.HibernateIdGenerator")
 	private Long id;
 	@Column(name = "id_role")
 	private Long idRole;

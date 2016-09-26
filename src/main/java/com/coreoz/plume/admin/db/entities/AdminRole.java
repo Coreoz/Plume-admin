@@ -5,6 +5,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.GenericGenerator;
+
 import com.coreoz.plume.db.hibernate.utils.HibernateIdGenerator;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
@@ -24,6 +26,7 @@ public class AdminRole {
 
 	@Id
 	@GeneratedValue(generator = HibernateIdGenerator.NAME)
+	@GenericGenerator(name = HibernateIdGenerator.NAME, strategy = "com.coreoz.plume.db.hibernate.utils.HibernateIdGenerator")
 	@JsonSerialize(using = ToStringSerializer.class)
 	private Long id;
 	private String label;
