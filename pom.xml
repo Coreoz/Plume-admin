@@ -135,6 +135,11 @@
 		</dependency>
 		<dependency>
 			<groupId>com.coreoz</groupId>
+			<artifactId>plume-db-querydsl-codegen</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.coreoz</groupId>
 			<artifactId>plume-web-jersey</artifactId>
 		</dependency>
 
