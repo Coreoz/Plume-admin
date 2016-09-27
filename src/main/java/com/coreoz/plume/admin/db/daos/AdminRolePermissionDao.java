@@ -1,49 +1,50 @@
 package com.coreoz.plume.admin.db.daos;
 
+import java.sql.Connection;
 import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.persistence.EntityManager;
 
-import com.coreoz.plume.admin.db.entities.AdminRolePermission;
-import com.coreoz.plume.admin.db.entities.AdminRolePermission.AdminRolePermissionId;
-import com.coreoz.plume.db.hibernate.TransactionManagerHibernate;
-import com.coreoz.plume.db.hibernate.crud.CrudDaoHibernate;
-import com.coreoz.plume.admin.db.entities.QAdminRolePermission;
+import com.coreoz.plume.admin.db.generated.AdminRolePermission;
+import com.coreoz.plume.admin.db.generated.QAdminRolePermission;
+import com.coreoz.plume.db.querydsl.crud.QueryDslDao;
+import com.coreoz.plume.db.querydsl.transaction.TransactionManagerQuerydsl;
+import com.querydsl.sql.dml.SQLInsertClause;
 
 @Singleton
-public class AdminRolePermissionDao extends CrudDaoHibernate<AdminRolePermission> {
+public class AdminRolePermissionDao extends QueryDslDao<AdminRolePermission> {
 
 	@Inject
-	public AdminRolePermissionDao(TransactionManagerHibernate transactionManager) {
-		super(QAdminRolePermission.adminRolePermission, transactionManager);
+	public AdminRolePermissionDao(TransactionManagerQuerydsl transactionManager) {
+		super(transactionManager, QAdminRolePermission.adminRolePermission);
 	}
 
 	public List<AdminRolePermission> findRolePermissions(Long idRole) {
-		return search(QAdminRolePermission.adminRolePermission.id.idRole.eq(idRole));
+		return selectFrom()
+			.where(QAdminRolePermission.adminRolePermission.idRole.eq(idRole))
+			.fetch();
 	}
 
-	public void deleteForRole(long idRole, EntityManager em) {
+	public void deleteForRole(long idRole, Connection connection) {
 		transactionManager
-			.queryDsl(em)
-			.delete(QAdminRolePermission.adminRolePermission)
-			.where(QAdminRolePermission.adminRolePermission.id.idRole.eq(idRole))
+			.delete(QAdminRolePermission.adminRolePermission, connection)
+			.where(QAdminRolePermission.adminRolePermission.idRole.eq(idRole))
 			.execute();
 	}
 
-	public void addAll(long idRole, Set<String> permissions, EntityManager em) {
-		for(String permission : permissions) {
-			save(
-				new AdminRolePermission().setId(
-					new AdminRolePermissionId()
-						.setIdRole(idRole)
-						.setPermission(permission)
-				),
-				em
+	public void addAll(long idRole, Set<String> permissions, Connection connection) {
+		SQLInsertClause inserts = transactionManager
+			.insert(QAdminRolePermission.adminRolePermission, connection)
+			.columns(
+				QAdminRolePermission.adminRolePermission.idRole,
+				QAdminRolePermission.adminRolePermission.permission
 			);
+		for(String permission : permissions) {
+			inserts.values(idRole, permission).addBatch();
 		}
+		inserts.execute();
 	}
 
 }

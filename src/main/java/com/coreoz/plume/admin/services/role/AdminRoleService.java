@@ -9,10 +9,10 @@ import javax.inject.Singleton;
 import com.coreoz.plume.admin.db.daos.AdminRoleDao;
 import com.coreoz.plume.admin.db.daos.AdminRoleDao.RolePermissionDetails;
 import com.coreoz.plume.admin.db.daos.AdminRolePermissionDao;
-import com.coreoz.plume.admin.db.entities.AdminRole;
+import com.coreoz.plume.admin.db.generated.AdminRole;
 import com.coreoz.plume.admin.services.permissions.AdminPermissionService;
 import com.coreoz.plume.db.crud.CrudService;
-import com.coreoz.plume.db.hibernate.TransactionManagerHibernate;
+import com.coreoz.plume.db.querydsl.transaction.TransactionManagerQuerydsl;
 
 @Singleton
 public class AdminRoleService extends CrudService<AdminRole> {
@@ -20,13 +20,13 @@ public class AdminRoleService extends CrudService<AdminRole> {
 	private final AdminRoleDao adminRoleDao;
 	private final AdminRolePermissionDao adminRolePermissionDao;
 	private final AdminPermissionService adminPermissionService;
-	private final TransactionManagerHibernate transactionManager;
+	private final TransactionManagerQuerydsl transactionManager;
 
 	@Inject
 	public AdminRoleService(AdminRoleDao adminRoleDao,
 			AdminRolePermissionDao adminRolePermissionDao,
 			AdminPermissionService adminPermissionService,
-			TransactionManagerHibernate transactionManager) {
+			TransactionManagerQuerydsl transactionManager) {
 		super(adminRoleDao);
 
 		this.adminRoleDao = adminRoleDao;
@@ -39,7 +39,7 @@ public class AdminRoleService extends CrudService<AdminRole> {
 		return adminRolePermissionDao
 				.findRolePermissions(idRole)
 				.stream()
-				.map(rolePermission -> rolePermission.getId().getPermission())
+				.map(rolePermission -> rolePermission.getPermission())
 				.collect(Collectors.toList());
 	}
 
@@ -74,34 +74,33 @@ public class AdminRoleService extends CrudService<AdminRole> {
 	}
 
 	public RoleWithPermissions saveWithPermissions(RoleWithPermissions roleWithPermissions) {
-		return transactionManager.executeAndReturn(em -> {
-			AdminRole adminRoleSaved = adminRoleDao.save(
-				new AdminRole()
-					.setId(roleWithPermissions.getIdRole())
-					.setLabel(roleWithPermissions.getLabel()),
-				em
-			);
+		return transactionManager.executeAndReturn(connection -> {
+			AdminRole adminRoleToSave = new AdminRole();
+			adminRoleToSave.setId(roleWithPermissions.getIdRole());
+			adminRoleToSave.setLabel(roleWithPermissions.getLabel());
+
+			AdminRole adminRoleSaved = adminRoleDao.save(adminRoleToSave, connection);
 
 			if(roleWithPermissions.getIdRole() != null) {
-				adminRolePermissionDao.deleteForRole(roleWithPermissions.getIdRole(), em);
+				adminRolePermissionDao.deleteForRole(roleWithPermissions.getIdRole(), connection);
 			}
 			adminRolePermissionDao.addAll(
 				adminRoleSaved.getId(),
 				roleWithPermissions.getPermissions(),
-				em
+				connection
 			);
 
 			return roleWithPermissions
-					.setIdRole(adminRoleSaved.getId())
-					.setLabel(adminRoleSaved.getLabel());
+				.setIdRole(adminRoleSaved.getId())
+				.setLabel(adminRoleSaved.getLabel());
 		});
 	}
 
 	public void deleteWithPermissions(long idRole) {
-		transactionManager.execute(em -> {
-			adminRolePermissionDao.deleteForRole(idRole, em);
+		transactionManager.execute(connection -> {
+			adminRolePermissionDao.deleteForRole(idRole, connection);
 
-			adminRoleDao.delete(idRole, em);
+			adminRoleDao.delete(idRole, connection);
 		});
 	}
 

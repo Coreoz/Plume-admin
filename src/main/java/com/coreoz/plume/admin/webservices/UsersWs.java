@@ -14,7 +14,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import com.coreoz.plume.admin.db.entities.AdminUser;
+import com.coreoz.plume.admin.db.generated.AdminUser;
 import com.coreoz.plume.admin.services.permissions.AdminPermissions;
 import com.coreoz.plume.admin.services.role.AdminRoleService;
 import com.coreoz.plume.admin.services.user.AdminUserService;

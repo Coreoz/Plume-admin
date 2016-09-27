@@ -2,7 +2,7 @@ package com.coreoz.plume.admin.webservices.data.user;
 
 import java.util.List;
 
-import com.coreoz.plume.admin.db.entities.AdminRole;
+import com.coreoz.plume.admin.db.generated.AdminRole;
 
 import lombok.Value;
 

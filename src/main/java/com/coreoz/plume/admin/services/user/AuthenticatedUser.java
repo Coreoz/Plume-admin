@@ -2,7 +2,7 @@ package com.coreoz.plume.admin.services.user;
 
 import java.util.Set;
 
-import com.coreoz.plume.admin.db.entities.AdminUser;
+import com.coreoz.plume.admin.db.generated.AdminUser;
 
 import lombok.Value;
 

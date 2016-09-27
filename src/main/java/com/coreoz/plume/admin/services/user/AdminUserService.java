@@ -6,7 +6,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import com.coreoz.plume.admin.db.daos.AdminUserDao;
-import com.coreoz.plume.admin.db.entities.AdminUser;
+import com.coreoz.plume.admin.db.generated.AdminUser;
 import com.coreoz.plume.admin.services.hash.HashService;
 import com.coreoz.plume.admin.services.role.AdminRoleService;
 import com.coreoz.plume.admin.webservices.data.user.AdminUserParameters;
@@ -58,16 +58,16 @@ public class AdminUserService extends CrudService<AdminUser> {
 	}
 
 	public AdminUser create(AdminUserParameters parameters) {
-		return adminUserDao.save(
-			new AdminUser()
-				.setIdRole(parameters.getIdRole())
-				.setCreationDate(timeProvider.currentDateTime())
-				.setUserName(parameters.getUserName())
-				.setEmail(parameters.getEmail())
-				.setFirstName(parameters.getFirstName())
-				.setLastName(parameters.getLastName())
-				.setPassword(hashService.hashPassword(parameters.getPassword()))
-		);
+		AdminUser adminUserToSave = new AdminUser();
+		adminUserToSave.setIdRole(parameters.getIdRole());
+		adminUserToSave.setCreationDate(timeProvider.currentDateTime());
+		adminUserToSave.setUserName(parameters.getUserName());
+		adminUserToSave.setEmail(parameters.getEmail());
+		adminUserToSave.setFirstName(parameters.getFirstName());
+		adminUserToSave.setLastName(parameters.getLastName());
+		adminUserToSave.setPassword(hashService.hashPassword(parameters.getPassword()));
+
+		return adminUserDao.save(adminUserToSave);
 	}
 
 	public boolean existsWithUsername(Long idUser, String newUserName) {
