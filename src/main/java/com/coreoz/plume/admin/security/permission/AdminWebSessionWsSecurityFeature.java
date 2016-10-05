@@ -9,7 +9,7 @@ import com.coreoz.plume.admin.websession.WebSessionSigner;
 
 public class AdminWebSessionWsSecurityFeature implements DynamicFeature {
 
-	private static final String REQUEST_SESSION_ATTRIBUTE_NAME = "sessionInfo";
+	public static final String REQUEST_SESSION_ATTRIBUTE_NAME = "sessionInfo";
 
 	private final WebSessionWsSecurityFeature<RestrictToAdmin> wsSecurityFeature;
 
