@@ -42,6 +42,7 @@ public class AdminUserDao extends CrudDaoQuerydsl<AdminUser> {
 		SQLUpdateClause updateQuery = transactionManager
 			.update(QAdminUser.adminUser)
 			.where(QAdminUser.adminUser.id.eq(id))
+			.set(QAdminUser.adminUser.idRole, idRole)
 			.set(QAdminUser.adminUser.userName, userName)
 			.set(QAdminUser.adminUser.email, email)
 			.set(QAdminUser.adminUser.firstName, firstName)
