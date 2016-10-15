@@ -26,9 +26,9 @@
 	</licenses>
 
 	<scm>
-		<developerConnection>scm:git:git@github.com:Coreoz/Plume-bo.git</developerConnection>
-		<connection>scm:git:git@github.com:Coreoz/Plume-bo.git</connection>
-		<url>https://github.com/Coreoz/Plume-bo</url>
+		<developerConnection>scm:git:git@github.com:Coreoz/Plume-admin.git</developerConnection>
+		<connection>scm:git:git@github.com:Coreoz/Plume-admin.git</connection>
+		<url>https://github.com/Coreoz/Plume-admin</url>
 	</scm>
 
 	<distributionManagement>
