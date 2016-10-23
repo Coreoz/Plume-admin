@@ -5,7 +5,7 @@ import javax.ws.rs.container.ContainerRequestContext;
 
 import org.glassfish.hk2.api.Factory;
 
-import com.coreoz.plume.admin.security.permission.AdminWebSessionWsSecurityFeature;
+import com.coreoz.plume.admin.jersey.WebSessionFeature;
 import com.coreoz.plume.admin.webservices.security.WebSessionAdmin;
 
 public class WebSessionAdminFactory implements Factory<WebSessionAdmin> {
@@ -19,9 +19,8 @@ public class WebSessionAdminFactory implements Factory<WebSessionAdmin> {
 
 	@Override
 	public WebSessionAdmin provide() {
-		// TODO to refactor
 		return (WebSessionAdmin)
-			context.getProperty(AdminWebSessionWsSecurityFeature.REQUEST_SESSION_ATTRIBUTE_NAME);
+			context.getProperty(WebSessionFeature.REQUEST_SESSION_ATTRIBUTE_NAME);
 	}
 
 	@Override

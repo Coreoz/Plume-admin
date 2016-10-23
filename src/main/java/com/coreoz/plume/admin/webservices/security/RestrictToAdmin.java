@@ -1,15 +1,15 @@
 package com.coreoz.plume.admin.webservices.security;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
 /**
- * Restraint l'accès à une ressource/web-service aux utilisateurs ayant la permission nécéssaire
+ * Restrict a resource to users having the required permission
  */
 @Documented
 @Retention (RUNTIME)
@@ -17,7 +17,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface RestrictToAdmin {
 
 	/**
-	 * Retourne la valeur de la permission qu'un utilisateur doit avoir pour accéder à la ressource/web-service
+	 * Returns the permission value a user must have to access the resource
 	 */
 	String value();
 

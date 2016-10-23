@@ -2,7 +2,7 @@ package com.coreoz.plume.admin.webservices.security;
 
 import java.util.Set;
 
-import com.coreoz.plume.admin.security.permission.WebSessionPermission;
+import com.coreoz.plume.admin.jersey.WebSessionPermission;
 
 import lombok.Getter;
 import lombok.Setter;

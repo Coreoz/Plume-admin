@@ -3,7 +3,7 @@ package com.coreoz.plume.admin.webservices.security;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import com.coreoz.plume.admin.security.permission.WebSessionPermission;
+import com.coreoz.plume.admin.jersey.WebSessionPermission;
 import com.coreoz.plume.admin.services.configuration.AdminConfigurationService;
 import com.coreoz.plume.admin.services.user.AuthenticatedUser;
 import com.coreoz.plume.services.time.TimeProvider;

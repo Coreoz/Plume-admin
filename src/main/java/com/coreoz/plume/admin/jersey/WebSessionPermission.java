@@ -1,4 +1,4 @@
-package com.coreoz.plume.admin.security.permission;
+package com.coreoz.plume.admin.jersey;
 
 import java.util.Set;
 
