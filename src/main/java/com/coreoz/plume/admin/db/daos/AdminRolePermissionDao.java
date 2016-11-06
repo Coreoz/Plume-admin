@@ -35,6 +35,12 @@ public class AdminRolePermissionDao extends QueryDslDao<AdminRolePermission> {
 	}
 
 	public void addAll(long idRole, Set<String> permissions, Connection connection) {
+		if(permissions.isEmpty()) {
+			// a batch cannot be prepared with no value, else it raises an error
+			// so if there is no permission to add, returns straightforward
+			return;
+		}
+
 		SQLInsertClause inserts = transactionManager
 			.insert(QAdminRolePermission.adminRolePermission, connection)
 			.columns(

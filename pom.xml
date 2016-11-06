@@ -5,7 +5,7 @@
 
 	<groupId>com.coreoz</groupId>
 	<artifactId>plume-admin</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.0-ÂSNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>Plume admin</name>
@@ -58,7 +58,7 @@
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<additionalparam>-Xdoclint:none</additionalparam>
 
-		<plume.version>1.0.0-SNAPSHOT</plume.version>
+		<plume.version>1.0.0-beta4</plume.version>
 	</properties>
 
 	<profiles>
