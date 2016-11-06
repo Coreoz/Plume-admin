@@ -10,6 +10,8 @@ admin.jwt-secret = "long_generated_password_to_secure_jwt_tokens"
 admin.session-duration = 12 hours
 admin.login.max-attempts = 5
 admin.login.blocked-duration = 30 seconds
+# enable to ensure that users passwords are long enough
+admin.passwords.min-length = 0
 ```
 
 Installation

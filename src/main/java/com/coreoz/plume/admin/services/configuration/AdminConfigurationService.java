@@ -34,4 +34,8 @@ public class AdminConfigurationService {
 		return config.getDuration("admin.login.blocked-duration");
 	}
 
+	public int passwordsMinimumLength() {
+		return config.getInt("admin.passwords.min-length");
+	}
+
 }

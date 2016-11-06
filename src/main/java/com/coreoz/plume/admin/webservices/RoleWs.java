@@ -15,8 +15,8 @@ import com.coreoz.plume.admin.services.permissions.AdminPermissions;
 import com.coreoz.plume.admin.services.role.AdminRoleService;
 import com.coreoz.plume.admin.services.role.RoleWithPermissions;
 import com.coreoz.plume.admin.services.role.RolesAndPermissions;
-import com.coreoz.plume.admin.webservices.errors.AdminWsError;
 import com.coreoz.plume.admin.webservices.security.RestrictToAdmin;
+import com.coreoz.plume.admin.webservices.validation.AdminWsError;
 import com.coreoz.plume.jersey.errors.Validators;
 import com.coreoz.plume.jersey.errors.WsException;
 

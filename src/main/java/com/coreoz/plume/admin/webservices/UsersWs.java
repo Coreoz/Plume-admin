@@ -21,8 +21,9 @@ import com.coreoz.plume.admin.services.user.AdminUserService;
 import com.coreoz.plume.admin.webservices.data.user.AdminUserDetails;
 import com.coreoz.plume.admin.webservices.data.user.AdminUserParameters;
 import com.coreoz.plume.admin.webservices.data.user.AdminUsersDetails;
-import com.coreoz.plume.admin.webservices.errors.AdminWsError;
 import com.coreoz.plume.admin.webservices.security.RestrictToAdmin;
+import com.coreoz.plume.admin.webservices.validation.AdminWsError;
+import com.coreoz.plume.admin.webservices.validation.PasswordsPolicy;
 import com.coreoz.plume.jersey.errors.Validators;
 import com.coreoz.plume.jersey.errors.WsException;
 import com.google.common.base.Strings;
@@ -41,11 +42,14 @@ public class UsersWs {
 
 	private final AdminUserService adminUserService;
 	private final AdminRoleService roleService;
+	private final PasswordsPolicy passwordsPolicy;
 
 	@Inject
-	public UsersWs(AdminUserService adminUserService, AdminRoleService roleService) {
+	public UsersWs(AdminUserService adminUserService, AdminRoleService roleService,
+			PasswordsPolicy passwordsPolicy) {
 		this.adminUserService = adminUserService;
 		this.roleService = roleService;
+		this.passwordsPolicy = passwordsPolicy;
 	}
 
 	@GET
@@ -104,6 +108,7 @@ public class UsersWs {
 				)
 			);
 		}
+		passwordsPolicy.checkPasswordSecure(parameters.getPassword());
 
 		if (adminUserService.existsWithUsername(parameters.getId(), parameters.getUserName())) {
 			throw new WsException(AdminWsError.USERNAME_ALREADY_EXISTS);
