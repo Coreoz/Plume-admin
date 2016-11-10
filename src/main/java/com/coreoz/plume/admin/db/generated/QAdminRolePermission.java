@@ -42,6 +42,11 @@ public class QAdminRolePermission extends com.querydsl.sql.RelationalPathBase<Ad
         addMetadata();
     }
 
+    public QAdminRolePermission(String variable, String schema) {
+        super(AdminRolePermission.class, forVariable(variable), schema, "PLM_ROLE_PERMISSION");
+        addMetadata();
+    }
+
     public QAdminRolePermission(Path<? extends AdminRolePermission> path) {
         super(path.getType(), path.getMetadata(), "PUBLIC", "PLM_ROLE_PERMISSION");
         addMetadata();

@@ -27,9 +27,9 @@ public class QuerydslGenerator {
 	public static void main(String... args) {
 		Configuration configuration = new Configuration(SQLTemplates.DEFAULT);
 //		configuration.register(classType(JSR310InstantType.class));
-		configuration.register(classType(JSR310LocalDateTimeType.class));
 		configuration.register(classType(JSR310LocalDateType.class));
 		configuration.register(classType(JSR310LocalTimeType.class));
+		configuration.register(classType(JSR310LocalDateTimeType.class));
 //		configuration.register(classType(JSR310OffsetDateTimeType.class));
 //		configuration.register(classType(JSR310OffsetTimeType.class));
 		configuration.register(classType(JSR310ZonedDateTimeType.class));

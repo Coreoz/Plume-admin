@@ -54,6 +54,11 @@ public class QAdminUser extends com.querydsl.sql.RelationalPathBase<AdminUser> {
         addMetadata();
     }
 
+    public QAdminUser(String variable, String schema) {
+        super(AdminUser.class, forVariable(variable), schema, "PLM_USER");
+        addMetadata();
+    }
+
     public QAdminUser(Path<? extends AdminUser> path) {
         super(path.getType(), path.getMetadata(), "PUBLIC", "PLM_USER");
         addMetadata();
