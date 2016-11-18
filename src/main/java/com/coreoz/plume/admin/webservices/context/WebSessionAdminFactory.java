@@ -5,22 +5,27 @@ import javax.ws.rs.container.ContainerRequestContext;
 
 import org.glassfish.hk2.api.Factory;
 
-import com.coreoz.plume.admin.jersey.WebSessionFeature;
+import com.coreoz.plume.admin.jersey.WebSessionRequestPermissionProvider;
 import com.coreoz.plume.admin.webservices.security.WebSessionAdmin;
+import com.coreoz.plume.admin.websession.WebSessionSigner;
 
 public class WebSessionAdminFactory implements Factory<WebSessionAdmin> {
 
 	private final ContainerRequestContext context;
+	private final WebSessionRequestPermissionProvider<WebSessionAdmin> webSessionRequestPermissionProvider;
 
 	@Inject
-	public WebSessionAdminFactory(ContainerRequestContext context) {
+	public WebSessionAdminFactory(ContainerRequestContext context, WebSessionSigner sessionSigner) {
 		this.context = context;
+		this.webSessionRequestPermissionProvider = new WebSessionRequestPermissionProvider<>(
+			sessionSigner,
+			WebSessionAdmin.class
+		);
 	}
 
 	@Override
 	public WebSessionAdmin provide() {
-		return (WebSessionAdmin)
-			context.getProperty(WebSessionFeature.REQUEST_SESSION_ATTRIBUTE_NAME);
+		return webSessionRequestPermissionProvider.currentSessionInformation(context);
 	}
 
 	@Override
