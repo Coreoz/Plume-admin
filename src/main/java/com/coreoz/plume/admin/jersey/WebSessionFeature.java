@@ -13,11 +13,6 @@ import com.coreoz.plume.jersey.security.permission.PermissionFeature;
 public class WebSessionFeature<T extends WebSessionPermission, A extends Annotation>
 	implements DynamicFeature {
 
-	static final String REQUEST_SESSION_ATTRIBUTE_NAME = "sessionInfo";
-
-	static final String BEARER_PREFIX = "Bearer ";
-	static final Object EMPTY_SESSION = new Object();
-
 	private final PermissionFeature<A> permissionFeature;
 
 	public WebSessionFeature(WebSessionSigner webSessionSigner, Class<T> webSessionClass,

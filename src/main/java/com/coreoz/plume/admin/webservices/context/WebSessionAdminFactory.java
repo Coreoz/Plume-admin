@@ -30,6 +30,7 @@ public class WebSessionAdminFactory implements Factory<WebSessionAdmin> {
 
 	@Override
 	public void dispose(WebSessionAdmin arg0) {
+		// unused
 	}
 
 }

@@ -11,6 +11,11 @@ import com.google.common.net.HttpHeaders;
 
 public class WebSessionRequestPermissionProvider<T extends WebSessionPermission> implements PermissionRequestProvider {
 
+	private static final String REQUEST_SESSION_ATTRIBUTE_NAME = "sessionInfo";
+
+	private static final String BEARER_PREFIX = "Bearer ";
+	private static final Object EMPTY_SESSION = new Object();
+
 	private final WebSessionSigner webSessionSigner;
 	private final Class<T> webSessionClass;
 
@@ -34,24 +39,24 @@ public class WebSessionRequestPermissionProvider<T extends WebSessionPermission>
 
 	@SuppressWarnings("unchecked")
 	public T currentSessionInformation(ContainerRequestContext request) {
-		Object webSession = request.getProperty(WebSessionFeature.REQUEST_SESSION_ATTRIBUTE_NAME);
+		Object webSession = request.getProperty(REQUEST_SESSION_ATTRIBUTE_NAME);
 		if(webSession == null) {
 			String webSessionSerialized = parseAuthorizationBearer(request);
 			webSession = webSessionSerialized == null ? null : webSessionSigner.parseSession(webSessionSerialized, webSessionClass);
 			if(webSession == null) {
-				webSession = WebSessionFeature.EMPTY_SESSION;
+				webSession = EMPTY_SESSION;
 			}
-			request.setProperty(WebSessionFeature.REQUEST_SESSION_ATTRIBUTE_NAME, webSession);
+			request.setProperty(REQUEST_SESSION_ATTRIBUTE_NAME, webSession);
 		}
-		return webSession == WebSessionFeature.EMPTY_SESSION ? null : (T) webSession;
+		return webSession == EMPTY_SESSION ? null : (T) webSession;
 	}
 
 	private String parseAuthorizationBearer(ContainerRequestContext request) {
 		String authorization = request.getHeaderString(HttpHeaders.AUTHORIZATION);
-		if(authorization == null || !authorization.startsWith(WebSessionFeature.BEARER_PREFIX)) {
+		if(authorization == null || !authorization.startsWith(BEARER_PREFIX)) {
 			return null;
 		}
-		return authorization.substring(WebSessionFeature.BEARER_PREFIX.length());
+		return authorization.substring(BEARER_PREFIX.length());
 	}
 
 }

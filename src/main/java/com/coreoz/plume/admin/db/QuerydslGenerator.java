@@ -83,7 +83,7 @@ public class QuerydslGenerator {
 		}
 	}
 
-	static Type<?> classType(Class<?> classType) {
+	private static Type<?> classType(Class<?> classType) {
 		try {
 			return (Type<?>) classType.newInstance();
 		} catch (Exception e) {
