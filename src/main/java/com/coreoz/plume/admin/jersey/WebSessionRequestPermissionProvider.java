@@ -28,7 +28,7 @@ public class WebSessionRequestPermissionProvider<T extends WebSessionPermission>
 	@Override
 	public String userInformation(ContainerRequestContext requestContext) {
 		WebSessionPermission session = currentSessionInformation(requestContext);
-		return session == null ? "No user connected" : session.getUserName();
+		return session == null ? "<no user connected>" : session.getUserName();
 	}
 
 	@Override
