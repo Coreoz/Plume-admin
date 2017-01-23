@@ -67,7 +67,7 @@ public class WebSessionSigner {
 	 * Serialize into a string the session and sign it
 	 */
 	@SuppressWarnings("unchecked")
-	public String serializeSession(Object sessionInformation) {
+	public String serializeSession(WebSession sessionInformation) {
 		return Jwts
 			.builder()
 			.signWith(signatureAlgorithm, signingKey)
