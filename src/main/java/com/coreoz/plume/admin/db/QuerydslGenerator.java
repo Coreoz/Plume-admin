@@ -1,6 +1,7 @@
 package com.coreoz.plume.admin.db;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -10,7 +11,6 @@ import java.sql.SQLException;
 import org.h2.jdbcx.JdbcDataSource;
 
 import com.coreoz.plume.db.querydsl.generation.IdBeanSerializer;
-import com.google.common.base.Throwables;
 import com.querydsl.codegen.EntityType;
 import com.querydsl.sql.Configuration;
 import com.querydsl.sql.SQLTemplates;
@@ -78,16 +78,16 @@ public class QuerydslGenerator {
 			}
 
 			return connection;
-		} catch (Exception e) {
-			throw Throwables.propagate(e);
+		} catch (SQLException | IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
 	private static Type<?> classType(Class<?> classType) {
 		try {
 			return (Type<?>) classType.newInstance();
-		} catch (Exception e) {
-			throw Throwables.propagate(e);
+		} catch (InstantiationException | IllegalAccessException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
