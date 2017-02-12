@@ -13,6 +13,19 @@ Installation
 6. SQL
 7. If hibernate is used, install Guice brige module: `install(new GuiceHibernateToQuerydslBridgeModule())`
 
+Current user access
+-------------------
+To fetch the current user in an administration web-service,
+this Jersey binder must be installed in the Jersey configuration class:
+```java
+register(new AbstractBinder() {
+	@Override
+	protected void configure() {
+		bindFactory(WebSessionAdminFactory.class).to(WebSessionPermission.class).in(RequestScoped.class);
+	}
+});
+```
+
 Configuration
 -------------
 To generate JWT secret, [LastPass generator](https://lastpass.com/generatepassword.php) can be used with a password length of about 50 characters.
