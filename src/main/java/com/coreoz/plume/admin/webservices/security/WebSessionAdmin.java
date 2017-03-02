@@ -3,6 +3,8 @@ package com.coreoz.plume.admin.webservices.security;
 import java.util.Set;
 
 import com.coreoz.plume.admin.jersey.WebSessionPermission;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -18,10 +20,12 @@ import lombok.experimental.Accessors;
 @ToString
 public class WebSessionAdmin implements WebSessionPermission {
 
+	@JsonSerialize(using = ToStringSerializer.class)
 	private long idUser;
 	private String userName;
 	private String fullName;
 	private Set<String> permissions;
+	@JsonSerialize(using = ToStringSerializer.class)
 	private long expirationTime;
 
 }
