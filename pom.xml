@@ -3,12 +3,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.coreoz</groupId>
-	<artifactId>plume-admin</artifactId>
+	<artifactId>plume-admin-parent</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
-	<packaging>jar</packaging>
+	<packaging>pom</packaging>
 
 	<name>Plume admin</name>
-	<description>A simple administration back-office based on Plume Framework</description>
+	<description>A simple administration area based on Plume Framework</description>
 	<url>https://github.com/Coreoz/Plume-bo</url>
 
 	<organization>
@@ -56,9 +56,13 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<additionalparam>-Xdoclint:none</additionalparam>
-
-		<plume-dependencies.version>1.0.0-rc1</plume-dependencies.version>
 	</properties>
+
+	<modules>
+		<module>plume-admin-dependencies</module>
+		<module>plume-admin-security</module>
+		<module>plume-admin-ws</module>
+	</modules>
 
 	<profiles>
 		<profile>
@@ -128,104 +132,6 @@
 				</configuration>
 			</plugin>
 		</plugins>
-		<resources>
-			<resource>
-				<directory>src/main/java</directory>
-				<includes>
-					<include>**/*.conf</include>
-				</includes>
-			</resource>
-		</resources>
 	</build>
-
-	<dependencies>
-		<dependency>
-			<groupId>com.coreoz</groupId>
-			<artifactId>plume-services</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.coreoz</groupId>
-			<artifactId>plume-conf</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.coreoz</groupId>
-			<artifactId>plume-db-querydsl</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.coreoz</groupId>
-			<artifactId>plume-db-querydsl-codegen</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.coreoz</groupId>
-			<artifactId>plume-web-jersey</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>io.swagger</groupId>
-			<artifactId>swagger-annotations</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<scope>provided</scope>
-		</dependency>
-
-		<!-- used only for manual code generation -->
-		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-classic</artifactId>
-			<scope>provided</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.google.inject</groupId>
-			<artifactId>guice</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>com.google.dagger</groupId>
-			<artifactId>dagger</artifactId>
-			<optional>true</optional>
-		</dependency>
-
-		<dependency>
-			<groupId>de.svenkubiak</groupId>
-			<artifactId>jBCrypt</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.assertj</groupId>
-			<artifactId>assertj-core</artifactId>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
-
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>com.coreoz</groupId>
-				<artifactId>plume-dependencies</artifactId>
-				<version>${plume-dependencies.version}</version>
-				<scope>import</scope>
-				<type>pom</type>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
 
 </project>

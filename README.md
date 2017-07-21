@@ -10,7 +10,7 @@ Installation
 3. Jersey web-services: `packages("com.coreoz.plume.admin.webservices")`
 4. Jersey admin security: `register(AdminSecurityFeature.class)`
 5. [Generate a JWT secret key](#configuration) and register it in your configuration: `admin.jwt-secret = "long_generated_password_to_secure_jwt_tokens"`
-6. SQL
+6. SQL, see [setup files](plume-admin-ws/sql)
 7. If hibernate is used, install Guice brige module: `install(new GuiceHibernateToQuerydslBridgeModule())`
 
 Current user access
@@ -25,6 +25,10 @@ register(new AbstractBinder() {
 	}
 });
 ```
+
+Admin security
+--------------
+To use this module without Admin Web-services, an implementation of `WebSessionClassProvider` must be provided.
 
 Configuration
 -------------
