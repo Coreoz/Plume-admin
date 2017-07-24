@@ -11,3 +11,7 @@
 `com.coreoz.plume.admin.webservices.security.AdminSecurityFeature` by `com.coreoz.plume.admin.jersey.feature.AdminSecurityFeature`
 - in all files of the project replace `GuiceAdminModule` by `GuiceAdminWsModule`
 - in all files of the project replace `GuiceAdminWithDefaultsModule` `GuiceAdminWsWithDefaultsModule`
+- if in your Guice configuration you are binding a `WebSessionProvider` class
+(e.g. a line with `bind(WebSessionProvider.class).to(WebSessionAdminProvider.class)`), you should add a line
+with the same binding for the class `WebSessionClassProvider`,
+e.g. `bind(WebSessionClassProvider.class).to(WebSessionAdminProvider.class)`

@@ -1,5 +1,6 @@
 package com.coreoz.plume.admin.guice;
 
+import com.coreoz.plume.admin.jersey.feature.WebSessionClassProvider;
 import com.coreoz.plume.admin.services.permissions.AdminPermissionService;
 import com.coreoz.plume.admin.services.permissions.AdminPermissionServiceBasic;
 import com.coreoz.plume.admin.webservices.security.WebSessionAdminProvider;
@@ -14,6 +15,7 @@ public class GuiceAdminWsWithDefaultsModule extends AbstractModule {
 
 		bind(AdminPermissionService.class).to(AdminPermissionServiceBasic.class);
 		bind(WebSessionProvider.class).to(WebSessionAdminProvider.class);
+		bind(WebSessionClassProvider.class).to(WebSessionAdminProvider.class);
 	}
 
 }
