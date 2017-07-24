@@ -9,5 +9,5 @@
 `com.coreoz.plume.admin.webservices.context.WebSessionAdminFactory` by `com.coreoz.plume.admin.jersey.context.WebSessionAdminFactory`
 - in all files of the project replace 
 `com.coreoz.plume.admin.webservices.security.AdminSecurityFeature` by `com.coreoz.plume.admin.jersey.feature.AdminSecurityFeature`
-- GuiceAdminWsModule
-- GuiceAdminWsWithDefaultsModule
+- in all files of the project replace `GuiceAdminModule` by `GuiceAdminWsModule`
+- in all files of the project replace `GuiceAdminWithDefaultsModule` `GuiceAdminWsWithDefaultsModule`

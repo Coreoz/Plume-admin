@@ -43,3 +43,7 @@ admin.login.blocked-duration = 30 seconds
 # enable to ensure that users passwords are long enough
 admin.passwords.min-length = 0
 ```
+
+Upgrade instructions
+--------------------
+See the [upgrade file](upgrade.md) to see the upgrade instructions.
