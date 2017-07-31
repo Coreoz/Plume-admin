@@ -15,3 +15,4 @@
 (e.g. a line with `bind(WebSessionProvider.class).to(WebSessionAdminProvider.class)`), you should add a line
 with the same binding for the class `WebSessionClassProvider`,
 e.g. `bind(WebSessionClassProvider.class).to(WebSessionAdminProvider.class)`
+- if `AuthenticatedUser.of()` is used, it must be replaced by `AuthenticatedUserAdmin.of()`
