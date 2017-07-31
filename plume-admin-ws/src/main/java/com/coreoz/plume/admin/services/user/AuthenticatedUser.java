@@ -4,12 +4,9 @@ import java.util.Set;
 
 import com.coreoz.plume.admin.db.generated.AdminUser;
 
-import lombok.Value;
+public interface AuthenticatedUser {
 
-@Value(staticConstructor = "of")
-public class AuthenticatedUser {
-
-	private final AdminUser user;
-	private final Set<String> permissions;
+	AdminUser getUser();
+	Set<String> getPermissions();
 
 }

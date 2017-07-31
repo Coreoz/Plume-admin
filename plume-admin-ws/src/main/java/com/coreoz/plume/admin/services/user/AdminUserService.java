@@ -38,7 +38,7 @@ public class AdminUserService extends CrudService<AdminUser> {
 		return adminUserDao
 				.findByUserName(userName)
 				.filter(user -> hashService.checkPassword(password, user.getPassword()))
-				.map(user -> AuthenticatedUser.of(
+				.map(user -> AuthenticatedUserAdmin.of(
 					user,
 					ImmutableSet.copyOf(adminRoleService.findRolePermissions(user.getIdRole()))
 				));
