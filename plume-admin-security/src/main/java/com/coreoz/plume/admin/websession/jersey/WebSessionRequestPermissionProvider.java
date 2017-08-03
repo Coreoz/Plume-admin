@@ -35,7 +35,9 @@ public class WebSessionRequestPermissionProvider<T extends WebSessionPermission>
 	@Override
 	public Collection<String> correspondingPermissions(ContainerRequestContext requestContext) {
 		WebSessionPermission session = currentSessionInformation(requestContext);
-		return session == null ? ImmutableList.of() : session.getPermissions();
+		return session == null || session.getPermissions() == null ?
+			ImmutableList.of()
+			: session.getPermissions();
 	}
 
 	@SuppressWarnings("unchecked")
