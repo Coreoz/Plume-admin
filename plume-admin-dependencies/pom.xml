@@ -17,7 +17,7 @@
 		<jjwt.version>0.7.0</jjwt.version>
 		<jbcrypt.version>0.4.1</jbcrypt.version>
 
-		<plume-framework.version>1.0.0-SNAPSHOT</plume-framework.version>
+		<plume-framework.version>1.0.0</plume-framework.version>
 	</properties>
 
 	<dependencyManagement>
