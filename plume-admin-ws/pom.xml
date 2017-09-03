@@ -10,7 +10,7 @@
 
 	<artifactId>plume-admin-ws</artifactId>
 	<packaging>jar</packaging>
-	<name>Plume admin Web-services</name>
+	<name>Plume Admin Web-services</name>
 	<description>Web-services to build simple administration area based on Plume Framework</description>
 
 	<build>

@@ -11,7 +11,7 @@
 
 	<artifactId>plume-admin-security</artifactId>
 	<packaging>jar</packaging>
-	<name>Plume admin security</name>
+	<name>Plume Admin Security</name>
 	<description>Jersey features to help secure restricted web-services</description>
 
 	<build>
