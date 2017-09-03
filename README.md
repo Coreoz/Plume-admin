@@ -2,6 +2,15 @@ Plume Admin
 ===========
 
 [![Build Status](https://travis-ci.org/Coreoz/Plume-admin.svg?branch=master)](https://travis-ci.org/Coreoz/Plume-admin)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.coreoz/plume-admin-parent/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.coreoz/plume-admin-parent)
+
+Plume Admin is based on [Plume Framework](https://github.com/Coreoz/Plume),
+it provides Jersey web services to build an administration area.
+
+If you are looking for a JavaScript frontened that uses these web-services,
+check out the [Plume Admin UI for AngularJS](https://github.com/Coreoz/Plume-admin-ui-angularjs).
+
+Looking for a demo? Check out the [Plume Demo project](https://github.com/Coreoz/Plume-demo/tree/master/plume-demo-full-guice-jersey).
 
 Installation
 ------------
@@ -22,6 +31,7 @@ register(new AbstractBinder() {
 	@Override
 	protected void configure() {
 		bindFactory(WebSessionAdminFactory.class).to(WebSessionPermission.class).in(RequestScoped.class);
+		bindFactory(WebSessionAdminFactory.class).to(WebSessionAdmin.class).in(RequestScoped.class);
 	}
 });
 ```
@@ -47,3 +57,4 @@ admin.passwords.min-length = 0
 Upgrade instructions
 --------------------
 See the [upgrade file](upgrade.md) to see the upgrade instructions.
+
