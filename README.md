@@ -15,7 +15,7 @@ Looking for a demo? Check out the [Plume Demo project](https://github.com/Coreoz
 Installation
 ------------
 1. Maven dependency: [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.coreoz/plume-admin/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.coreoz/plume-admin)
-2. Guice module: `install(new GuiceAdminWithDefaultsModule())`
+2. Guice module: `install(new GuiceAdminWsWithDefaultsModule())`
 3. Jersey web-services: `packages("com.coreoz.plume.admin.webservices")`
 4. Jersey admin security: `register(AdminSecurityFeature.class)`
 5. [Generate a JWT secret key](#configuration) and register it in your configuration: `admin.jwt-secret = "long_generated_password_to_secure_jwt_tokens"`
