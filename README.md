@@ -14,13 +14,19 @@ Looking for a demo? Check out the [Plume Demo project](https://github.com/Coreoz
 
 Installation
 ------------
-1. Maven dependency: [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.coreoz/plume-admin/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.coreoz/plume-admin)
+1. Maven dependency:
+```xml
+<dependency>
+    <groupId>com.coreoz</groupId>
+    <artifactId>plume-admin-ws</artifactId>
+</dependency
+```
 2. Guice module: `install(new GuiceAdminWsWithDefaultsModule())`
 3. Jersey web-services: `packages("com.coreoz.plume.admin.webservices")`
 4. Jersey admin security: `register(AdminSecurityFeature.class)`
 5. [Generate a JWT secret key](#configuration) and register it in your configuration: `admin.jwt-secret = "long_generated_password_to_secure_jwt_tokens"`
 6. SQL, see [setup files](plume-admin-ws/sql)
-7. If hibernate is used, install Guice brige module: `install(new GuiceHibernateToQuerydslBridgeModule())`
+7. Install a JS frontend like [Plume Admin UI for AngularJS](https://github.com/Coreoz/Plume-admin-ui-angularjs).
 
 Current user access
 -------------------
@@ -57,4 +63,8 @@ admin.passwords.min-length = 0
 Upgrade instructions
 --------------------
 See the [upgrade file](upgrade.md) to see the upgrade instructions.
+
+Hibernate
+---------
+If hibernate is used, install Guice brige module: `install(new GuiceHibernateToQuerydslBridgeModule())`
 
