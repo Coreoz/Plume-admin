@@ -4,10 +4,10 @@
 
 	<groupId>com.coreoz</groupId>
 	<artifactId>plume-admin-parent</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
-	<name>Plume admin</name>
+	<name>Plume Admin Parent</name>
 	<description>A simple administration area based on Plume Framework</description>
 	<url>https://github.com/Coreoz/Plume-bo</url>
 
@@ -50,6 +50,16 @@
 			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
 		</repository>
 	</distributionManagement>
+
+	<repositories>
+		<repository>
+			<id>oss.public</id>
+			<url>https://oss.sonatype.org/content/groups/public</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

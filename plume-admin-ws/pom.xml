@@ -5,12 +5,12 @@
 	<parent>
 		<groupId>com.coreoz</groupId>
 		<artifactId>plume-admin-parent</artifactId>
-		<version>1.0.0-SNAPSHOT</version>
+		<version>1.0.1-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>plume-admin-ws</artifactId>
 	<packaging>jar</packaging>
-	<name>Plume admin Web-services</name>
+	<name>Plume Admin Web-services</name>
 	<description>Web-services to build simple administration area based on Plume Framework</description>
 
 	<build>

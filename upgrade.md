@@ -1,5 +1,5 @@
-1.0.0-rc3
-=========
+From 1.0.0-rc3 to 1.0.0
+=======================
 - in `pom.xml` replace `<artifactId>plume-admin</artifactId>` by `<artifactId>plume-admin-ws</artifactId>`
 - in all files of the project replace 
 `com.coreoz.plume.admin.webservices.security.RestrictToAdmin` by `com.coreoz.plume.admin.jersey.feature.RestrictToAdmin`
