@@ -19,7 +19,7 @@ Installation
 <dependency>
     <groupId>com.coreoz</groupId>
     <artifactId>plume-admin-ws</artifactId>
-</dependency
+</dependency>
 ```
 2. Guice module: `install(new GuiceAdminWsWithDefaultsModule())`
 3. Jersey web-services: `packages("com.coreoz.plume.admin.webservices")`
