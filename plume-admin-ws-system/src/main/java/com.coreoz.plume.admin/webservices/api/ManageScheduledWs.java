@@ -4,14 +4,19 @@ import com.coreoz.plume.admin.jersey.feature.RestrictToAdmin;
 import com.coreoz.plume.admin.services.permission.ProjectAdminPermission;
 import com.coreoz.plume.admin.services.scheduled.ManageScheduledJobsService;
 import com.coreoz.plume.admin.services.scheduled.bean.TasksAndThreadBean;
+import com.coreoz.plume.admin.websession.WebSessionPermission;
 import com.coreoz.plume.jersey.errors.WsException;
+import com.coreoz.wisp.Job;
 import com.coreoz.wisp.Scheduler;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 @Path("/system/scheduler")
@@ -22,11 +27,15 @@ import javax.ws.rs.core.MediaType;
 @Singleton
 public class ManageScheduledWs {
 
+    private static final Logger logger = LoggerFactory.getLogger(ManageScheduledWs.class);
+
     private final ManageScheduledJobsService manageScheduledJobsService;
+    private final Scheduler scheduler;
 
     @Inject
-    public ManageScheduledWs(ManageScheduledJobsService manageScheduledJobsService) {
+    public ManageScheduledWs(ManageScheduledJobsService manageScheduledJobsService, Scheduler scheduler) {
         this.manageScheduledJobsService = manageScheduledJobsService;
+        this.scheduler = scheduler;
     }
 
     @GET
@@ -40,13 +49,9 @@ public class ManageScheduledWs {
     @POST
     @Path("/{name}")
     @ApiOperation("Execute Async Task")
-    public void executeScheduled(@PathParam("name") String name) {
-        Scheduler scheduler = new Scheduler();
-        if(!scheduler.findJob(name).isPresent())
-        {
-            throw new WsException(SystemWsError.TASK_NOT_FOUND);
-        } else {
-            manageScheduledJobsService.executeAsyncTask(name, scheduler.findJob(name));
-        }
+    public void executeScheduled(@PathParam("name") String name, @Context WebSessionPermission connectedUser) {
+        Job jobToExecute = scheduler.findJob(name).orElseThrow(() -> new WsException(SystemWsError.TASK_NOT_FOUND));
+        logger.info("Manual execution of {} by {}", name, connectedUser.getUserName());
+        manageScheduledJobsService.executeAsyncTask(name, jobToExecute);
     }
 }

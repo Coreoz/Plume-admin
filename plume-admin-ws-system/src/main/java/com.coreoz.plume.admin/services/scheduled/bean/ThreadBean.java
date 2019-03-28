@@ -10,4 +10,7 @@ import lombok.Setter;
 public class ThreadBean {
     private int activeThreads;
     private int inactiveThreads;
+    private int minThreads;
+    private int maxThreads;
+    private int largestPoolSize;
 }

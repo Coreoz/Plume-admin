@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 @Singleton
 public class LoggerService {
 
-    private static Map<String, String> logOriginalLevelMap = new HashMap<>();
+    private final Map<String, String> logOriginalLevelMap = new HashMap<>();
 
     public List<LoggerLevel> getLogList() {
         return ((LoggerContext) LoggerFactory.getILoggerFactory()).getLoggerList()
@@ -37,8 +37,8 @@ public class LoggerService {
         //Set real logger
         ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger(name).setLevel(Level.toLevel(level));
         //Get log from the log hashmap
-        if (logOriginalLevelMap != null && !logOriginalLevelMap.containsKey(name)) {
-            logOriginalLevelMap.put(name, originalLevel.equals("OFF") ? "" : originalLevel);
+        if (!logOriginalLevelMap.containsKey(name)) {
+            logOriginalLevelMap.put(name, Level.OFF.levelStr.equals(originalLevel) ? "" : originalLevel);
         }
     }
 

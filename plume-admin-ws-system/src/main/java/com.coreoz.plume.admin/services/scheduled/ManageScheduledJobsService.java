@@ -23,7 +23,7 @@ public class ManageScheduledJobsService {
 
     private static final Logger logger = LoggerFactory.getLogger(ManageScheduledJobsService.class);
 
-    public static Scheduler scheduler;
+    private final Scheduler scheduler;
 
     @Inject
     public ManageScheduledJobsService(Scheduler scheduler) {
@@ -40,7 +40,8 @@ public class ManageScheduledJobsService {
                     String.valueOf(job.schedule()),
                     job.executionsCount(),
                     job.nextExecutionTimeInMillis(),
-                    job.lastExecutionTimeInMillis() != null ? job.lastExecutionTimeInMillis() : 0L,
+                    job.lastExecutionStartedTimeInMillis() != null ? job.lastExecutionStartedTimeInMillis() : 0L,
+                    job.lastExecutionEndedTimeInMillis() != null ? job.lastExecutionEndedTimeInMillis() : 0L,
                     String.valueOf(job.status()),
                     ((seconds > 5) && (job.status() == JobStatus.SCHEDULED)) || (job.status() == JobStatus.DONE)
                 );
@@ -48,23 +49,28 @@ public class ManageScheduledJobsService {
             .collect(Collectors.toList());
     }
 
-    public void executeAsyncTask(String name, Optional<Job> jobToExecute) {
-        long secondsToNextExecution = (jobToExecute.get().nextExecutionTimeInMillis() - Instant.now().getEpochSecond()) / 1000;
-        Schedule scheduleToExecute = jobToExecute.get().schedule();
-        if ((secondsToNextExecution > 5) && (jobToExecute.get().status() == JobStatus.SCHEDULED)) {
+    public synchronized void executeAsyncTask(String name, Job jobToExecute) {
+        long secondsToNextExecution = (jobToExecute.nextExecutionTimeInMillis() - Instant.now().getEpochSecond()) / 1000;
+        Schedule scheduleToExecute = jobToExecute.schedule();
+        if ((secondsToNextExecution > 5) && (jobToExecute.status() == JobStatus.SCHEDULED)) {
+            logger.debug("Cancelling the job {} to execute it now", name);
             scheduler.cancel(name);
-            scheduler.schedule(name, jobToExecute.get().runnable(), Schedules.afterInitialDelay(scheduleToExecute, Duration.ofSeconds(2)));
-        } else if (jobToExecute.get().status() == JobStatus.DONE) {
-            scheduler.schedule(name, jobToExecute.get().runnable(), Schedules.executeOnce(Schedule.willNeverBeExecuted));
+            scheduler.schedule(name, jobToExecute.runnable(), Schedules.afterInitialDelay(scheduleToExecute, Duration.ZERO));
+        } else if (jobToExecute.status() == JobStatus.DONE) {
+            logger.debug("Executing once the job {} that has been cancelled", name);
+            scheduler.schedule(name, jobToExecute.runnable(), Schedules.executeOnce(Schedule.willNeverBeExecuted));
         } else {
-            logger.warn("The job {} will not be planned to be executed now since it is already executing or will be executed in less than 5 seconds", jobToExecute.get().name());
+            logger.warn("The job {} will not be planned to be executed now since it is already executing or will be executed in less than 5 seconds", jobToExecute.name());
         }
     }
 
     public ThreadBean getThreadStat() {
         return new ThreadBean(
             scheduler.stats().getThreadPoolStats().getActiveThreads(),
-            scheduler.stats().getThreadPoolStats().getIdleThreads()
+            scheduler.stats().getThreadPoolStats().getIdleThreads(),
+            scheduler.stats().getThreadPoolStats().getMinThreads(),
+            scheduler.stats().getThreadPoolStats().getMaxThreads(),
+            scheduler.stats().getThreadPoolStats().getLargestPoolSize()
         );
     }
 }

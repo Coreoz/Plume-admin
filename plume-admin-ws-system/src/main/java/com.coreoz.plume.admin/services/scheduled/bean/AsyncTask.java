@@ -12,7 +12,8 @@ public class AsyncTask {
     private String frequency;
     private long nbExecution;
     private long nextExecution;
-    private long previousExecution;
+    private long previousExecutionStart;
+    private long previousExecutionEnd;
     private String status;
     private boolean canBeRun;
 }
