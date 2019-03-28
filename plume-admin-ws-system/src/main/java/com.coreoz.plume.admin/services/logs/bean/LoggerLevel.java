@@ -1,13 +1,14 @@
 package com.coreoz.plume.admin.services.logs.bean;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class LogBean {
-    private int id;
+@AllArgsConstructor
+public class LoggerLevel {
     private String name;
     private String level;
-    private String oldLevel;
+    private String originalLevel;
 }
