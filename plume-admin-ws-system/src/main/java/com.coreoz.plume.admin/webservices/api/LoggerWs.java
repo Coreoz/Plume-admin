@@ -35,17 +35,9 @@ public class LoggerWs {
     }
 
     @PUT
-    @Path("/{level}/{originalLevel}/{name}")
+    @Path("/{level}/{name}")
     @ApiOperation("Update Logger")
-    public void updateLog(@PathParam("name") String name, @PathParam("level") String level, @PathParam("originalLevel") String originalLevel) {
-        loggerService.updateLog(name, level, originalLevel);
+    public void updateLog(@PathParam("name") String name, @PathParam("level") String level) {
+        loggerService.updateLog(name, level);
     }
-
-    @POST
-    @Path("/add/{level}/{name}")
-    @ApiOperation("Add Logger")
-    public void addLog(@PathParam("name") String name, @PathParam("level") String level) {
-        loggerService.addLog(name, level);
-    }
-
 }

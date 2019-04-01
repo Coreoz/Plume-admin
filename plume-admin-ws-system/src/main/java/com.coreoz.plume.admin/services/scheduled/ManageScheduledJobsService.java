@@ -25,6 +25,8 @@ public class ManageScheduledJobsService {
 
     private final Scheduler scheduler;
 
+    private final Integer duration = 5;
+
     @Inject
     public ManageScheduledJobsService(Scheduler scheduler) {
         this.scheduler = scheduler;
@@ -43,7 +45,7 @@ public class ManageScheduledJobsService {
                     job.lastExecutionStartedTimeInMillis() != null ? job.lastExecutionStartedTimeInMillis() : 0L,
                     job.lastExecutionEndedTimeInMillis() != null ? job.lastExecutionEndedTimeInMillis() : 0L,
                     String.valueOf(job.status()),
-                    ((seconds > 5) && (job.status() == JobStatus.SCHEDULED)) || (job.status() == JobStatus.DONE)
+                    ((seconds > duration) && (job.status() == JobStatus.SCHEDULED)) || (job.status() == JobStatus.DONE)
                 );
             })
             .collect(Collectors.toList());
@@ -52,7 +54,7 @@ public class ManageScheduledJobsService {
     public synchronized void executeAsyncTask(String name, Job jobToExecute) {
         long secondsToNextExecution = (jobToExecute.nextExecutionTimeInMillis() - Instant.now().getEpochSecond()) / 1000;
         Schedule scheduleToExecute = jobToExecute.schedule();
-        if ((secondsToNextExecution > 5) && (jobToExecute.status() == JobStatus.SCHEDULED)) {
+        if ((secondsToNextExecution > duration) && (jobToExecute.status() == JobStatus.SCHEDULED)) {
             logger.debug("Cancelling the job {} to execute it now", name);
             scheduler.cancel(name);
             scheduler.schedule(name, jobToExecute.runnable(), Schedules.afterInitialDelay(scheduleToExecute, Duration.ZERO));

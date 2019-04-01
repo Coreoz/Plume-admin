@@ -33,18 +33,15 @@ public class LoggerService {
             .collect(Collectors.toList());
     }
 
-    public void updateLog(String name, String level, String originalLevel) {
-        //Set real logger
-        ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger(name).setLevel(Level.toLevel(level));
-        //Get log from the log hashmap
+    public void updateLog(String name, String level) {
+        Level originalLevel = ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger(name).getLevel();
         if (!logOriginalLevelMap.containsKey(name)) {
-            logOriginalLevelMap.put(name, Level.OFF.levelStr.equals(originalLevel) ? "" : originalLevel);
+            if (originalLevel == null) {
+                logOriginalLevelMap.put(name, "");
+            } else {
+                logOriginalLevelMap.put(name, Level.OFF.equals(originalLevel) ? "" : originalLevel.levelStr);
+            }
         }
-    }
-
-    public void addLog(String name, String level) {
-        //Getting non-existent logger name in LoggerFactory create and add it
-        Logger logger = (Logger) LoggerFactory.getLogger(name);
-        logger.setLevel(Level.valueOf(level));
+        ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger(name).setLevel(Level.toLevel(level));
     }
 }
