@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class ThreadBean {
+public class AdminSchedulerThreadStats {
     private int activeThreads;
     private int inactiveThreads;
     private int minThreads;

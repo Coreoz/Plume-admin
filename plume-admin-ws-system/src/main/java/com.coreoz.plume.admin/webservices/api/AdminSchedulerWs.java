@@ -2,8 +2,8 @@ package com.coreoz.plume.admin.webservices.api;
 
 import com.coreoz.plume.admin.jersey.feature.RestrictToAdmin;
 import com.coreoz.plume.admin.services.permission.ProjectAdminPermission;
-import com.coreoz.plume.admin.services.scheduled.ManageScheduledJobsService;
-import com.coreoz.plume.admin.services.scheduled.bean.TasksAndThreadBean;
+import com.coreoz.plume.admin.services.scheduled.AdminSchedulerService;
+import com.coreoz.plume.admin.services.scheduled.bean.AdminSchedulerData;
 import com.coreoz.plume.admin.websession.WebSessionPermission;
 import com.coreoz.plume.jersey.errors.WsException;
 import com.coreoz.wisp.Job;
@@ -25,33 +25,33 @@ import javax.ws.rs.core.MediaType;
 @Produces(MediaType.APPLICATION_JSON)
 @RestrictToAdmin(ProjectAdminPermission.MANAGE_SYSTEM)
 @Singleton
-public class ManageScheduledWs {
+public class AdminSchedulerWs {
 
-    private static final Logger logger = LoggerFactory.getLogger(ManageScheduledWs.class);
+    private static final Logger logger = LoggerFactory.getLogger(AdminSchedulerWs.class);
 
-    private final ManageScheduledJobsService manageScheduledJobsService;
+    private final AdminSchedulerService adminSchedulerService;
     private final Scheduler scheduler;
 
     @Inject
-    public ManageScheduledWs(ManageScheduledJobsService manageScheduledJobsService, Scheduler scheduler) {
-        this.manageScheduledJobsService = manageScheduledJobsService;
+    public AdminSchedulerWs(AdminSchedulerService adminSchedulerService, Scheduler scheduler) {
+        this.adminSchedulerService = adminSchedulerService;
         this.scheduler = scheduler;
     }
 
     @GET
-    @ApiOperation("Fetch Async Task And Thread Task")
-    public TasksAndThreadBean getTasksAndThread() {
-        return new TasksAndThreadBean(
-            manageScheduledJobsService.getAsyncTasks(),
-            manageScheduledJobsService.getThreadStat());
+    @ApiOperation("Fetch scheduler jobs and thread pool information")
+    public AdminSchedulerData getAdminSchedulerData() {
+        return new AdminSchedulerData(
+            adminSchedulerService.getSchedulerJobs(),
+            adminSchedulerService.getSchedulerThreadStats());
     }
 
     @POST
     @Path("/{name}")
-    @ApiOperation("Execute Async Task")
-    public void executeScheduled(@PathParam("name") String name, @Context WebSessionPermission connectedUser) {
+    @ApiOperation("Execute a job on the scheduler ASAP")
+    public void executeJobNow(@PathParam("name") String name, @Context WebSessionPermission connectedUser) {
         Job jobToExecute = scheduler.findJob(name).orElseThrow(() -> new WsException(SystemWsError.TASK_NOT_FOUND));
         logger.info("Manual execution of {} by {}", name, connectedUser.getUserName());
-        manageScheduledJobsService.executeAsyncTask(name, jobToExecute);
+        adminSchedulerService.executeJobNow(jobToExecute);
     }
 }

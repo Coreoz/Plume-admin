@@ -1,7 +1,7 @@
 package com.coreoz.plume.admin.services.scheduled;
 
-import com.coreoz.plume.admin.services.scheduled.bean.AsyncTask;
-import com.coreoz.plume.admin.services.scheduled.bean.ThreadBean;
+import com.coreoz.plume.admin.services.scheduled.bean.AdminSchedulerJob;
+import com.coreoz.plume.admin.services.scheduled.bean.AdminSchedulerThreadStats;
 import com.coreoz.wisp.Job;
 import com.coreoz.wisp.JobStatus;
 import com.coreoz.wisp.Scheduler;
@@ -14,30 +14,28 @@ import org.slf4j.LoggerFactory;
 
 import java.time.*;
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Singleton
-public class ManageScheduledJobsService {
+public class AdminSchedulerService {
 
-    private static final Logger logger = LoggerFactory.getLogger(ManageScheduledJobsService.class);
+    private static final Logger logger = LoggerFactory.getLogger(AdminSchedulerService.class);
 
     private final Scheduler scheduler;
 
-    private final Integer duration = 5;
+    private static final long JOB_NEXT_EXECUTION_MIN_DURATION_TO_ALLOW_EXECUTION_IN_MILLIS = 5000L;
 
     @Inject
-    public ManageScheduledJobsService(Scheduler scheduler) {
+    public AdminSchedulerService(Scheduler scheduler) {
         this.scheduler = scheduler;
     }
 
-    public List<AsyncTask> getAsyncTasks() {
+    public List<AdminSchedulerJob> getSchedulerJobs() {
         return scheduler.jobStatus()
             .stream()
             .map(job -> {
-                long seconds = TimeUnit.MILLISECONDS.toSeconds(job.nextExecutionTimeInMillis()) - Instant.now().getEpochSecond();
-                return new AsyncTask(
+                long nextExecutionDurationInMillis = job.nextExecutionTimeInMillis() - System.currentTimeMillis();
+                return new AdminSchedulerJob(
                     job.name(),
                     String.valueOf(job.schedule()),
                     job.executionsCount(),
@@ -45,16 +43,17 @@ public class ManageScheduledJobsService {
                     job.lastExecutionStartedTimeInMillis() != null ? job.lastExecutionStartedTimeInMillis() : 0L,
                     job.lastExecutionEndedTimeInMillis() != null ? job.lastExecutionEndedTimeInMillis() : 0L,
                     String.valueOf(job.status()),
-                    ((seconds > duration) && (job.status() == JobStatus.SCHEDULED)) || (job.status() == JobStatus.DONE)
+                    ((nextExecutionDurationInMillis > JOB_NEXT_EXECUTION_MIN_DURATION_TO_ALLOW_EXECUTION_IN_MILLIS) && (job.status() == JobStatus.SCHEDULED)) || (job.status() == JobStatus.DONE)
                 );
             })
             .collect(Collectors.toList());
     }
 
-    public synchronized void executeAsyncTask(String name, Job jobToExecute) {
-        long secondsToNextExecution = (jobToExecute.nextExecutionTimeInMillis() - Instant.now().getEpochSecond()) / 1000;
+    public synchronized void executeJobNow(Job jobToExecute) {
+        String name = jobToExecute.name();
+        long nextExecutionDurationInMillis = jobToExecute.nextExecutionTimeInMillis() - System.currentTimeMillis();
         Schedule scheduleToExecute = jobToExecute.schedule();
-        if ((secondsToNextExecution > duration) && (jobToExecute.status() == JobStatus.SCHEDULED)) {
+        if ((nextExecutionDurationInMillis > JOB_NEXT_EXECUTION_MIN_DURATION_TO_ALLOW_EXECUTION_IN_MILLIS) && (jobToExecute.status() == JobStatus.SCHEDULED)) {
             logger.debug("Cancelling the job {} to execute it now", name);
             scheduler.cancel(name);
             scheduler.schedule(name, jobToExecute.runnable(), Schedules.afterInitialDelay(scheduleToExecute, Duration.ZERO));
@@ -66,8 +65,8 @@ public class ManageScheduledJobsService {
         }
     }
 
-    public ThreadBean getThreadStat() {
-        return new ThreadBean(
+    public AdminSchedulerThreadStats getSchedulerThreadStats() {
+        return new AdminSchedulerThreadStats(
             scheduler.stats().getThreadPoolStats().getActiveThreads(),
             scheduler.stats().getThreadPoolStats().getIdleThreads(),
             scheduler.stats().getThreadPoolStats().getMinThreads(),

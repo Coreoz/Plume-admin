@@ -9,7 +9,7 @@ import java.util.List;
 @Getter
 @Setter
 @AllArgsConstructor
-public class TasksAndThreadBean {
-    private List<AsyncTask> asyncTasks;
-    private ThreadBean threadStats;
+public class AdminSchedulerData {
+    private List<AdminSchedulerJob> jobs;
+    private AdminSchedulerThreadStats threadStats;
 }

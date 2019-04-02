@@ -7,13 +7,13 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class AsyncTask {
+public class AdminSchedulerJob {
     private String name;
     private String frequency;
-    private long nbExecution;
-    private long nextExecution;
-    private long previousExecutionStart;
-    private long previousExecutionEnd;
+    private long executionsCount;
+    private long nextExecutionTimeInMillis;
+    private long lastExecutionStartedTimeInMillis;
+    private long lastExecutionEndedTimeInMillis;
     private String status;
     private boolean canBeRun;
 }
