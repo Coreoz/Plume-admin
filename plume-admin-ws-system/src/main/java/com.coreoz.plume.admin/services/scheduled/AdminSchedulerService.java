@@ -40,8 +40,8 @@ public class AdminSchedulerService {
                     String.valueOf(job.schedule()),
                     job.executionsCount(),
                     job.nextExecutionTimeInMillis(),
-                    job.lastExecutionStartedTimeInMillis() != null ? job.lastExecutionStartedTimeInMillis() : 0L,
-                    job.lastExecutionEndedTimeInMillis() != null ? job.lastExecutionEndedTimeInMillis() : 0L,
+                    job.lastExecutionStartedTimeInMillis(),
+                    job.lastExecutionEndedTimeInMillis(),
                     String.valueOf(job.status()),
                     ((nextExecutionDurationInMillis > JOB_NEXT_EXECUTION_MIN_DURATION_TO_ALLOW_EXECUTION_IN_MILLIS) && (job.status() == JobStatus.SCHEDULED)) || (job.status() == JobStatus.DONE)
                 );

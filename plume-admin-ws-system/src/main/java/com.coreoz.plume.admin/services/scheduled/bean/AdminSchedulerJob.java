@@ -11,9 +11,9 @@ public class AdminSchedulerJob {
     private String name;
     private String frequency;
     private long executionsCount;
-    private long nextExecutionTimeInMillis;
-    private long lastExecutionStartedTimeInMillis;
-    private long lastExecutionEndedTimeInMillis;
+    private Long nextExecutionTimeInMillis;
+    private Long lastExecutionStartedTimeInMillis;
+    private Long lastExecutionEndedTimeInMillis;
     private String status;
     private boolean canBeRun;
 }
