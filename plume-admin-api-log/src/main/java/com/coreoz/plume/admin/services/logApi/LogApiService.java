@@ -1,7 +1,7 @@
 package com.coreoz.plume.admin.services.logApi;
 
 
-import com.coreoz.plume.admin.db.daos.LogApiDao;
+import com.coreoz.plume.admin.db.daos.LogApiDaoC;
 import com.coreoz.plume.admin.db.daos.LogHeaderDao;
 import com.coreoz.plume.admin.db.generated.LogApi;
 import com.coreoz.plume.admin.services.configuration.LogApiConfigurationService;
@@ -18,13 +18,13 @@ import java.util.stream.Collectors;
 @Singleton
 public class LogApiService extends CrudService<LogApi> {
 
-    private LogApiDao logApiDao;
+    private LogApiDaoC logApiDao;
     private LogHeaderService logHeaderService;
     private LogApiConfigurationService configurationService;
     private LogHeaderDao logHeaderDao;
 
     @Inject
-    public LogApiService(LogApiDao logApiDao, LogHeaderService logHeaderService, LogApiConfigurationService configurationService, LogHeaderDao logHeaderDao) {
+    public LogApiService(LogApiDaoC logApiDao, LogHeaderService logHeaderService, LogApiConfigurationService configurationService, LogHeaderDao logHeaderDao) {
         super(logApiDao);
         this.logApiDao = logApiDao;
         this.logHeaderService = logHeaderService;
