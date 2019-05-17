@@ -5,6 +5,7 @@ import com.coreoz.plume.admin.services.scheduled.bean.AdminSchedulerThreadStats;
 import com.coreoz.wisp.Job;
 import com.coreoz.wisp.JobStatus;
 import com.coreoz.wisp.Scheduler;
+import com.coreoz.wisp.schedule.AfterInitialDelaySchedule;
 import com.coreoz.wisp.schedule.Schedule;
 import com.coreoz.wisp.schedule.Schedules;
 import com.google.inject.Inject;
@@ -52,17 +53,24 @@ public class AdminSchedulerService {
     public synchronized void executeJobNow(Job jobToExecute) {
         String name = jobToExecute.name();
         long nextExecutionDurationInMillis = jobToExecute.nextExecutionTimeInMillis() - System.currentTimeMillis();
-        Schedule scheduleToExecute = jobToExecute.schedule();
         if ((nextExecutionDurationInMillis > JOB_NEXT_EXECUTION_MIN_DURATION_TO_ALLOW_EXECUTION_IN_MILLIS) && (jobToExecute.status() == JobStatus.SCHEDULED)) {
             logger.debug("Cancelling the job {} to execute it now", name);
+            Schedule scheduleToExecute = jobToExecute.schedule();
             scheduler.cancel(name);
-            scheduler.schedule(name, jobToExecute.runnable(), Schedules.afterInitialDelay(scheduleToExecute, Duration.ZERO));
+            scheduler.schedule(name, jobToExecute.runnable(), Schedules.afterInitialDelay(cleanUpSchedule(scheduleToExecute), Duration.ZERO));
         } else if (jobToExecute.status() == JobStatus.DONE) {
             logger.debug("Executing once the job {} that has been cancelled", name);
             scheduler.schedule(name, jobToExecute.runnable(), Schedules.executeOnce(Schedule.willNeverBeExecuted));
         } else {
             logger.warn("The job {} will not be planned to be executed now since it is already executing or will be executed in less than 5 seconds", jobToExecute.name());
         }
+    }
+
+    private Schedule cleanUpSchedule(Schedule schedule) {
+        if(schedule instanceof AfterInitialDelaySchedule) {
+            return ((AfterInitialDelaySchedule) schedule).baseSchedule();
+        }
+        return schedule;
     }
 
     public AdminSchedulerThreadStats getSchedulerThreadStats() {
