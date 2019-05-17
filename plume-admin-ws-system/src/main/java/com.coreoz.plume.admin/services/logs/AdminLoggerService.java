@@ -1,6 +1,7 @@
 package com.coreoz.plume.admin.services.logs;
 
 import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 import com.coreoz.plume.admin.services.logs.bean.LoggerLevel;
 
 import org.slf4j.LoggerFactory;
@@ -32,10 +33,10 @@ public class AdminLoggerService {
     }
 
     public void changeLoggerLevel(String name, String level) {
-        Level currentLevel = ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger(name).getLevel();
+        Logger logger = ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger(name);
         if (!originalLoggerLevels.containsKey(name)) {
-            originalLoggerLevels.put(name, currentLevel == null || Level.OFF.equals(currentLevel) ? "" : currentLevel.levelStr);
+            originalLoggerLevels.put(name, logger.getLevel() == null || Level.OFF.equals(logger.getLevel()) ? "" : logger.getLevel().levelStr);
         }
-        ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger(name).setLevel(Level.toLevel(level));
+        logger.setLevel(Level.toLevel(level));
     }
 }
