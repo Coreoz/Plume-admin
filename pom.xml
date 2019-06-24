@@ -72,8 +72,9 @@
 		<module>plume-admin-dependencies</module>
 		<module>plume-admin-security</module>
 		<module>plume-admin-ws</module>
-		<module>plume-admin-ws-system</module>
-    </modules>
+		<module>plume-admin-api-log</module>
+    <module>plume-admin-ws-system</module>
+	</modules>
 
 	<profiles>
 		<profile>
