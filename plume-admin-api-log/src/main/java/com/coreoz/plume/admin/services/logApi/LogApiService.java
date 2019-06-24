@@ -1,7 +1,7 @@
 package com.coreoz.plume.admin.services.logApi;
 
 
-import com.coreoz.plume.admin.db.daos.LogApiDaoC;
+import com.coreoz.plume.admin.db.daos.LogApiDao;
 import com.coreoz.plume.admin.db.daos.LogHeaderDao;
 import com.coreoz.plume.admin.db.generated.LogApi;
 import com.coreoz.plume.admin.services.configuration.LogApiConfigurationService;
@@ -18,13 +18,13 @@ import java.util.stream.Collectors;
 @Singleton
 public class LogApiService extends CrudService<LogApi> {
 
-    private LogApiDaoC logApiDao;
+    private LogApiDao logApiDao;
     private LogHeaderService logHeaderService;
     private LogApiConfigurationService configurationService;
     private LogHeaderDao logHeaderDao;
 
     @Inject
-    public LogApiService(LogApiDaoC logApiDao, LogHeaderService logHeaderService, LogApiConfigurationService configurationService, LogHeaderDao logHeaderDao) {
+    public LogApiService(LogApiDao logApiDao, LogHeaderService logHeaderService, LogApiConfigurationService configurationService, LogHeaderDao logHeaderDao) {
         super(logApiDao);
         this.logApiDao = logApiDao;
         this.logHeaderService = logHeaderService;
@@ -89,14 +89,13 @@ public class LogApiService extends CrudService<LogApi> {
     }
     public void cleanLogsNumberByApiName(){
         List<String> apiList = logApiDao.getListApiNames();
-        apiList.forEach(this::hasNumberofLogsReachedLimit);
+        apiList.forEach(this::deleteLogLinesOutsideLimit);
     }
 
-    private void hasNumberofLogsReachedLimit(String apiName){
+    private void deleteLogLinesOutsideLimit(String apiName){
         List<LogApi> logListbyApi= logApiDao.getLogsbyApiName(apiName);
         if (logListbyApi.size() >= configurationService.getLogNumberMax()){
-            List<LogApi> logListSorted = logListbyApi.stream().sorted(Comparator.comparing(LogApi::getDate)).collect(Collectors.toList());
-            List<LogApi> logsToBeDeletd = logListSorted.subList(0,logListbyApi.size() - configurationService.getLogNumberMax());
+            List<LogApi> logsToBeDeletd = logListbyApi.stream().sorted(Comparator.comparing(LogApi::getDate)).limit(logListbyApi.size() - configurationService.getLogNumberMax()).collect(Collectors.toList());
             logsToBeDeletd.forEach(log -> this.deleteLog(log.getId()));
         }
     }

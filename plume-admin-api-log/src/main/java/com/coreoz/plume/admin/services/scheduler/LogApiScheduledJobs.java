@@ -28,12 +28,12 @@ public class LogApiScheduledJobs {
 
     public void startScheduler() {
         scheduler.schedule(
-            "Delete logs older than X days",
+            "Delete logs older than " + configurationService.getLogNumberDaysLimit() +  " days",
             logApiService::deleteOldLogs,
             Schedules.executeAt(configurationService.getLogTiming())
         );
         scheduler.schedule(
-            "Delete logs for each url if the number of logs by is greater than X ",
+            "Delete logs for each url if the number of logs by is greater than " + configurationService.getLogNumberMax(),
             logApiService::cleanLogsNumberByApiName,
             Schedules.fixedDelaySchedule(Duration.ofMinutes(configurationService.getLogCleanDelay()))
         );

@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 
 
 @Singleton
-public class LogApiDaoC extends CrudDaoQuerydsl<LogApi> {
+public class LogApiDao extends CrudDaoQuerydsl<LogApi> {
 
     @Inject
     public LogApiDaoC(TransactionManagerQuerydsl transactionManager) {
@@ -35,11 +35,9 @@ public class LogApiDaoC extends CrudDaoQuerydsl<LogApi> {
         return transactionManager
             .selectQuery()
             .select(QLogApi.logApi.api)
-            .from(QLogApi.logApi)
-            .fetch()
-            .stream()
             .distinct()
-            .collect(Collectors.toList());
+            .from(QLogApi.logApi)
+            .fetch();
     }
 
     public List<LogApi> getListApibyDate(int numberOfDays){
