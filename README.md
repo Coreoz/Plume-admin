@@ -60,6 +60,23 @@ admin.login.blocked-duration = 30 seconds
 admin.passwords.min-length = 0
 ```
 
+HTTP API Log module
+-------------------
+To set up the module:
+- Maven:
+```xml
+<dependency>
+  <groupId>com.coreoz</groupId>
+  <artifactId>plume-admin-api-log</artifactId>
+</dependency>
+```
+- Scheduler:
+```java
+LogApiScheduledJobs logApiScheduledJobs; // from dependency injection
+logApiScheduledJobs.scheduleJobs();
+```
+- [See SQL files](plume-admin-api-log/sql/)
+
 Upgrade instructions
 --------------------
 See the [upgrade file](upgrade.md) to see the upgrade instructions.

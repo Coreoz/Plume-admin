@@ -1,19 +1,21 @@
 package com.coreoz.plume.admin.services.logApi;
 
 
+import java.time.Instant;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import com.coreoz.plume.admin.db.daos.LogApiDao;
+import com.coreoz.plume.admin.db.daos.LogApiTrimmed;
 import com.coreoz.plume.admin.db.daos.LogHeaderDao;
 import com.coreoz.plume.admin.db.generated.LogApi;
 import com.coreoz.plume.admin.services.configuration.LogApiConfigurationService;
 import com.coreoz.plume.db.crud.CrudService;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Singleton
 public class LogApiService extends CrudService<LogApi> {
@@ -32,19 +34,14 @@ public class LogApiService extends CrudService<LogApi> {
         this.logHeaderDao = logHeaderDao;
     }
 
-    public List<LogApiBean> getAllLogs() {
-        List<LogApi> logApiList = findAll();
-        List<LogApiBean> logApiBeansList = new ArrayList<>();
-        logApiList.forEach(log -> {
-            logApiBeansList.add(getLogbyId(log.getId()));
-        });
-        return logApiBeansList.stream().sorted(Comparator.comparing(LogApiBean::getDate).reversed()).collect(Collectors.toList());
+    public List<LogApiTrimmed> fetchAllTrimmedLogs() {
+        return logApiDao.fetchTrimmedLogs();
     }
 
-    public LogApiBean getLogbyId(Long id){
+    public LogApiBean fetchLogDetails(Long id) {
         LogApi log = findById(id);
-        LogHeaderBean headerRequest = logHeaderService.getHeaderForApi(id, "request");
-        LogHeaderBean headerResponse = logHeaderService.getHeaderForApi(id, "response");
+        LogHeaderBean headerRequest = logHeaderService.getHeaderForApi(id, HttpPart.REQUEST);
+        LogHeaderBean headerResponse = logHeaderService.getHeaderForApi(id, HttpPart.RESPONSE);
         String bodyRequest = log.getBodyRequest();
         String bodyResponse = log.getBodyResponse();
         boolean isCompleteTextRequest = true;
@@ -73,6 +70,22 @@ public class LogApiService extends CrudService<LogApi> {
         );
     }
 
+	public Optional<HttpBodyPart> findBodyPart(Long id, Boolean isRequest) {
+		return Optional
+			.ofNullable(findById(id))
+			.map(log -> new HttpBodyPart(
+				log.getApi(),
+				isRequest ? log.getBodyRequest() : log.getBodyResponse(),
+				logHeaderService
+					.guessResponseMimeType(logHeaderService.findHeaders(
+						id,
+						isRequest ? HttpPart.REQUEST : HttpPart.RESPONSE
+					))
+					.map(MimeType::getFileExtension)
+					.orElse("txt")
+			));
+	}
+
     public void saveLog(LogInterceptApiBean interceptedLog){
         LogApi log = new LogApi();
         log.setDate(Instant.now());
@@ -83,8 +96,8 @@ public class LogApiService extends CrudService<LogApi> {
         log.setBodyResponse(interceptedLog.getBodyResponse());
         log.setApi(interceptedLog.getApiName());
         Long logId = save(log).getId();
-        interceptedLog.getHeaderRequest().forEach( header -> logHeaderService.saveHeader(header, "request", logId));
-        interceptedLog.getHeaderResponse().forEach( header -> logHeaderService.saveHeader(header, "response", logId));
+        interceptedLog.getHeaderRequest().forEach( header -> logHeaderService.saveHeader(header, HttpPart.REQUEST, logId));
+        interceptedLog.getHeaderResponse().forEach( header -> logHeaderService.saveHeader(header, HttpPart.RESPONSE, logId));
 
     }
     public void cleanLogsNumberByApiName(){
@@ -109,6 +122,5 @@ public class LogApiService extends CrudService<LogApi> {
         logHeaderDao.deleteHeadersbyApi(idLog);
         delete(idLog);
     }
-
 
 }

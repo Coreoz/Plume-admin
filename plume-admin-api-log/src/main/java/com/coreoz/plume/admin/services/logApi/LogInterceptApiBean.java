@@ -3,15 +3,13 @@ package com.coreoz.plume.admin.services.logApi;
 
 
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Value;
-
-import java.util.List;
 
 @AllArgsConstructor
 @Getter
-@Value(staticConstructor = "of")
 public class LogInterceptApiBean {
     private String url;
     private String method;

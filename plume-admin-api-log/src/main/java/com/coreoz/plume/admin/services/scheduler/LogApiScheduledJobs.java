@@ -26,7 +26,7 @@ public class LogApiScheduledJobs {
         this.logApiService = logApiService;
     }
 
-    public void startScheduler() {
+    public void scheduleJobs() {
         scheduler.schedule(
             "Delete logs older than " + configurationService.getLogNumberDaysLimit() +  " days",
             logApiService::deleteOldLogs,

@@ -25,104 +25,14 @@
 	</build>
 
 	<dependencies>
-
-		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-classic</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>com.google.inject</groupId>
-			<artifactId>guice</artifactId>
-			<optional>true</optional>
-		</dependency>
-
-		<!-- allow to use Guice dependency injection in Jersey controllers -->
-		<dependency>
-			<groupId>org.glassfish.hk2</groupId>
-			<artifactId>guice-bridge</artifactId>
-			<exclusions>
-				<exclusion>
-					<artifactId>guice</artifactId>
-					<groupId>com.google.inject</groupId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-
-		<dependency>
-			<groupId>com.coreoz</groupId>
-			<artifactId>plume-services</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.coreoz</groupId>
-			<artifactId>plume-conf</artifactId>
-		</dependency>
-
-		<!-- database -->
-		<dependency>
-			<groupId>com.coreoz</groupId>
-			<artifactId>plume-db-querydsl</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.coreoz</groupId>
-			<artifactId>plume-db-querydsl-codegen</artifactId>
-			<optional>true</optional>
-		</dependency>
-
-		<!-- PUT YOUR DATABASE CONNECTOR HERE -->
-		<dependency>
-			<groupId>org.mariadb.jdbc</groupId>
-			<artifactId>mariadb-java-client</artifactId>
-			<version>2.1.2</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.coreoz</groupId>
-			<artifactId>plume-file-core</artifactId>
-			<version>1.0.0-rc9</version>
-		</dependency>
-
-		<!-- jersey -->
-		<dependency>
-			<groupId>com.coreoz</groupId>
-			<artifactId>plume-web-jersey</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.jersey.containers</groupId>
-			<artifactId>jersey-container-grizzly2-http</artifactId>
-		</dependency>
-
-		<!-- swagger -->
-		<dependency>
-			<groupId>io.swagger</groupId>
-			<artifactId>swagger-jaxrs</artifactId>
-			<exclusions>
-				<exclusion>
-					<artifactId>joda-time</artifactId>
-					<groupId>joda-time</groupId>
-				</exclusion>
-				<exclusion>
-					<groupId>javax.ws.rs</groupId>
-					<artifactId>jsr311-api</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-
-
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<scope>provided</scope>
-		</dependency>
-
 		<dependency>
 			<groupId>com.coreoz</groupId>
 			<artifactId>plume-admin-ws</artifactId>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>okhttp</artifactId>
 		</dependency>
 
 		<dependency>
@@ -131,40 +41,14 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.squareup.retrofit2</groupId>
-			<artifactId>retrofit</artifactId>
-			<version>2.4.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.squareup.retrofit2</groupId>
-			<artifactId>converter-jackson</artifactId>
-			<version>2.4.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.squareup.okhttp3</groupId>
-			<artifactId>logging-interceptor</artifactId>
-			<version>3.11.0</version>
-		</dependency>
-
-
-
-		<dependency>
-			<groupId>com.google.dagger</groupId>
-			<artifactId>dagger</artifactId>
+			<groupId>com.google.inject</groupId>
+			<artifactId>guice</artifactId>
 			<optional>true</optional>
 		</dependency>
-
-
-
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.assertj</groupId>
-			<artifactId>assertj-core</artifactId>
-			<scope>test</scope>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 

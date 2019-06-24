@@ -1,13 +1,14 @@
 package com.coreoz.plume.admin.db.daos;
 
+import java.util.List;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 import com.coreoz.plume.admin.db.generated.LogHeader;
 import com.coreoz.plume.admin.db.generated.QLogHeader;
 import com.coreoz.plume.db.querydsl.crud.CrudDaoQuerydsl;
 import com.coreoz.plume.db.querydsl.transaction.TransactionManagerQuerydsl;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import java.util.List;
 
 @Singleton
 public class LogHeaderDao extends CrudDaoQuerydsl<LogHeader> {
@@ -17,16 +18,16 @@ public class LogHeaderDao extends CrudDaoQuerydsl<LogHeader> {
         super(transactionManager, QLogHeader.logHeader);
     }
 
-    public List<LogHeader> findHeadersByApi(Long idApi, String type) {
+    public List<LogHeader> findHeadersByApi(Long idLogApi, String httpPart) {
         return transactionManager
             .selectQuery()
             .select(QLogHeader.logHeader)
             .from(QLogHeader.logHeader)
-            .where(QLogHeader.logHeader.idLogApi.eq(idApi).and(QLogHeader.logHeader.type.eq(type)))
+            .where(QLogHeader.logHeader.idLogApi.eq(idLogApi).and(QLogHeader.logHeader.type.eq(httpPart)))
             .fetch();
     }
 
-    public void deleteHeadersbyApi(Long idApi){
+    public void deleteHeadersbyApi(Long idApi) {
         transactionManager
             .delete(QLogHeader.logHeader)
             .where(QLogHeader.logHeader.idLogApi.eq(idApi))
