@@ -1,4 +1,18 @@
-package com.coreoz.plume.admin.webservices.api;
+package com.coreoz.plume.admin.webservices;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.coreoz.plume.admin.jersey.feature.RestrictToAdmin;
 import com.coreoz.plume.admin.services.permission.ProjectAdminPermission;
@@ -8,18 +22,11 @@ import com.coreoz.plume.admin.websession.WebSessionPermission;
 import com.coreoz.plume.jersey.errors.WsException;
 import com.coreoz.wisp.Job;
 import com.coreoz.wisp.Scheduler;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-
-@Path("/system/scheduler")
+@Path("/admin/system/scheduler")
 @Api("Manage scheduledJobs web-services")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)

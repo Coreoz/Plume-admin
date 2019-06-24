@@ -1,4 +1,4 @@
-package com.coreoz.plume.admin.webservices.api;
+package com.coreoz.plume.admin.webservices;
 
 import com.coreoz.plume.jersey.errors.WsError;
 

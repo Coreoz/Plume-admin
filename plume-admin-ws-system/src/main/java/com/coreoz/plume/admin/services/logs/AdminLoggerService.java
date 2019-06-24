@@ -1,17 +1,19 @@
 package com.coreoz.plume.admin.services.logs;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import com.coreoz.plume.admin.services.logs.bean.LoggerLevel;
-
-import org.slf4j.LoggerFactory;
-import ch.qos.logback.classic.LoggerContext;
-
-import javax.inject.Singleton;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+
+import javax.inject.Singleton;
+
+import org.slf4j.LoggerFactory;
+
+import com.coreoz.plume.admin.services.logs.bean.LoggerLevel;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
 
 @Singleton
 public class AdminLoggerService {
