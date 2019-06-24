@@ -20,6 +20,8 @@ create table plm_log_header
   id_log_api bigint       null,
   type       varchar(255) null,
   `key`      varchar(255) null,
-  constraint wlf_log_header_wlf_log_api_id_fk
+  constraint plm_log_header_plm_log_api_id_fk
     foreign key (id_log_api) references plm_log_api (id)
 );
+
+INSERT INTO PLM_ROLE_PERMISSION VALUES(1, 'MANAGE_API_LOGS');

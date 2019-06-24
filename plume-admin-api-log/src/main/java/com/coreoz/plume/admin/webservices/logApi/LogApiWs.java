@@ -2,9 +2,11 @@ package com.coreoz.plume.admin.webservices.logApi;
 
 
 import com.coreoz.plume.admin.db.generated.LogApi;
+import com.coreoz.plume.admin.jersey.feature.RestrictToAdmin;
 import com.coreoz.plume.admin.services.logApi.LogApiBean;
 import com.coreoz.plume.admin.services.logApi.LogApiService;
 import com.coreoz.plume.admin.services.logApi.LogHeaderService;
+import com.coreoz.plume.admin.services.permission.ProjectAdminPermission;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import javax.inject.Inject;
@@ -22,6 +24,7 @@ import java.util.List;
 @Api("Manage api logs")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
+@RestrictToAdmin(ProjectAdminPermission.MANAGE_API_LOGS)
 @Singleton
 public class LogApiWs {
     private LogApiService logApiService;
