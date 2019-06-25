@@ -60,6 +60,11 @@ admin.login.blocked-duration = 30 seconds
 admin.passwords.min-length = 0
 ```
 
+WS System module
+----------------
+To set up the module, install the Plume Schedule module in `ApplicationModule`: `install(new GuiceSchedulerModule());`
+
+
 HTTP API Log module
 -------------------
 To set up the module:
@@ -70,6 +75,7 @@ To set up the module:
   <artifactId>plume-admin-api-log</artifactId>
 </dependency>
 ```
+- Install the Plume Schedule module in `ApplicationModule`: `install(new GuiceSchedulerModule());`
 - Scheduler:
 ```java
 LogApiScheduledJobs logApiScheduledJobs; // from dependency injection
