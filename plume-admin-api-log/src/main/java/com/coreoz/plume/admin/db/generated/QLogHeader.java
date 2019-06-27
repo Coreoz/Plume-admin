@@ -1,15 +1,16 @@
 package com.coreoz.plume.admin.db.generated;
 
-import static com.querydsl.core.types.PathMetadataFactory.*;
+import static com.querydsl.core.types.PathMetadataFactory.forVariable;
 
-import com.querydsl.core.types.dsl.*;
-
-import com.querydsl.core.types.PathMetadata;
-import javax.annotation.Generated;
-import com.querydsl.core.types.Path;
-
-import com.querydsl.sql.ColumnMetadata;
 import java.sql.Types;
+
+import javax.annotation.Generated;
+
+import com.querydsl.core.types.Path;
+import com.querydsl.core.types.PathMetadata;
+import com.querydsl.core.types.dsl.NumberPath;
+import com.querydsl.core.types.dsl.StringPath;
+import com.querydsl.sql.ColumnMetadata;
 
 
 
@@ -22,7 +23,7 @@ public class QLogHeader extends com.querydsl.sql.RelationalPathBase<LogHeader> {
 
     private static final long serialVersionUID = 1757724469;
 
-    public static final QLogHeader logHeader = new QLogHeader("wlf_log_header");
+    public static final QLogHeader logHeader = new QLogHeader("plm_log_header");
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
@@ -36,10 +37,10 @@ public class QLogHeader extends com.querydsl.sql.RelationalPathBase<LogHeader> {
 
     public final com.querydsl.sql.PrimaryKey<LogHeader> primary = createPrimaryKey(id);
 
-    public final com.querydsl.sql.ForeignKey<LogApi> wlfLogHeaderWlfLogApiIdFk = createForeignKey(idLogApi, "id");
+    public final com.querydsl.sql.ForeignKey<LogApi> plmLogHeaderPlmLogApiIdFk = createForeignKey(idLogApi, "id");
 
     public QLogHeader(String variable) {
-        super(LogHeader.class, forVariable(variable), "null", "wlf_log_header");
+        super(LogHeader.class, forVariable(variable), "null", "plm_log_header");
         addMetadata();
     }
 
@@ -49,17 +50,17 @@ public class QLogHeader extends com.querydsl.sql.RelationalPathBase<LogHeader> {
     }
 
     public QLogHeader(String variable, String schema) {
-        super(LogHeader.class, forVariable(variable), schema, "wlf_log_header");
+        super(LogHeader.class, forVariable(variable), schema, "plm_log_header");
         addMetadata();
     }
 
     public QLogHeader(Path<? extends LogHeader> path) {
-        super(path.getType(), path.getMetadata(), "null", "wlf_log_header");
+        super(path.getType(), path.getMetadata(), "null", "plm_log_header");
         addMetadata();
     }
 
     public QLogHeader(PathMetadata metadata) {
-        super(LogHeader.class, metadata, "null", "wlf_log_header");
+        super(LogHeader.class, metadata, "null", "plm_log_header");
         addMetadata();
     }
 

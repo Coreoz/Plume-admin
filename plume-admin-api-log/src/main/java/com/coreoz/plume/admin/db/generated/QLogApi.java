@@ -1,14 +1,16 @@
 package com.coreoz.plume.admin.db.generated;
-import static com.querydsl.core.types.PathMetadataFactory.*;
+import static com.querydsl.core.types.PathMetadataFactory.forVariable;
 
-import com.querydsl.core.types.dsl.*;
-
-import com.querydsl.core.types.PathMetadata;
-import javax.annotation.Generated;
-import com.querydsl.core.types.Path;
-
-import com.querydsl.sql.ColumnMetadata;
 import java.sql.Types;
+
+import javax.annotation.Generated;
+
+import com.querydsl.core.types.Path;
+import com.querydsl.core.types.PathMetadata;
+import com.querydsl.core.types.dsl.DateTimePath;
+import com.querydsl.core.types.dsl.NumberPath;
+import com.querydsl.core.types.dsl.StringPath;
+import com.querydsl.sql.ColumnMetadata;
 
 
 
@@ -21,7 +23,7 @@ public class QLogApi extends com.querydsl.sql.RelationalPathBase<LogApi> {
 
     private static final long serialVersionUID = 2131172978;
 
-    public static final QLogApi logApi = new QLogApi("wlf_log_api");
+    public static final QLogApi logApi = new QLogApi("plm_log_api");
 
     public final StringPath api = createString("api");
 
@@ -41,10 +43,10 @@ public class QLogApi extends com.querydsl.sql.RelationalPathBase<LogApi> {
 
     public final com.querydsl.sql.PrimaryKey<LogApi> primary = createPrimaryKey(id);
 
-    public final com.querydsl.sql.ForeignKey<LogHeader> _wlfLogHeaderWlfLogApiIdFk = createInvForeignKey(id, "id_log_api");
+    public final com.querydsl.sql.ForeignKey<LogHeader> _plmLogHeaderPlmLogApiIdFk = createInvForeignKey(id, "id_log_api");
 
     public QLogApi(String variable) {
-        super(LogApi.class, forVariable(variable), "null", "wlf_log_api");
+        super(LogApi.class, forVariable(variable), "null", "plm_log_api");
         addMetadata();
     }
 
@@ -54,7 +56,7 @@ public class QLogApi extends com.querydsl.sql.RelationalPathBase<LogApi> {
     }
 
     public QLogApi(String variable, String schema) {
-        super(LogApi.class, forVariable(variable), schema, "wlf_log_api");
+        super(LogApi.class, forVariable(variable), schema, "plm_log_api");
         addMetadata();
     }
 
@@ -64,7 +66,7 @@ public class QLogApi extends com.querydsl.sql.RelationalPathBase<LogApi> {
     }
 
     public QLogApi(PathMetadata metadata) {
-        super(LogApi.class, metadata, "null", "wlf_log_api");
+        super(LogApi.class, metadata, "null", "plm_log_api");
         addMetadata();
     }
 
