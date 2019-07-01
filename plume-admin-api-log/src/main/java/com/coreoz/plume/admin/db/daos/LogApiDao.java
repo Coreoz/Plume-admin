@@ -26,6 +26,7 @@ public class LogApiDao extends CrudDaoQuerydsl<LogApi> {
             .selectQuery()
             .select(
             	QLogApi.logApi.id,
+            	QLogApi.logApi.date,
             	QLogApi.logApi.method,
             	QLogApi.logApi.api,
             	QLogApi.logApi.url,
@@ -37,6 +38,7 @@ public class LogApiDao extends CrudDaoQuerydsl<LogApi> {
             .stream()
             .map(tuple -> new LogApiTrimmed(
             	tuple.get(QLogApi.logApi.id),
+            	tuple.get(QLogApi.logApi.date),
             	tuple.get(QLogApi.logApi.method),
             	tuple.get(QLogApi.logApi.api),
             	tuple.get(QLogApi.logApi.url),
