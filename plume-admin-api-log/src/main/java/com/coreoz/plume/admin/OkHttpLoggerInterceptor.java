@@ -1,8 +1,19 @@
 package com.coreoz.plume.admin;
 
+import java.io.EOFException;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.coreoz.plume.admin.services.logApi.LogApiService;
 import com.coreoz.plume.admin.services.logApi.LogInterceptApiBean;
 import com.coreoz.plume.admin.services.logApi.LogInterceptHeaderBean;
+
 import okhttp3.Connection;
 import okhttp3.Headers;
 import okhttp3.Interceptor;
@@ -15,15 +26,6 @@ import okhttp3.internal.http.HttpHeaders;
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.GzipSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.EOFException;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 
 public class OkHttpLoggerInterceptor implements Interceptor {
@@ -43,162 +45,163 @@ public class OkHttpLoggerInterceptor implements Interceptor {
     @Override
     public Response intercept(Chain chain) throws IOException {
         Request request = chain.request();
+
+        if (!logger.isDebugEnabled()) {
+        	return chain.proceed(request);
+        }
+
         List<LogInterceptHeaderBean> requestHeaders = new ArrayList<>();
         List<LogInterceptHeaderBean> responseHeaders = new ArrayList<>();
-        if (logger.isDebugEnabled()) {
-            RequestBody requestBody = request.body();
-            boolean hasRequestBody = requestBody != null;
-            Connection connection = chain.connection();
-            String requestStartMessage = "--> " + request.method() + ' ' + request.url() + (connection != null ? " " + connection.protocol() : "");
-            if (hasRequestBody) {
-                requestStartMessage = requestStartMessage + " (" + requestBody.contentLength() + "-byte body)";
-            }
-            this.logger.info(requestStartMessage);
-            if (hasRequestBody) {
-                if (requestBody.contentType() != null) {
-                    LogInterceptHeaderBean logInterceptHeaderBean = new LogInterceptHeaderBean("Content-Type", requestBody.contentType().toString());
-                    requestHeaders.add(logInterceptHeaderBean);
-                    this.logger.info("Content-Type: " + requestBody.contentType());
-                }
-
-                if (requestBody.contentLength() != -1L) {
-                    this.logger.info("Content-Length: " + requestBody.contentLength());
-                }
-
-                Headers headers = request.headers();
-                int i = 0;
-
-                for (int count = headers.size(); i < count; ++i) {
-                    String name = headers.name(i);
-                    if (!"Content-Type".equalsIgnoreCase(name) && !"Content-Length".equalsIgnoreCase(name)) {
-                        LogInterceptHeaderBean logInterceptHeaderBean = new LogInterceptHeaderBean(headers.name(i), headers.value(i));
-                        requestHeaders.add(logInterceptHeaderBean);
-                        this.logger.info(name + ": " + headers.value(i));
-                    }
-                }
-                if (this.bodyHasUnknownEncoding(request.headers())) {
-                    this.logger.info("--> END " + request.method() + " (encoded body omitted)");
-                } else {
-                    Buffer buffer = new Buffer();
-                    requestBody.writeTo(buffer);
-                    Charset charset = UTF8;
-                    MediaType contentType = requestBody.contentType();
-                    if (contentType != null) {
-                        charset = contentType.charset(UTF8);
-                    }
-
-                    this.logger.info("");
-                    if (isPlaintext(buffer)) {
-                        this.logger.info(buffer.readString(charset));
-                        this.logger.info("--> END " + request.method() + " (" + requestBody.contentLength() + "-byte body)");
-                    } else {
-                        this.logger.info("--> END " + request.method() + " (binary " + requestBody.contentLength() + "-byte body omitted)");
-                    }
-                }
-            } else {
-                this.logger.info("--> END " + request.method());
+        RequestBody requestBody = request.body();
+        boolean hasRequestBody = requestBody != null;
+        Connection connection = chain.connection();
+        String requestStartMessage = "--> " + request.method() + ' ' + request.url() + (connection != null ? " " + connection.protocol() : "");
+        if (hasRequestBody) {
+            requestStartMessage = requestStartMessage + " (" + requestBody.contentLength() + "-byte body)";
+        }
+        this.logger.debug(requestStartMessage);
+        if (hasRequestBody) {
+            if (requestBody.contentType() != null) {
+                LogInterceptHeaderBean logInterceptHeaderBean = new LogInterceptHeaderBean("Content-Type", requestBody.contentType().toString());
+                requestHeaders.add(logInterceptHeaderBean);
+                this.logger.debug("Content-Type: " + requestBody.contentType());
             }
 
-            long startNs = System.nanoTime();
-
-            Response response;
-            try {
-                response = chain.proceed(request);
-            } catch (Exception var27) {
-                this.logger.info("<-- HTTP FAILED: " + var27);
-                throw var27;
+            if (requestBody.contentLength() != -1L) {
+                this.logger.debug("Content-Length: " + requestBody.contentLength());
             }
 
-            Buffer bufferRs = new Buffer();
-
-            long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNs);
-            ResponseBody responseBody = response.body();
-
-            long contentLength = responseBody.contentLength();
-            String bodySize = contentLength != -1L ? contentLength + "-byte" : "unknown-length";
-            this.logger.info("<-- " + response.code() + (response.message().isEmpty() ? "" : ' ' + response.message()) + ' ' + response.request().url() + " (" + tookMs + "ms" + ", " + bodySize + " body" + ')');
-
-            Headers headers = response.headers();
+            Headers headers = request.headers();
             int i = 0;
 
             for (int count = headers.size(); i < count; ++i) {
-                LogInterceptHeaderBean logInterceptHeaderBean = new LogInterceptHeaderBean(headers.name(i), headers.value(i));
-                responseHeaders.add(logInterceptHeaderBean);
-                this.logger.info(headers.name(i) + ": " + headers.value(i));
-            }
-
-            if (HttpHeaders.hasBody(response)) {
-                if (this.bodyHasUnknownEncoding(response.headers())) {
-                    this.logger.info("<-- END HTTP (encoded body omitted)");
-                } else {
-                    BufferedSource source = responseBody.source();
-                    source.request(9223372036854775807L);
-                    Buffer buffer = source.buffer();
-                    bufferRs = source.buffer();
-                    Long gzippedLength = null;
-                    if ("gzip".equalsIgnoreCase(headers.get("Content-Encoding"))) {
-                        gzippedLength = buffer.size();
-                        GzipSource gzippedResponseBody = null;
-
-                        try {
-                            gzippedResponseBody = new GzipSource(buffer.clone());
-                            buffer = new Buffer();
-                            buffer.writeAll(gzippedResponseBody);
-                            bufferRs.writeAll(gzippedResponseBody);
-                        } finally {
-                            if (gzippedResponseBody != null) {
-                                gzippedResponseBody.close();
-                            }
-                        }
-                    }
-
-                    Charset charset = UTF8;
-                    MediaType contentType = responseBody.contentType();
-                    if (contentType != null) {
-                        charset = contentType.charset(UTF8);
-                    }
-
-                    if (!isPlaintext(buffer)) {
-                        this.logger.info("");
-                        this.logger.info("<-- END HTTP (binary " + buffer.size() + "-byte body omitted)");
-                        return response;
-                    }
-
-                    if (contentLength != 0L) {
-                        this.logger.info("");
-                        this.logger.info(buffer.clone().readString(charset));
-                    }
-
-                    if (gzippedLength != null) {
-                        this.logger.info("<-- END HTTP (" + buffer.size() + "-byte, " + gzippedLength + "-gzipped-byte body)");
-                    } else {
-                        this.logger.info("<-- END HTTP (" + buffer.size() + "-byte body)");
-                    }
+                String name = headers.name(i);
+                if (!"Content-Type".equalsIgnoreCase(name) && !"Content-Length".equalsIgnoreCase(name)) {
+                    LogInterceptHeaderBean logInterceptHeaderBean = new LogInterceptHeaderBean(headers.name(i), headers.value(i));
+                    requestHeaders.add(logInterceptHeaderBean);
+                    this.logger.debug(name + ": " + headers.value(i));
                 }
+            }
+            if (this.bodyHasUnknownEncoding(request.headers())) {
+                this.logger.debug("--> END " + request.method() + " (encoded body omitted)");
             } else {
-                this.logger.info("<-- END HTTP");
-            }
-            Buffer bufferRq = new Buffer();
-            if (hasRequestBody) {
-                requestBody.writeTo(bufferRq);
-            }
+                Buffer buffer = new Buffer();
+                requestBody.writeTo(buffer);
+                Charset charset = UTF8;
+                MediaType contentType = requestBody.contentType();
+                if (contentType != null) {
+                    charset = contentType.charset(UTF8);
+                }
 
-            LogInterceptApiBean logInterceptApiBean = new LogInterceptApiBean(
-                request.url().toString(),
-                request.method(),
-                String.valueOf(response.code()),
-                bufferRq.clone().readString(UTF8),
-                bufferRs.clone().readString(UTF8),
-                requestHeaders,
-                responseHeaders,
-                this.apiName
-            );
-            logApiService.saveLog(logInterceptApiBean);
-            return response;
+                this.logger.debug("");
+                if (isPlaintext(buffer)) {
+                    this.logger.debug(buffer.readString(charset));
+                    this.logger.debug("--> END " + request.method() + " (" + requestBody.contentLength() + "-byte body)");
+                } else {
+                    this.logger.debug("--> END " + request.method() + " (binary " + requestBody.contentLength() + "-byte body omitted)");
+                }
+            }
+        } else {
+            this.logger.debug("--> END " + request.method());
         }
 
+        long startNs = System.nanoTime();
 
-        return null;
+        Response response;
+        try {
+            response = chain.proceed(request);
+        } catch (Exception e) {
+            this.logger.debug("<-- HTTP FAILED: ", e);
+            // TODO something needs to be logged in the tracer API
+            throw e;
+        }
+
+        Buffer bufferRs = new Buffer();
+
+        long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNs);
+        ResponseBody responseBody = response.body();
+
+        long contentLength = responseBody.contentLength();
+        String bodySize = contentLength != -1L ? contentLength + "-byte" : "unknown-length";
+        this.logger.debug("<-- " + response.code() + (response.message().isEmpty() ? "" : ' ' + response.message()) + ' ' + response.request().url() + " (" + tookMs + "ms" + ", " + bodySize + " body" + ')');
+
+        Headers headers = response.headers();
+        int i = 0;
+
+        for (int count = headers.size(); i < count; ++i) {
+            LogInterceptHeaderBean logInterceptHeaderBean = new LogInterceptHeaderBean(headers.name(i), headers.value(i));
+            responseHeaders.add(logInterceptHeaderBean);
+            this.logger.debug(headers.name(i) + ": " + headers.value(i));
+        }
+
+        if (HttpHeaders.hasBody(response)) {
+            if (this.bodyHasUnknownEncoding(response.headers())) {
+                this.logger.debug("<-- END HTTP (encoded body omitted)");
+            } else {
+                BufferedSource source = responseBody.source();
+                source.request(9223372036854775807L);
+                Buffer buffer = source.buffer();
+                bufferRs = source.buffer();
+                Long gzippedLength = null;
+                if ("gzip".equalsIgnoreCase(headers.get("Content-Encoding"))) {
+                    gzippedLength = buffer.size();
+                    GzipSource gzippedResponseBody = null;
+
+                    try {
+                        gzippedResponseBody = new GzipSource(buffer.clone());
+                        buffer = new Buffer();
+                        buffer.writeAll(gzippedResponseBody);
+                        bufferRs.writeAll(gzippedResponseBody);
+                    } finally {
+                        if (gzippedResponseBody != null) {
+                            gzippedResponseBody.close();
+                        }
+                    }
+                }
+
+                Charset charset = UTF8;
+                MediaType contentType = responseBody.contentType();
+                if (contentType != null) {
+                    charset = contentType.charset(UTF8);
+                }
+
+                if (!isPlaintext(buffer)) {
+                    this.logger.debug("");
+                    this.logger.debug("<-- END HTTP (binary " + buffer.size() + "-byte body omitted)");
+                    return response;
+                }
+
+                if (contentLength != 0L) {
+                    this.logger.debug("");
+                    this.logger.debug(buffer.clone().readString(charset));
+                }
+
+                if (gzippedLength != null) {
+                    this.logger.debug("<-- END HTTP (" + buffer.size() + "-byte, " + gzippedLength + "-gzipped-byte body)");
+                } else {
+                    this.logger.debug("<-- END HTTP (" + buffer.size() + "-byte body)");
+                }
+            }
+        } else {
+            this.logger.debug("<-- END HTTP");
+        }
+        Buffer bufferRq = new Buffer();
+        if (hasRequestBody) {
+            requestBody.writeTo(bufferRq);
+        }
+
+        LogInterceptApiBean logInterceptApiBean = new LogInterceptApiBean(
+            request.url().toString(),
+            request.method(),
+            String.valueOf(response.code()),
+            bufferRq.clone().readString(UTF8),
+            bufferRs.clone().readString(UTF8),
+            requestHeaders,
+            responseHeaders,
+            this.apiName
+        );
+        logApiService.saveLog(logInterceptApiBean);
+        return response;
     }
 
     static boolean isPlaintext(Buffer buffer) {
