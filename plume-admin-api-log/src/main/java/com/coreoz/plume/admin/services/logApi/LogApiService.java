@@ -29,7 +29,7 @@ public class LogApiService extends CrudService<LogApi> {
     private final LogApiDao logApiDao;
     private final LogHeaderService logHeaderService;
     private final TimeProvider timeProvider;
-    private final int bodyMaxBytesDisplayed;
+    private final int bodyMaxCharsDisplayed;
     private final Duration cleaningMaxDuration;
     private final int cleaningMaxLogsPerApi;
 
@@ -43,7 +43,7 @@ public class LogApiService extends CrudService<LogApi> {
         this.logHeaderService = logHeaderService;
         this.timeProvider = timeProvider;
 
-        this.bodyMaxBytesDisplayed = configurationService.bodyMaxBytesDisplayed().intValue();
+        this.bodyMaxCharsDisplayed = configurationService.bodyMaxCharsDisplayed().intValue();
         this.cleaningMaxDuration = configurationService.cleaningMaxDuration();
         this.cleaningMaxLogsPerApi = configurationService.cleaningMaxLogsPerApi();
 
@@ -64,13 +64,13 @@ public class LogApiService extends CrudService<LogApi> {
         boolean isCompleteTextRequest = true;
         boolean isCompleteTextResponse = true;
         // TODO should be done in SQL directly
-        if (log.getBodyRequest().length() > bodyMaxBytesDisplayed) {
+        if (log.getBodyRequest().length() > bodyMaxCharsDisplayed) {
             isCompleteTextRequest = false;
-            bodyRequest = bodyRequest.substring(0, bodyMaxBytesDisplayed);
+            bodyRequest = bodyRequest.substring(0, bodyMaxCharsDisplayed);
         }
-        if (log.getBodyResponse().length() > bodyMaxBytesDisplayed) {
+        if (log.getBodyResponse().length() > bodyMaxCharsDisplayed) {
             isCompleteTextResponse = false;
-            bodyResponse = bodyResponse.substring(0, bodyMaxBytesDisplayed);
+            bodyResponse = bodyResponse.substring(0, bodyMaxCharsDisplayed);
         }
         return new LogApiBean(
             log.getId(),

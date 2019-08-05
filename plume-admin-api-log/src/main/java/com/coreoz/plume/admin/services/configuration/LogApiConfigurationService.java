@@ -22,8 +22,8 @@ public class LogApiConfigurationService {
         );
     }
 
-    public Long bodyMaxBytesDisplayed() {
-    	return config.getBytes("api.log.body-max-bytes-displayed");
+    public Long bodyMaxCharsDisplayed() {
+    	return config.getBytes("api.log.body-max-chars-displayed");
     }
 
     public int cleaningMaxLogsPerApi() {
