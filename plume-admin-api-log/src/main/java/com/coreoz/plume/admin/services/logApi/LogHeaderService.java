@@ -40,7 +40,8 @@ public class LogHeaderService extends CrudService<LogHeader> {
         header.setName(httpHeader.getName());
         header.setValue(httpHeader.getValue());
         header.setType(httpPart.name());
-        save(header);
+
+        logHeaderDao.save(header);
     }
 
     Optional<MimeType> guessResponseMimeType(List<LogHeader> headers) {

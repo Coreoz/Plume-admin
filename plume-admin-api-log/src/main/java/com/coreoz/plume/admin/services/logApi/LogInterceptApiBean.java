@@ -10,7 +10,7 @@ import lombok.Getter;
 public class LogInterceptApiBean {
     private String url;
     private String method;
-    private String statusCode;
+    private int statusCode;
     private String bodyRequest;
     private String bodyResponse;
     private List<HttpHeader> headerRequest;

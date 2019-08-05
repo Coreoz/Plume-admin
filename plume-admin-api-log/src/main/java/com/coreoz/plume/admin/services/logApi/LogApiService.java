@@ -5,6 +5,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -31,6 +33,8 @@ public class LogApiService extends CrudService<LogApi> {
     private final Duration cleaningMaxDuration;
     private final int cleaningMaxLogsPerApi;
 
+    private final BlockingQueue<LogInterceptApiBean> logsToBeSaved;
+
     @Inject
     public LogApiService(LogApiDao logApiDao, LogHeaderService logHeaderService,
     		LogApiConfigurationService configurationService, TimeProvider timeProvider) {
@@ -42,6 +46,9 @@ public class LogApiService extends CrudService<LogApi> {
         this.bodyMaxBytesDisplayed = configurationService.bodyMaxBytesDisplayed().intValue();
         this.cleaningMaxDuration = configurationService.cleaningMaxDuration();
         this.cleaningMaxLogsPerApi = configurationService.cleaningMaxLogsPerApi();
+
+        this.logsToBeSaved = new LinkedBlockingQueue<>();
+        new Thread(this::insertWaitingLogs, "Http Log API Async saving").start();
     }
 
     public List<LogApiTrimmed> fetchAllTrimmedLogs() {
@@ -98,18 +105,34 @@ public class LogApiService extends CrudService<LogApi> {
 	}
 
     public void saveLog(LogInterceptApiBean interceptedLog) {
-        LogApi log = new LogApi();
-        log.setDate(Instant.now());
-        log.setMethod(interceptedLog.getMethod());
-        log.setStatusCode(interceptedLog.getStatusCode());
-        log.setUrl(interceptedLog.getUrl());
-        log.setBodyRequest(interceptedLog.getBodyRequest());
-        log.setBodyResponse(interceptedLog.getBodyResponse());
-        log.setApiName(interceptedLog.getApiName());
-        Long logId = save(log).getId();
-        interceptedLog.getHeaderRequest().forEach( header -> logHeaderService.saveHeader(header, HttpPart.REQUEST, logId));
-        interceptedLog.getHeaderResponse().forEach( header -> logHeaderService.saveHeader(header, HttpPart.RESPONSE, logId));
+        logsToBeSaved.add(interceptedLog);
+    }
 
+    private void insertWaitingLogs() {
+    	while(true) {
+    		try {
+				LogInterceptApiBean logToSave = logsToBeSaved.take();
+
+		        LogApi log = new LogApi();
+		        log.setDate(Instant.now());
+		        log.setMethod(logToSave.getMethod());
+		        log.setStatusCode(logToSave.getStatusCode());
+		        log.setUrl(logToSave.getUrl());
+		        log.setBodyRequest(logToSave.getBodyRequest());
+		        log.setBodyResponse(logToSave.getBodyResponse());
+		        log.setApiName(logToSave.getApiName());
+
+	        	logApiDao.save(log);
+	        	for(HttpHeader requestHeader : logToSave.getHeaderRequest()) {
+	        		logHeaderService.saveHeader(requestHeader, HttpPart.REQUEST, log.getId());
+	        	}
+	        	for(HttpHeader responseHeader : logToSave.getHeaderResponse()) {
+	        		logHeaderService.saveHeader(responseHeader, HttpPart.RESPONSE, log.getId());
+	        	}
+			} catch (Throwable e) {
+				logger.error("Error saving HTTP log", e);
+			}
+    	}
     }
 
     // clean up

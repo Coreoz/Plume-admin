@@ -37,7 +37,7 @@ public class QLogApi extends com.querydsl.sql.RelationalPathBase<LogApi> {
 
     public final StringPath method = createString("method");
 
-    public final StringPath statusCode = createString("statusCode");
+    public final NumberPath<Integer> statusCode = createNumber("statusCode", Integer.class);
 
     public final StringPath url = createString("url");
 
@@ -77,7 +77,7 @@ public class QLogApi extends com.querydsl.sql.RelationalPathBase<LogApi> {
         addMetadata(date, ColumnMetadata.named("date").withIndex(2).ofType(Types.TIMESTAMP).withSize(19));
         addMetadata(id, ColumnMetadata.named("id").withIndex(1).ofType(Types.BIGINT).withSize(19).notNull());
         addMetadata(method, ColumnMetadata.named("method").withIndex(3).ofType(Types.VARCHAR).withSize(255));
-        addMetadata(statusCode, ColumnMetadata.named("status_code").withIndex(4).ofType(Types.VARCHAR).withSize(255));
+        addMetadata(statusCode, ColumnMetadata.named("status_code").withIndex(4).ofType(Types.SMALLINT).withSize(255));
         addMetadata(url, ColumnMetadata.named("url").withIndex(8).ofType(Types.VARCHAR).withSize(255));
     }
 

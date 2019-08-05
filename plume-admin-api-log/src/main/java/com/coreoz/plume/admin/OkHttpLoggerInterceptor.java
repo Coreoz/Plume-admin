@@ -10,9 +10,11 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.coreoz.plume.admin.services.logApi.HttpHeader;
 import com.coreoz.plume.admin.services.logApi.LogApiService;
 import com.coreoz.plume.admin.services.logApi.LogInterceptApiBean;
-import com.coreoz.plume.admin.services.logApi.HttpHeader;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 
 import okhttp3.Connection;
 import okhttp3.Headers;
@@ -26,7 +28,6 @@ import okhttp3.internal.http.HttpHeaders;
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.GzipSource;
-
 
 public class OkHttpLoggerInterceptor implements Interceptor {
 
@@ -46,14 +47,16 @@ public class OkHttpLoggerInterceptor implements Interceptor {
     public Response intercept(Chain chain) throws IOException {
         Request request = chain.request();
 
-        if (!logger.isDebugEnabled()) {
-        	return chain.proceed(request);
-        }
-
         List<HttpHeader> requestHeaders = new ArrayList<>();
         List<HttpHeader> responseHeaders = new ArrayList<>();
         RequestBody requestBody = request.body();
         boolean hasRequestBody = requestBody != null;
+        String requestBodyString = null;
+        if (hasRequestBody) {
+        	Buffer bufferRq = new Buffer();
+            requestBody.writeTo(bufferRq);
+            requestBodyString = bufferRq.clone().readString(UTF8);
+        }
         Connection connection = chain.connection();
         String requestStartMessage = "--> " + request.method() + ' ' + request.url() + (connection != null ? " " + connection.protocol() : "");
         if (hasRequestBody) {
@@ -62,8 +65,7 @@ public class OkHttpLoggerInterceptor implements Interceptor {
         this.logger.debug(requestStartMessage);
         if (hasRequestBody) {
             if (requestBody.contentType() != null) {
-                HttpHeader logInterceptHeaderBean = new HttpHeader("Content-Type", requestBody.contentType().toString());
-                requestHeaders.add(logInterceptHeaderBean);
+            	requestHeaders.add(new HttpHeader("Content-Type", requestBody.contentType().toString()));
                 this.logger.debug("Content-Type: " + requestBody.contentType());
             }
 
@@ -77,8 +79,7 @@ public class OkHttpLoggerInterceptor implements Interceptor {
             for (int count = headers.size(); i < count; ++i) {
                 String name = headers.name(i);
                 if (!"Content-Type".equalsIgnoreCase(name) && !"Content-Length".equalsIgnoreCase(name)) {
-                    HttpHeader logInterceptHeaderBean = new HttpHeader(headers.name(i), headers.value(i));
-                    requestHeaders.add(logInterceptHeaderBean);
+                	requestHeaders.add(new HttpHeader(headers.name(i), headers.value(i)));
                     this.logger.debug(name + ": " + headers.value(i));
                 }
             }
@@ -112,7 +113,19 @@ public class OkHttpLoggerInterceptor implements Interceptor {
             response = chain.proceed(request);
         } catch (Exception e) {
             this.logger.debug("<-- HTTP FAILED: ", e);
-            // TODO something needs to be logged in the tracer API
+
+            LogInterceptApiBean logInterceptApiBean = new LogInterceptApiBean(
+                request.url().toString(),
+                request.method(),
+                500,
+                requestBodyString,
+                Throwables.getStackTraceAsString(e),
+                requestHeaders,
+                ImmutableList.of(),
+                this.apiName
+            );
+            logApiService.saveLog(logInterceptApiBean);
+
             throw e;
         }
 
@@ -129,8 +142,7 @@ public class OkHttpLoggerInterceptor implements Interceptor {
         int i = 0;
 
         for (int count = headers.size(); i < count; ++i) {
-            HttpHeader logInterceptHeaderBean = new HttpHeader(headers.name(i), headers.value(i));
-            responseHeaders.add(logInterceptHeaderBean);
+        	responseHeaders.add(new HttpHeader(headers.name(i), headers.value(i)));
             this.logger.debug(headers.name(i) + ": " + headers.value(i));
         }
 
@@ -193,7 +205,7 @@ public class OkHttpLoggerInterceptor implements Interceptor {
         LogInterceptApiBean logInterceptApiBean = new LogInterceptApiBean(
             request.url().toString(),
             request.method(),
-            String.valueOf(response.code()),
+            response.code(),
             bufferRq.clone().readString(UTF8),
             bufferRs.clone().readString(UTF8),
             requestHeaders,

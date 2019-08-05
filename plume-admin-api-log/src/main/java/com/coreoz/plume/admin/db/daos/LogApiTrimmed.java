@@ -15,5 +15,5 @@ public class LogApiTrimmed {
 	private final String method;
 	private final String api;
 	private final String url;
-	private final String statusCode;
+	private final Integer statusCode;
 }

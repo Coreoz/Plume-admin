@@ -30,7 +30,7 @@ public class LogApi extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuerydsl
     private String method;
 
     @Column("status_code")
-    private String statusCode;
+    private Integer statusCode;
 
     @Column("url")
     private String url;
@@ -85,11 +85,11 @@ public class LogApi extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuerydsl
         this.method = method;
     }
 
-    public String getStatusCode() {
+    public Integer getStatusCode() {
         return statusCode;
     }
 
-    public void setStatusCode(String statusCode) {
+    public void setStatusCode(Integer statusCode) {
         this.statusCode = statusCode;
     }
 
