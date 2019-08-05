@@ -23,11 +23,11 @@ public class LogApiConfigurationService {
     }
 
     public Long bodyMaxBytesDisplayed() {
-    	return config.getBytes("body-max-bytes-displayed");
+    	return config.getBytes("api.log.body-max-bytes-displayed");
     }
 
     public int cleaningMaxLogsPerApi() {
-    	return config.getInt("api.log.cleaning.max-logs");
+    	return config.getInt("api.log.cleaning.max-logs-per-api");
     }
 
     public Duration cleaningMaxDuration() {

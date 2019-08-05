@@ -12,11 +12,16 @@ import com.coreoz.plume.admin.db.generated.QLogApi;
 import com.coreoz.plume.admin.db.generated.QLogHeader;
 import com.coreoz.plume.db.querydsl.crud.CrudDaoQuerydsl;
 import com.coreoz.plume.db.querydsl.transaction.TransactionManagerQuerydsl;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberPath;
+import com.querydsl.core.types.dsl.SimpleExpression;
 import com.querydsl.sql.SQLExpressions;
 import com.querydsl.sql.SQLQuery;
 
 @Singleton
 public class LogApiDao extends CrudDaoQuerydsl<LogApi> {
+
+	private static final NumberPath<Long> ID_SQL_PATH = Expressions.numberPath(Long.class, "id");
 
     @Inject
     public LogApiDao(TransactionManagerQuerydsl transactionManager) {
@@ -59,25 +64,30 @@ public class LogApiDao extends CrudDaoQuerydsl<LogApi> {
     }
 
     public long deleteLogsOverLimit(String apiName, int maxLogByApi)  {
-		SQLQuery<Long> logApiIdsToDeleteQuery = SQLExpressions
+		SimpleExpression<Long> logApiIdsToDeleteQuery = SQLExpressions
 			.select(QLogApi.logApi.id)
 			.from(QLogApi.logApi)
 			.where(QLogApi.logApi.api.eq(apiName))
 			.orderBy(QLogApi.logApi.date.desc())
 			.limit(Long.MAX_VALUE)
-			.offset(maxLogByApi);
+			.offset(maxLogByApi)
+			.as("alias_for_mysql");
+		// this is needed because MySQL does not allow limit in sub-query :/
+		SQLQuery<Long> logApiIdsToDeleteQueryWrapperForMysql = SQLExpressions
+			.select(ID_SQL_PATH)
+			.from(logApiIdsToDeleteQuery);
 
 		return transactionManager.executeAndReturn(connection -> {
 			transactionManager
 				.delete(QLogHeader.logHeader, connection)
 				.where(QLogHeader.logHeader.idLogApi.in(
-					logApiIdsToDeleteQuery
+					logApiIdsToDeleteQueryWrapperForMysql
 				))
 				.execute();
 
 			return transactionManager
 				.delete(QLogApi.logApi, connection)
-				.where(QLogApi.logApi.id.in(logApiIdsToDeleteQuery))
+				.where(QLogApi.logApi.id.in(logApiIdsToDeleteQueryWrapperForMysql))
 				.execute();
 		});
     }
