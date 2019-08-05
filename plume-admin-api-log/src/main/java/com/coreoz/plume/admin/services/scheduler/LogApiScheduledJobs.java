@@ -1,8 +1,5 @@
 package com.coreoz.plume.admin.services.scheduler;
 
-
-import java.time.Duration;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -18,7 +15,6 @@ public class LogApiScheduledJobs {
     private final LogApiConfigurationService configurationService;
     private final LogApiService logApiService;
 
-
     @Inject
     public LogApiScheduledJobs(Scheduler scheduler,LogApiConfigurationService configurationService, LogApiService logApiService) {
         this.scheduler = scheduler;
@@ -28,14 +24,9 @@ public class LogApiScheduledJobs {
 
     public void scheduleJobs() {
         scheduler.schedule(
-            "Delete logs older than " + configurationService.getLogNumberDaysLimit() +  " days",
-            logApiService::deleteOldLogs,
-            Schedules.executeAt(configurationService.getLogTiming())
-        );
-        scheduler.schedule(
-            "Delete logs for each url if the number of logs by is greater than " + configurationService.getLogNumberMax(),
-            logApiService::cleanLogsNumberByApiName,
-            Schedules.fixedDelaySchedule(Duration.ofMinutes(configurationService.getLogCleanDelay()))
+            "Clean API logs",
+            logApiService::cleanUp,
+            Schedules.fixedDelaySchedule(configurationService.cleaningRunningEvery())
         );
     }
 

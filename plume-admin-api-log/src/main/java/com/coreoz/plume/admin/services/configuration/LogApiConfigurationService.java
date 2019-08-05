@@ -1,5 +1,7 @@
 package com.coreoz.plume.admin.services.configuration;
 
+import java.time.Duration;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -20,13 +22,20 @@ public class LogApiConfigurationService {
         );
     }
 
-    public int getLogBodyLimit(){ return config.getInt("api.log.bodyLimit");}
+    public Long bodyMaxBytesDisplayed() {
+    	return config.getBytes("body-max-bytes-displayed");
+    }
 
-    public int getLogNumberMax() { return config.getInt("api.log.numberMax");}
+    public int cleaningMaxLogsPerApi() {
+    	return config.getInt("api.log.cleaning.max-logs");
+    }
 
-    public int getLogNumberDaysLimit() { return config.getInt("api.log.numberDaysLimit");}
+    public Duration cleaningMaxDuration() {
+    	return config.getDuration("api.log.cleaning.max-duration");
+    }
 
-    public String getLogTiming() {return config.getString("api.log.clean.timing");}
+    public Duration cleaningRunningEvery() {
+    	return config.getDuration("api.log.cleaning.running-every");
+    }
 
-    public long getLogCleanDelay() {return config.getLong("api.log.clean.url.timing");}
 }

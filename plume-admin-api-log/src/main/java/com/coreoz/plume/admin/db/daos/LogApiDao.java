@@ -1,6 +1,5 @@
 package com.coreoz.plume.admin.db.daos;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -10,8 +9,11 @@ import javax.inject.Singleton;
 
 import com.coreoz.plume.admin.db.generated.LogApi;
 import com.coreoz.plume.admin.db.generated.QLogApi;
+import com.coreoz.plume.admin.db.generated.QLogHeader;
 import com.coreoz.plume.db.querydsl.crud.CrudDaoQuerydsl;
 import com.coreoz.plume.db.querydsl.transaction.TransactionManagerQuerydsl;
+import com.querydsl.sql.SQLExpressions;
+import com.querydsl.sql.SQLQuery;
 
 @Singleton
 public class LogApiDao extends CrudDaoQuerydsl<LogApi> {
@@ -47,16 +49,7 @@ public class LogApiDao extends CrudDaoQuerydsl<LogApi> {
             .collect(Collectors.toList());
     }
 
-    public List<LogApi> getLogsbyApiName(String apiName) {
-        return transactionManager
-            .selectQuery()
-            .select(QLogApi.logApi)
-            .from(QLogApi.logApi)
-            .where(QLogApi.logApi.api.eq(apiName))
-            .fetch();
-    }
-
-    public List<String> getListApiNames() {
+    public List<String> listApiNames() {
         return transactionManager
             .selectQuery()
             .select(QLogApi.logApi.api)
@@ -65,13 +58,48 @@ public class LogApiDao extends CrudDaoQuerydsl<LogApi> {
             .fetch();
     }
 
-    public List<LogApi> getListApibyDate(int numberOfDays) {
-        return transactionManager
-            .selectQuery()
-            .select(QLogApi.logApi)
-            .from(QLogApi.logApi)
-            .where(QLogApi.logApi.date.before(Instant.now().minus(Duration.ofDays(numberOfDays))))
-            .fetch();
+    public long deleteLogsOverLimit(String apiName, int maxLogByApi)  {
+		SQLQuery<Long> logApiIdsToDeleteQuery = SQLExpressions
+			.select(QLogApi.logApi.id)
+			.from(QLogApi.logApi)
+			.where(QLogApi.logApi.api.eq(apiName))
+			.orderBy(QLogApi.logApi.date.desc())
+			.limit(Long.MAX_VALUE)
+			.offset(maxLogByApi);
+
+		return transactionManager.executeAndReturn(connection -> {
+			transactionManager
+				.delete(QLogHeader.logHeader, connection)
+				.where(QLogHeader.logHeader.idLogApi.in(
+					logApiIdsToDeleteQuery
+				))
+				.execute();
+
+			return transactionManager
+				.delete(QLogApi.logApi, connection)
+				.where(QLogApi.logApi.id.in(logApiIdsToDeleteQuery))
+				.execute();
+		});
     }
+
+	public long deleteOldLogs(Instant minimumLogDate) {
+		return transactionManager.executeAndReturn(connection -> {
+			transactionManager
+				.delete(QLogHeader.logHeader, connection)
+				.where(QLogHeader.logHeader.idLogApi.in(
+					SQLExpressions
+						.select(QLogApi.logApi.id)
+						.from(QLogApi.logApi)
+						.where(QLogApi.logApi.date.before(minimumLogDate))
+				))
+				.execute();
+
+			return transactionManager
+				.delete(QLogApi.logApi, connection)
+				.where(QLogApi.logApi.date.before(minimumLogDate))
+				.execute();
+		});
+	}
+
 }
 

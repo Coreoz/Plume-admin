@@ -1,37 +1,47 @@
 package com.coreoz.plume.admin.services.logApi;
 
 
+import java.time.Duration;
 import java.time.Instant;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.coreoz.plume.admin.db.daos.LogApiDao;
 import com.coreoz.plume.admin.db.daos.LogApiTrimmed;
-import com.coreoz.plume.admin.db.daos.LogHeaderDao;
 import com.coreoz.plume.admin.db.generated.LogApi;
 import com.coreoz.plume.admin.services.configuration.LogApiConfigurationService;
 import com.coreoz.plume.db.crud.CrudService;
+import com.coreoz.plume.services.time.TimeProvider;
 
 @Singleton
 public class LogApiService extends CrudService<LogApi> {
 
-    private LogApiDao logApiDao;
-    private LogHeaderService logHeaderService;
-    private LogApiConfigurationService configurationService;
-    private LogHeaderDao logHeaderDao;
+	private static final Logger logger = LoggerFactory.getLogger(LogApiService.class);
+
+    private final LogApiDao logApiDao;
+    private final LogHeaderService logHeaderService;
+    private final TimeProvider timeProvider;
+    private final int bodyMaxBytesDisplayed;
+    private final Duration cleaningMaxDuration;
+    private final int cleaningMaxLogsPerApi;
 
     @Inject
-    public LogApiService(LogApiDao logApiDao, LogHeaderService logHeaderService, LogApiConfigurationService configurationService, LogHeaderDao logHeaderDao) {
+    public LogApiService(LogApiDao logApiDao, LogHeaderService logHeaderService,
+    		LogApiConfigurationService configurationService, TimeProvider timeProvider) {
         super(logApiDao);
         this.logApiDao = logApiDao;
         this.logHeaderService = logHeaderService;
-        this.configurationService = configurationService;
-        this.logHeaderDao = logHeaderDao;
+        this.timeProvider = timeProvider;
+
+        this.bodyMaxBytesDisplayed = configurationService.bodyMaxBytesDisplayed().intValue();
+        this.cleaningMaxDuration = configurationService.cleaningMaxDuration();
+        this.cleaningMaxLogsPerApi = configurationService.cleaningMaxLogsPerApi();
     }
 
     public List<LogApiTrimmed> fetchAllTrimmedLogs() {
@@ -46,13 +56,14 @@ public class LogApiService extends CrudService<LogApi> {
         String bodyResponse = log.getBodyResponse();
         boolean isCompleteTextRequest = true;
         boolean isCompleteTextResponse = true;
-        if (log.getBodyRequest().length() > this.configurationService.getLogBodyLimit()){
+        // TODO should be done in SQL directly
+        if (log.getBodyRequest().length() > bodyMaxBytesDisplayed) {
             isCompleteTextRequest = false;
-            bodyRequest = bodyRequest.substring(0,this.configurationService.getLogBodyLimit());
+            bodyRequest = bodyRequest.substring(0, bodyMaxBytesDisplayed);
         }
-        if (log.getBodyResponse().length() > this.configurationService.getLogBodyLimit()){
+        if (log.getBodyResponse().length() > bodyMaxBytesDisplayed) {
             isCompleteTextResponse = false;
-            bodyResponse = bodyResponse.substring(0,this.configurationService.getLogBodyLimit());
+            bodyResponse = bodyResponse.substring(0, bodyMaxBytesDisplayed);
         }
         return new LogApiBean(
             log.getId(),
@@ -86,7 +97,7 @@ public class LogApiService extends CrudService<LogApi> {
 			));
 	}
 
-    public void saveLog(LogInterceptApiBean interceptedLog){
+    public void saveLog(LogInterceptApiBean interceptedLog) {
         LogApi log = new LogApi();
         log.setDate(Instant.now());
         log.setMethod(interceptedLog.getMethod());
@@ -100,27 +111,24 @@ public class LogApiService extends CrudService<LogApi> {
         interceptedLog.getHeaderResponse().forEach( header -> logHeaderService.saveHeader(header, HttpPart.RESPONSE, logId));
 
     }
-    public void cleanLogsNumberByApiName(){
-        List<String> apiList = logApiDao.getListApiNames();
-        apiList.forEach(this::deleteLogLinesOutsideLimit);
+
+    // clean up
+
+    public void cleanUp() {
+    	deleteOldLogs();
+    	deleteLogsOverApiLimit();
     }
 
-    private void deleteLogLinesOutsideLimit(String apiName){
-        List<LogApi> logListbyApi= logApiDao.getLogsbyApiName(apiName);
-        if (logListbyApi.size() >= configurationService.getLogNumberMax()){
-            List<LogApi> logsToBeDeletd = logListbyApi.stream().sorted(Comparator.comparing(LogApi::getDate)).limit(logListbyApi.size() - configurationService.getLogNumberMax()).collect(Collectors.toList());
-            logsToBeDeletd.forEach(log -> this.deleteLog(log.getId()));
-        }
+    private void deleteOldLogs() {
+    	long nbLogsDeleted = logApiDao.deleteOldLogs(timeProvider.currentInstant().minus(cleaningMaxDuration));
+    	logger.debug("{} older logs than {}ms have been deleted", nbLogsDeleted, cleaningMaxDuration.toMillis());
     }
 
-    public void deleteOldLogs(){
-        List<LogApi> logOldList = logApiDao.getListApibyDate(configurationService.getLogNumberDaysLimit());
-        logOldList.forEach(log -> this.deleteLog(log.getId()));
-    }
-
-    private void deleteLog(Long idLog){
-        logHeaderDao.deleteHeadersbyApi(idLog);
-        delete(idLog);
+    private void deleteLogsOverApiLimit() {
+    	for(String apiName : logApiDao.listApiNames()) {
+    		long nbLogsDeleted = logApiDao.deleteLogsOverLimit(apiName, cleaningMaxLogsPerApi);
+    		logger.debug("{} logs have been deleted for API {}", nbLogsDeleted, apiName);
+    	}
     }
 
 }
