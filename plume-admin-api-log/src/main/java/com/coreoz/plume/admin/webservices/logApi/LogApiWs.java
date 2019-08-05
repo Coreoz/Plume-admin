@@ -43,7 +43,7 @@ public class LogApiWs {
     }
 
     @GET
-    @ApiOperation("Download the body of a request or a response")
+    @ApiOperation("Fetch the headers and the trimmed body of a request/response")
     @Path("/{idLog}")
     public LogApiBean details(@PathParam("idLog") Long id) {
     	return logApiService.fetchLogDetails(id);
