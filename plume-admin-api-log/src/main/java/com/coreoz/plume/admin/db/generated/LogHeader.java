@@ -1,6 +1,7 @@
 package com.coreoz.plume.admin.db.generated;
 
 import javax.annotation.Generated;
+
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.querydsl.sql.Column;
 
@@ -18,8 +19,8 @@ public class LogHeader extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuery
     @Column("id_log_api")
     private Long idLogApi;
 
-    @Column("key")
-    private String key;
+    @Column("name")
+    private String name;
 
     @Column("type")
     private String type;
@@ -27,11 +28,13 @@ public class LogHeader extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuery
     @Column("value")
     private String value;
 
-    public Long getId() {
+    @Override
+	public Long getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    @Override
+	public void setId(Long id) {
         this.id = id;
     }
 
@@ -43,12 +46,12 @@ public class LogHeader extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuery
         this.idLogApi = idLogApi;
     }
 
-    public String getKey() {
-        return key;
+    public String getName() {
+        return name;
     }
 
-    public void setKey(String key) {
-        this.key = key;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getType() {

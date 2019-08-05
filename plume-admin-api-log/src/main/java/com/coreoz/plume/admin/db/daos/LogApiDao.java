@@ -35,7 +35,7 @@ public class LogApiDao extends CrudDaoQuerydsl<LogApi> {
             	QLogApi.logApi.id,
             	QLogApi.logApi.date,
             	QLogApi.logApi.method,
-            	QLogApi.logApi.api,
+            	QLogApi.logApi.apiName,
             	QLogApi.logApi.url,
             	QLogApi.logApi.statusCode
             )
@@ -47,7 +47,7 @@ public class LogApiDao extends CrudDaoQuerydsl<LogApi> {
             	tuple.get(QLogApi.logApi.id),
             	tuple.get(QLogApi.logApi.date),
             	tuple.get(QLogApi.logApi.method),
-            	tuple.get(QLogApi.logApi.api),
+            	tuple.get(QLogApi.logApi.apiName),
             	tuple.get(QLogApi.logApi.url),
             	tuple.get(QLogApi.logApi.statusCode)
             ))
@@ -57,7 +57,7 @@ public class LogApiDao extends CrudDaoQuerydsl<LogApi> {
     public List<String> listApiNames() {
         return transactionManager
             .selectQuery()
-            .select(QLogApi.logApi.api)
+            .select(QLogApi.logApi.apiName)
             .distinct()
             .from(QLogApi.logApi)
             .fetch();
@@ -67,7 +67,7 @@ public class LogApiDao extends CrudDaoQuerydsl<LogApi> {
 		SimpleExpression<Long> logApiIdsToDeleteQuery = SQLExpressions
 			.select(QLogApi.logApi.id)
 			.from(QLogApi.logApi)
-			.where(QLogApi.logApi.api.eq(apiName))
+			.where(QLogApi.logApi.apiName.eq(apiName))
 			.orderBy(QLogApi.logApi.date.desc())
 			.limit(Long.MAX_VALUE)
 			.offset(maxLogByApi)

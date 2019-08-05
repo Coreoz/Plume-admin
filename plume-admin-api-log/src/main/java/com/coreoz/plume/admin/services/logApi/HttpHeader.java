@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public class LogInterceptHeaderBean {
-    private String key;
+public class HttpHeader {
+    private String name;
     private String value;
 }

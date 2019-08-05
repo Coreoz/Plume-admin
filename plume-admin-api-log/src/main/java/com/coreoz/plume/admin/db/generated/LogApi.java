@@ -1,5 +1,6 @@
 package com.coreoz.plume.admin.db.generated;
 import javax.annotation.Generated;
+
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.querydsl.sql.Column;
 
@@ -9,8 +10,8 @@ import com.querydsl.sql.Column;
 @Generated("com.coreoz.plume.db.querydsl.generation.IdBeanSerializer")
 public class LogApi extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuerydsl {
 
-    @Column("api")
-    private String api;
+    @Column("apiName")
+    private String apiName;
 
     @Column("body_request")
     private String bodyRequest;
@@ -34,12 +35,12 @@ public class LogApi extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuerydsl
     @Column("url")
     private String url;
 
-    public String getApi() {
-        return api;
+    public String getApiName() {
+        return apiName;
     }
 
-    public void setApi(String api) {
-        this.api = api;
+    public void setApiName(String apiName) {
+        this.apiName = apiName;
     }
 
     public String getBodyRequest() {
@@ -66,11 +67,13 @@ public class LogApi extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuerydsl
         this.date = date;
     }
 
-    public Long getId() {
+    @Override
+	public Long getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    @Override
+	public void setId(Long id) {
         this.id = id;
     }
 

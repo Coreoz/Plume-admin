@@ -25,7 +25,7 @@ public class QLogApi extends com.querydsl.sql.RelationalPathBase<LogApi> {
 
     public static final QLogApi logApi = new QLogApi("plm_log_api");
 
-    public final StringPath api = createString("api");
+    public final StringPath apiName = createString("apiName");
 
     public final StringPath bodyRequest = createString("bodyRequest");
 
@@ -71,7 +71,7 @@ public class QLogApi extends com.querydsl.sql.RelationalPathBase<LogApi> {
     }
 
     public void addMetadata() {
-        addMetadata(api, ColumnMetadata.named("api").withIndex(7).ofType(Types.VARCHAR).withSize(255));
+        addMetadata(apiName, ColumnMetadata.named("apiName").withIndex(7).ofType(Types.VARCHAR).withSize(255));
         addMetadata(bodyRequest, ColumnMetadata.named("body_request").withIndex(5).ofType(Types.VARCHAR).withSize(255));
         addMetadata(bodyResponse, ColumnMetadata.named("body_response").withIndex(6).ofType(Types.VARCHAR).withSize(255));
         addMetadata(date, ColumnMetadata.named("date").withIndex(2).ofType(Types.TIMESTAMP).withSize(19));

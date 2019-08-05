@@ -29,7 +29,7 @@ public class QLogHeader extends com.querydsl.sql.RelationalPathBase<LogHeader> {
 
     public final NumberPath<Long> idLogApi = createNumber("idLogApi", Long.class);
 
-    public final StringPath key = createString("key");
+    public final StringPath name = createString("name");
 
     public final StringPath type = createString("type");
 
@@ -67,7 +67,7 @@ public class QLogHeader extends com.querydsl.sql.RelationalPathBase<LogHeader> {
     public void addMetadata() {
         addMetadata(id, ColumnMetadata.named("id").withIndex(1).ofType(Types.BIGINT).withSize(19).notNull());
         addMetadata(idLogApi, ColumnMetadata.named("id_log_api").withIndex(3).ofType(Types.BIGINT).withSize(19));
-        addMetadata(key, ColumnMetadata.named("key").withIndex(5).ofType(Types.VARCHAR).withSize(255));
+        addMetadata(name, ColumnMetadata.named("name").withIndex(5).ofType(Types.VARCHAR).withSize(255));
         addMetadata(type, ColumnMetadata.named("type").withIndex(4).ofType(Types.VARCHAR).withSize(255));
         addMetadata(value, ColumnMetadata.named("value").withIndex(2).ofType(Types.VARCHAR).withSize(255));
     }

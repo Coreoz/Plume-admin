@@ -21,8 +21,8 @@ public class LogApiBean {
     private String statusCode;
     private String bodyRequest;
     private String bodyResponse;
-    private LogHeaderBean headerRequest;
-    private LogHeaderBean headerResponse;
+    private HttpHeaders headerRequest;
+    private HttpHeaders headerResponse;
     private Boolean IsCompleteTextRequest;
     private Boolean IsCompleteTextResponse;
 }

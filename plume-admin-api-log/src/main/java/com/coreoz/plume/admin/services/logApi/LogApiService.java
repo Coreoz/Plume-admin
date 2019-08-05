@@ -50,8 +50,8 @@ public class LogApiService extends CrudService<LogApi> {
 
     public LogApiBean fetchLogDetails(Long id) {
         LogApi log = findById(id);
-        LogHeaderBean headerRequest = logHeaderService.getHeaderForApi(id, HttpPart.REQUEST);
-        LogHeaderBean headerResponse = logHeaderService.getHeaderForApi(id, HttpPart.RESPONSE);
+        HttpHeaders headerRequest = logHeaderService.getHeaderForApi(id, HttpPart.REQUEST);
+        HttpHeaders headerResponse = logHeaderService.getHeaderForApi(id, HttpPart.RESPONSE);
         String bodyRequest = log.getBodyRequest();
         String bodyResponse = log.getBodyResponse();
         boolean isCompleteTextRequest = true;
@@ -67,7 +67,7 @@ public class LogApiService extends CrudService<LogApi> {
         }
         return new LogApiBean(
             log.getId(),
-            log.getApi(),
+            log.getApiName(),
             log.getUrl(),
             log.getDate(),
             log.getMethod(),
@@ -85,7 +85,7 @@ public class LogApiService extends CrudService<LogApi> {
 		return Optional
 			.ofNullable(findById(id))
 			.map(log -> new HttpBodyPart(
-				log.getApi(),
+				log.getApiName(),
 				isRequest ? log.getBodyRequest() : log.getBodyResponse(),
 				logHeaderService
 					.guessResponseMimeType(logHeaderService.findHeaders(
@@ -105,7 +105,7 @@ public class LogApiService extends CrudService<LogApi> {
         log.setUrl(interceptedLog.getUrl());
         log.setBodyRequest(interceptedLog.getBodyRequest());
         log.setBodyResponse(interceptedLog.getBodyResponse());
-        log.setApi(interceptedLog.getApiName());
+        log.setApiName(interceptedLog.getApiName());
         Long logId = save(log).getId();
         interceptedLog.getHeaderRequest().forEach( header -> logHeaderService.saveHeader(header, HttpPart.REQUEST, logId));
         interceptedLog.getHeaderResponse().forEach( header -> logHeaderService.saveHeader(header, HttpPart.RESPONSE, logId));

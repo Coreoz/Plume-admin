@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import com.coreoz.plume.admin.services.logApi.LogApiService;
 import com.coreoz.plume.admin.services.logApi.LogInterceptApiBean;
-import com.coreoz.plume.admin.services.logApi.LogInterceptHeaderBean;
+import com.coreoz.plume.admin.services.logApi.HttpHeader;
 
 import okhttp3.Connection;
 import okhttp3.Headers;
@@ -50,8 +50,8 @@ public class OkHttpLoggerInterceptor implements Interceptor {
         	return chain.proceed(request);
         }
 
-        List<LogInterceptHeaderBean> requestHeaders = new ArrayList<>();
-        List<LogInterceptHeaderBean> responseHeaders = new ArrayList<>();
+        List<HttpHeader> requestHeaders = new ArrayList<>();
+        List<HttpHeader> responseHeaders = new ArrayList<>();
         RequestBody requestBody = request.body();
         boolean hasRequestBody = requestBody != null;
         Connection connection = chain.connection();
@@ -62,7 +62,7 @@ public class OkHttpLoggerInterceptor implements Interceptor {
         this.logger.debug(requestStartMessage);
         if (hasRequestBody) {
             if (requestBody.contentType() != null) {
-                LogInterceptHeaderBean logInterceptHeaderBean = new LogInterceptHeaderBean("Content-Type", requestBody.contentType().toString());
+                HttpHeader logInterceptHeaderBean = new HttpHeader("Content-Type", requestBody.contentType().toString());
                 requestHeaders.add(logInterceptHeaderBean);
                 this.logger.debug("Content-Type: " + requestBody.contentType());
             }
@@ -77,7 +77,7 @@ public class OkHttpLoggerInterceptor implements Interceptor {
             for (int count = headers.size(); i < count; ++i) {
                 String name = headers.name(i);
                 if (!"Content-Type".equalsIgnoreCase(name) && !"Content-Length".equalsIgnoreCase(name)) {
-                    LogInterceptHeaderBean logInterceptHeaderBean = new LogInterceptHeaderBean(headers.name(i), headers.value(i));
+                    HttpHeader logInterceptHeaderBean = new HttpHeader(headers.name(i), headers.value(i));
                     requestHeaders.add(logInterceptHeaderBean);
                     this.logger.debug(name + ": " + headers.value(i));
                 }
@@ -129,7 +129,7 @@ public class OkHttpLoggerInterceptor implements Interceptor {
         int i = 0;
 
         for (int count = headers.size(); i < count; ++i) {
-            LogInterceptHeaderBean logInterceptHeaderBean = new LogInterceptHeaderBean(headers.name(i), headers.value(i));
+            HttpHeader logInterceptHeaderBean = new HttpHeader(headers.name(i), headers.value(i));
             responseHeaders.add(logInterceptHeaderBean);
             this.logger.debug(headers.name(i) + ": " + headers.value(i));
         }
