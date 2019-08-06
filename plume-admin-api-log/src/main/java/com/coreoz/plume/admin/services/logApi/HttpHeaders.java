@@ -12,6 +12,5 @@ import lombok.Getter;
 @Getter
 public class HttpHeaders {
     private List<LogHeader> header;
-    // TODO should be replaced by the mime type
-    private String mode;
+    private String mimeType;
 }

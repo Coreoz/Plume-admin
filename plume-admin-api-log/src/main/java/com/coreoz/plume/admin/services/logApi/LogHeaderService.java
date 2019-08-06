@@ -30,7 +30,7 @@ public class LogHeaderService extends CrudService<LogHeader> {
         List<LogHeader> headers = findHeaders(idLogApi, httpPart);
         return new HttpHeaders(
         	headers,
-            guessResponseMimeType(headers).map(MimeType::getFormattingMode).orElse("")
+            guessResponseMimeType(headers).map(MimeType::getMimeType).orElse("")
         );
     }
 
