@@ -44,7 +44,7 @@ public class LogHeaderService extends CrudService<LogHeader> {
         logHeaderDao.save(header);
     }
 
-    Optional<MimeType> guessResponseMimeType(List<LogHeader> headers) {
+    static Optional<MimeType> guessResponseMimeType(List<LogHeader> headers) {
     	return headers
 	    	.stream()
 	    	.filter(header -> header.getName().toLowerCase().contains(com.google.common.net.HttpHeaders.CONTENT_TYPE.toLowerCase()))
