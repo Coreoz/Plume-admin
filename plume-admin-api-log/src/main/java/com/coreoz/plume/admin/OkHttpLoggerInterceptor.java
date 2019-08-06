@@ -129,8 +129,7 @@ public class OkHttpLoggerInterceptor implements Interceptor {
             throw e;
         }
 
-        Buffer bufferRs = new Buffer();
-
+        Buffer bufferRs = null;
         long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNs);
         ResponseBody responseBody = response.body();
 
@@ -152,8 +151,8 @@ public class OkHttpLoggerInterceptor implements Interceptor {
             } else {
                 BufferedSource source = responseBody.source();
                 source.request(9223372036854775807L);
-                Buffer buffer = source.buffer();
-                bufferRs = source.buffer();
+                Buffer buffer = source.getBuffer();
+                bufferRs = source.getBuffer();
                 Long gzippedLength = null;
                 if ("gzip".equalsIgnoreCase(headers.get("Content-Encoding"))) {
                     gzippedLength = buffer.size();
@@ -197,17 +196,13 @@ public class OkHttpLoggerInterceptor implements Interceptor {
         } else {
             this.logger.debug("<-- END HTTP");
         }
-        Buffer bufferRq = new Buffer();
-        if (hasRequestBody) {
-            requestBody.writeTo(bufferRq);
-        }
 
         LogInterceptApiBean logInterceptApiBean = new LogInterceptApiBean(
             request.url().toString(),
             request.method(),
             response.code(),
-            bufferRq.clone().readString(UTF8),
-            bufferRs.clone().readString(UTF8),
+            requestBodyString,
+            bufferRs == null ? null : bufferRs.clone().readString(UTF8),
             requestHeaders,
             responseHeaders,
             this.apiName
