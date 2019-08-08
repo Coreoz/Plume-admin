@@ -94,7 +94,7 @@ public class LogApiService extends CrudService<LogApi> {
 			.map(log -> new HttpBodyPart(
 				log.getApiName(),
 				isRequest ? log.getBodyRequest() : log.getBodyResponse(),
-				logHeaderService
+				MimeType
 					.guessResponseMimeType(logHeaderService.findHeaders(
 						id,
 						isRequest ? HttpPart.REQUEST : HttpPart.RESPONSE
