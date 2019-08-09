@@ -52,10 +52,18 @@ To generate JWT secret, [LastPass generator](https://lastpass.com/generatepasswo
 ```
 # this key should be changed in production if test users cannot be trusted
 admin.jwt-secret = "long_generated_password_to_secure_jwt_tokens"
+
 # default values
-admin.session-duration = 12 hours
+# the duration after which a session token expires
+admin.session.expire-duration = 1 minute
+# the duration after which the client should refresh the session token (must be lower than the expire duration)
+admin.session.refresh-duration = 20 seconds
+# the duration after which the client should stop refreshing the session token (must be greater than the expire duration)  
+admin.session.inative-duration = 15 minutes
 admin.login.max-attempts = 5
 admin.login.blocked-duration = 30 seconds
+admin.passwords.min-length = 0
+
 # enable to ensure that users passwords are long enough
 admin.passwords.min-length = 0
 ```

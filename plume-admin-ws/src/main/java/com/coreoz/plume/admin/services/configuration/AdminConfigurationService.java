@@ -27,8 +27,32 @@ public class AdminConfigurationService {
 		return config.getString("admin.jwt-secret");
 	}
 
-	public long sessionDurationInMillis() {
-		return config.getDuration("admin.session-duration", TimeUnit.MILLISECONDS);
+	public long sessionExpireDurationInMillis() {
+		return config.getDuration("admin.session.expire-duration", TimeUnit.MILLISECONDS);
+	}
+
+	public long sessionRefreshDurationInMillis() {
+		long expireDuration = sessionExpireDurationInMillis();
+		long refreshDuration = config.getDuration("admin.session.refresh-duration", TimeUnit.MILLISECONDS);
+		if(expireDuration <= refreshDuration) {
+			throw new RuntimeException(
+				"Refresh duration (admin.session.refresh-duration), "
+				+ "must be lower than the expire duration (admin.session.expire-duration)"
+			);
+		}
+		return refreshDuration;
+	}
+
+	public long sessionInactiveDurationInMillis() {
+		long expireDuration = sessionExpireDurationInMillis();
+		long inactiveDuration = config.getDuration("admin.session.inative-duration", TimeUnit.MILLISECONDS);
+		if(expireDuration > inactiveDuration) {
+			throw new RuntimeException(
+				"Inactive duration (admin.session.inative-duration), "
+				+ "must be greater than the expire duration (admin.session.expire-duration)"
+			);
+		}
+		return inactiveDuration;
 	}
 
 	public int loginMaxAttempts() {
