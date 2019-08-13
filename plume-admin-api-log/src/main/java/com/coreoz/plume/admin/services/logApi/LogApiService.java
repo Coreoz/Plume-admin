@@ -64,11 +64,11 @@ public class LogApiService extends CrudService<LogApi> {
         boolean isCompleteTextRequest = true;
         boolean isCompleteTextResponse = true;
         // TODO should be done in SQL directly
-        if (log.getBodyRequest().length() > bodyMaxCharsDisplayed) {
+        if (bodyRequest != null && bodyRequest.length() > bodyMaxCharsDisplayed) {
             isCompleteTextRequest = false;
             bodyRequest = bodyRequest.substring(0, bodyMaxCharsDisplayed);
         }
-        if (log.getBodyResponse().length() > bodyMaxCharsDisplayed) {
+        if (bodyResponse != null && bodyResponse.length() > bodyMaxCharsDisplayed) {
             isCompleteTextResponse = false;
             bodyResponse = bodyResponse.substring(0, bodyMaxCharsDisplayed);
         }
