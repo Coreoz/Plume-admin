@@ -13,6 +13,7 @@ import lombok.Getter;
 @Getter
 enum MimeType {
     XML("application/xml", "xml"),
+    ATOM_XML("application/atom+xml", "xml"),
     HTML("text/html", "html"),
     JSON("application/json", "json"),
     TEXT("text/plain", "txt");
