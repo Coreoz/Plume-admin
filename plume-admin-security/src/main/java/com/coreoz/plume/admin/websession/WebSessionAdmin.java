@@ -1,8 +1,7 @@
-package com.coreoz.plume.admin.webservices.security;
+package com.coreoz.plume.admin.websession;
 
 import java.util.Set;
 
-import com.coreoz.plume.admin.websession.WebSessionPermission;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 

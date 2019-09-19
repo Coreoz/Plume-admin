@@ -21,10 +21,8 @@ import io.jsonwebtoken.SignatureAlgorithm;
 /**
  * A generic class to help serialialize/deserialialize objets from/to JWT.
  * Note that to use this class, you must have <code>plume-services</code> in your classpath.
- *
- * @param <T> The type of class handled by the JWT signer
  */
-public class JwtSessionSigner<T> {
+public class JwtSessionSigner implements WebSessionSigner {
 
 	private static final Logger logger = LoggerFactory.getLogger(JwtSessionSigner.class);
 
@@ -49,7 +47,8 @@ public class JwtSessionSigner<T> {
 	 * Returns an instance of {@link #T} if the session could be read and is fully valid
 	 * or null otherwise.
 	 */
-	public T parseSession(String webSesionSerialized, Class<T> sessionClass) {
+	@Override
+	public <T> T parseSession(String webSesionSerialized, Class<T> sessionClass) {
 		try {
 			Claims sessionAsMap = Jwts
 				.parser()
@@ -69,8 +68,9 @@ public class JwtSessionSigner<T> {
 	/**
 	 * Serialize into a string the session and sign it
 	 */
+	@Override
 	@SuppressWarnings("unchecked")
-	public String serializeSession(T sessionInformation, Long expirationTime) {
+	public String serializeSession(Object sessionInformation, Long expirationTime) {
 		JwtBuilder jwtBuilder = Jwts
 			.builder()
 			.signWith(signatureAlgorithm, signingKey)

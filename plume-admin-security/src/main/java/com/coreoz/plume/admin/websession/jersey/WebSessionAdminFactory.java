@@ -1,31 +1,30 @@
-package com.coreoz.plume.admin.webservices.context;
+package com.coreoz.plume.admin.websession.jersey;
 
 import javax.inject.Inject;
 import javax.ws.rs.container.ContainerRequestContext;
 
 import org.glassfish.hk2.api.Factory;
 
-import com.coreoz.plume.admin.webservices.security.WebSessionAdmin;
+import com.coreoz.plume.admin.websession.WebSessionAdmin;
 import com.coreoz.plume.admin.websession.WebSessionSigner;
-import com.coreoz.plume.admin.websession.jersey.WebSessionRequestPermissionProvider;
 
+/**
+ * Jersey {@link Factory} to extract session from requests
+ */
 public class WebSessionAdminFactory implements Factory<WebSessionAdmin> {
 
 	private final ContainerRequestContext context;
-	private final WebSessionRequestPermissionProvider<WebSessionAdmin> webSessionRequestPermissionProvider;
+	private final WebSessionSigner webSessionSigner;
 
 	@Inject
 	public WebSessionAdminFactory(ContainerRequestContext context, WebSessionSigner sessionSigner) {
 		this.context = context;
-		this.webSessionRequestPermissionProvider = new WebSessionRequestPermissionProvider<>(
-			sessionSigner,
-			WebSessionAdmin.class
-		);
+		this.webSessionSigner = sessionSigner;
 	}
 
 	@Override
 	public WebSessionAdmin provide() {
-		return webSessionRequestPermissionProvider.currentSessionInformation(context);
+		return JerseySessionParser.currentSessionInformation(context, webSessionSigner, WebSessionAdmin.class);
 	}
 
 	@Override

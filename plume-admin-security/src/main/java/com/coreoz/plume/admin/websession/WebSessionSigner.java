@@ -1,19 +1,11 @@
 package com.coreoz.plume.admin.websession;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+/**
+ * Enable serialization/deserialization of web session objects
+ */
+public interface WebSessionSigner {
 
-import com.coreoz.plume.admin.services.configuration.AdminSecurityConfigurationService;
-import com.coreoz.plume.services.time.TimeProvider;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-@Singleton
-public class WebSessionSigner extends JwtSessionSigner<WebSessionPermission> {
-
-	@Inject
-	public WebSessionSigner(AdminSecurityConfigurationService conf,
-			ObjectMapper objectMapper, TimeProvider timeProvider) {
-		super(conf.jwtSecret(), objectMapper, timeProvider);
-	}
+	<T> T parseSession(String webSesionSerialized, Class<T> sessionClass);
+	String serializeSession(Object sessionInformation, Long expirationTime);
 
 }

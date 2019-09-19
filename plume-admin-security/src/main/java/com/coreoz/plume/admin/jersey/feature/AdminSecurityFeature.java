@@ -6,22 +6,26 @@ import javax.ws.rs.container.DynamicFeature;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.FeatureContext;
 
-import com.coreoz.plume.admin.websession.WebSessionPermission;
+import com.coreoz.plume.admin.websession.WebSessionAdmin;
 import com.coreoz.plume.admin.websession.WebSessionSigner;
-import com.coreoz.plume.admin.websession.jersey.WebSessionFeature;
+import com.coreoz.plume.admin.websession.jersey.WebSessionRequestPermissionProvider;
+import com.coreoz.plume.jersey.security.permission.PermissionFeature;
 
+/**
+ * The Jersey feature that will secure a resource (JAX-RS Java class) annotated with {@link RestrictToAdmin}
+ */
 @Singleton
 public class AdminSecurityFeature implements DynamicFeature {
 
-	private final WebSessionFeature<WebSessionPermission, RestrictToAdmin> webSessionSecurityFeature;
+	private final PermissionFeature<RestrictToAdmin> permissionFeature;
 
-	@SuppressWarnings("unchecked")
 	@Inject
-	public AdminSecurityFeature(WebSessionSigner webSessionSigner,
-			WebSessionClassProvider webSessionClassProvider) {
-		this.webSessionSecurityFeature = new WebSessionFeature<>(
-			webSessionSigner,
-			(Class<WebSessionPermission>) webSessionClassProvider.webSessionClass(),
+	public AdminSecurityFeature(WebSessionSigner webSessionSigner) {
+		this.permissionFeature = new PermissionFeature<>(
+			new WebSessionRequestPermissionProvider<>(
+				webSessionSigner,
+				WebSessionAdmin.class
+			),
 			RestrictToAdmin.class,
 			RestrictToAdmin::value
 		);
@@ -29,7 +33,7 @@ public class AdminSecurityFeature implements DynamicFeature {
 
 	@Override
 	public void configure(ResourceInfo resourceInfo, FeatureContext context) {
-		webSessionSecurityFeature.configure(resourceInfo, context);
+		permissionFeature.configure(resourceInfo, context);
 	}
 
 }

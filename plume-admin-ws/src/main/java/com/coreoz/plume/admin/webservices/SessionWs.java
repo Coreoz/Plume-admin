@@ -15,10 +15,10 @@ import com.coreoz.plume.admin.services.user.AdminUserService;
 import com.coreoz.plume.admin.services.user.AuthenticatedUser;
 import com.coreoz.plume.admin.webservices.data.session.AdminCredentials;
 import com.coreoz.plume.admin.webservices.data.session.AdminSession;
-import com.coreoz.plume.admin.webservices.security.WebSessionProvider;
 import com.coreoz.plume.admin.webservices.validation.AdminWsError;
+import com.coreoz.plume.admin.websession.JwtSessionSigner;
+import com.coreoz.plume.admin.websession.WebSessionAdmin;
 import com.coreoz.plume.admin.websession.WebSessionPermission;
-import com.coreoz.plume.admin.websession.WebSessionSigner;
 import com.coreoz.plume.jersey.errors.Validators;
 import com.coreoz.plume.jersey.errors.WsException;
 import com.coreoz.plume.services.time.TimeProvider;
@@ -35,10 +35,8 @@ import io.swagger.annotations.ApiOperation;
 public class SessionWs {
 
 	private final AdminUserService adminUserService;
-	private final WebSessionSigner sessionSigner;
-	private final WebSessionProvider webSessionProvider;
+	private final JwtSessionSigner jwtSessionSigner;
 	private final TimeProvider timeProvider;
-
 	private final LoginFailAttemptsManager failAttemptsManager;
 
 	private final long blockedDurationInSeconds;
@@ -49,13 +47,11 @@ public class SessionWs {
 
 	@Inject
 	public SessionWs(AdminUserService adminUserService,
-			WebSessionSigner sessionSigner,
+			JwtSessionSigner jwtSessionSigner,
 			AdminConfigurationService configurationService,
-			WebSessionProvider webSessionProvider,
 			TimeProvider timeProvider) {
 		this.adminUserService = adminUserService;
-		this.sessionSigner = sessionSigner;
-		this.webSessionProvider = webSessionProvider;
+		this.jwtSessionSigner = jwtSessionSigner;
 		this.timeProvider = timeProvider;
 
 		this.failAttemptsManager = new LoginFailAttemptsManager(
@@ -71,19 +67,18 @@ public class SessionWs {
 	@POST
 	@ApiOperation(value = "Authenticate a user and create a session token")
 	public AdminSession authenticate(AdminCredentials credentials) {
-		return toAdminSession(webSessionProvider.toWebSession(authenticateUser(credentials)));
+		return toAdminSession(toWebSession(authenticateUser(credentials)));
 	}
 
-	@SuppressWarnings("unchecked")
 	@PUT
 	@Consumes(MediaType.TEXT_PLAIN)
 	@ApiOperation(value = "Renew a valid session token")
 	public AdminSession renew(String webSessionSerialized) {
 		Validators.checkRequired("sessionToken", webSessionSerialized);
 
-		WebSessionPermission parsedSession = sessionSigner.parseSession(
+		WebSessionAdmin parsedSession = jwtSessionSigner.parseSession(
 			webSessionSerialized,
-			(Class<WebSessionPermission>) webSessionProvider.webSessionClass()
+			WebSessionAdmin.class
 		);
 
 		if(parsedSession == null) {
@@ -112,9 +107,17 @@ public class SessionWs {
 			});
 	}
 
+	public WebSessionPermission toWebSession(AuthenticatedUser user) {
+		return new WebSessionAdmin()
+			.setPermissions(user.getPermissions())
+			.setIdUser(user.getUser().getId())
+			.setUserName(user.getUser().getUserName())
+			.setFullName(user.getUser().getFirstName() + " " + user.getUser().getLastName());
+	}
+
 	public AdminSession toAdminSession(WebSessionPermission webSession) {
 		return new AdminSession(
-			sessionSigner.serializeSession(
+			jwtSessionSigner.serializeSession(
 				webSession,
 				timeProvider.currentTime() + maxTimeSessionDurationInMilliseconds
 			),

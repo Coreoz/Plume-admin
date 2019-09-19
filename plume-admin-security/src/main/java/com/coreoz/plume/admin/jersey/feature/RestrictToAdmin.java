@@ -9,7 +9,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * Restrict a resource to users having the required permission
+ * Restrict a resource (JAX-RS Java class) to users having the required permission
  */
 @Documented
 @Retention (RUNTIME)
