@@ -18,9 +18,9 @@
 	<properties>
 		<jjwt.version>0.9.1</jjwt.version>
 		<jbcrypt.version>0.4.1</jbcrypt.version>
-		<okhttp.version>3.14.2</okhttp.version>
+		<okhttp.version>3.14.3</okhttp.version>
 
-		<plume-framework.version>2.0.0-SNAPSHOT</plume-framework.version>
+		<plume-framework.version>2.0.0-beta2</plume-framework.version>
 	</properties>
 
 	<dependencyManagement>
