@@ -17,7 +17,7 @@ import com.coreoz.plume.admin.db.daos.LogApiTrimmed;
 import com.coreoz.plume.admin.jersey.feature.RestrictToAdmin;
 import com.coreoz.plume.admin.services.logApi.LogApiBean;
 import com.coreoz.plume.admin.services.logApi.LogApiService;
-import com.coreoz.plume.admin.services.permission.ProjectAdminPermission;
+import com.coreoz.plume.admin.services.permission.ApiLogAdminPermissions;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -26,7 +26,7 @@ import io.swagger.annotations.ApiOperation;
 @Api("Application HTTP API trace")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@RestrictToAdmin(ProjectAdminPermission.MANAGE_API_LOGS)
+@RestrictToAdmin(ApiLogAdminPermissions.MANAGE_API_LOGS)
 @Singleton
 public class LogApiWs {
     private LogApiService logApiService;

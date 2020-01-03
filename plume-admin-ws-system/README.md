@@ -7,6 +7,7 @@ This module adds two API to manage:
 
 Installation
 ------------
+
 1. Maven dependency:
 ```xml
 <dependency>
