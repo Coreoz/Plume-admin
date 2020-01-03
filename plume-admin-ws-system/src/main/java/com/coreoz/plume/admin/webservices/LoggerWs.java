@@ -15,7 +15,7 @@ import javax.ws.rs.core.MediaType;
 import com.coreoz.plume.admin.jersey.feature.RestrictToAdmin;
 import com.coreoz.plume.admin.services.logs.AdminLoggerService;
 import com.coreoz.plume.admin.services.logs.bean.LoggerLevel;
-import com.coreoz.plume.admin.services.permission.ProjectAdminPermission;
+import com.coreoz.plume.admin.services.permission.SystemAdminPermissions;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -24,7 +24,7 @@ import io.swagger.annotations.ApiOperation;
 @Api("Manage application logger levels")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@RestrictToAdmin(ProjectAdminPermission.MANAGE_SYSTEM)
+@RestrictToAdmin(SystemAdminPermissions.MANAGE_SYSTEM)
 @Singleton
 public class LoggerWs {
 

@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.coreoz.plume.admin.jersey.feature.RestrictToAdmin;
-import com.coreoz.plume.admin.services.permission.ProjectAdminPermission;
+import com.coreoz.plume.admin.services.permission.SystemAdminPermissions;
 import com.coreoz.plume.admin.services.scheduled.AdminSchedulerService;
 import com.coreoz.plume.admin.services.scheduled.bean.AdminSchedulerData;
 import com.coreoz.plume.admin.websession.WebSessionPermission;
@@ -30,7 +30,7 @@ import io.swagger.annotations.ApiOperation;
 @Api("Manage scheduledJobs web-services")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@RestrictToAdmin(ProjectAdminPermission.MANAGE_SYSTEM)
+@RestrictToAdmin(SystemAdminPermissions.MANAGE_SYSTEM)
 @Singleton
 public class AdminSchedulerWs {
 

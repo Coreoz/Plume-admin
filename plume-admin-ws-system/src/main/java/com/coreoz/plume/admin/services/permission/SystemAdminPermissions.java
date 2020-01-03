@@ -1,6 +1,6 @@
 package com.coreoz.plume.admin.services.permission;
 
-public class ProjectAdminPermission {
+public class SystemAdminPermissions {
 
     public static final String MANAGE_SYSTEM = "MANAGE_SYSTEM";
 
