@@ -21,6 +21,7 @@ import com.coreoz.plume.admin.websession.WebSessionAdmin;
 import com.coreoz.plume.admin.websession.WebSessionPermission;
 import com.coreoz.plume.jersey.errors.Validators;
 import com.coreoz.plume.jersey.errors.WsException;
+import com.coreoz.plume.jersey.security.permission.PublicApi;
 import com.coreoz.plume.services.time.TimeProvider;
 import com.google.common.collect.ImmutableList;
 
@@ -31,6 +32,8 @@ import io.swagger.annotations.ApiOperation;
 @Api(value = "Manage the administration session")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
+// This API is marked as public, since it must be accessed without any authentication
+@PublicApi
 @Singleton
 public class SessionWs {
 
