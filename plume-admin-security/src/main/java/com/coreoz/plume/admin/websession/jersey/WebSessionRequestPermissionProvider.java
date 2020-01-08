@@ -25,6 +25,8 @@ public class WebSessionRequestPermissionProvider<T extends WebSessionPermission>
 		this.webSessionClass = webSessionClass;
 	}
 
+	// TODO faire 2 méthodes statiques pour gérer la session + 2 implem de WebSessionRequestPermissionProvider
+
 	@Override
 	public String userInformation(ContainerRequestContext requestContext) {
 		WebSessionPermission session = JerseySessionParser.currentSessionInformation(requestContext, webSessionSigner, webSessionClass);

@@ -24,7 +24,7 @@ public class WebSessionAdminFactory implements Factory<WebSessionAdmin> {
 
 	@Override
 	public WebSessionAdmin provide() {
-		return JerseySessionParser.currentSessionInformation(context, webSessionSigner, WebSessionAdmin.class);
+		return JerseySessionParser.currentSessionInformationWithFingerprintCheck(context, webSessionSigner, WebSessionAdmin.class);
 	}
 
 	@Override
