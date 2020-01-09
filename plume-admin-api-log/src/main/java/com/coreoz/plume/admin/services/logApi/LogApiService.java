@@ -32,6 +32,7 @@ public class LogApiService extends CrudService<LogApi> {
     private final int bodyMaxCharsDisplayed;
     private final Duration cleaningMaxDuration;
     private final int cleaningMaxLogsPerApi;
+    private final boolean saveToDatabase;
 
     private final BlockingQueue<LogInterceptApiBean> logsToBeSaved;
 
@@ -46,9 +47,12 @@ public class LogApiService extends CrudService<LogApi> {
         this.bodyMaxCharsDisplayed = configurationService.bodyMaxCharsDisplayed().intValue();
         this.cleaningMaxDuration = configurationService.cleaningMaxDuration();
         this.cleaningMaxLogsPerApi = configurationService.cleaningMaxLogsPerApi();
+        this.saveToDatabase = configurationService.saveToDatabase();
 
         this.logsToBeSaved = new LinkedBlockingQueue<>();
-        new Thread(this::insertWaitingLogs, "Http Log API Async saving").start();
+        if(saveToDatabase) {
+        	new Thread(this::insertWaitingLogs, "Http Log API Async saving").start();
+        }
     }
 
     public List<LogApiTrimmed> fetchAllTrimmedLogs() {
@@ -105,7 +109,9 @@ public class LogApiService extends CrudService<LogApi> {
 	}
 
     public void saveLog(LogInterceptApiBean interceptedLog) {
-        logsToBeSaved.add(interceptedLog);
+        if(saveToDatabase) {
+            logsToBeSaved.add(interceptedLog);
+        }
     }
 
     private void insertWaitingLogs() {
