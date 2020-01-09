@@ -18,7 +18,7 @@
 		<jbcrypt.version>0.4.1</jbcrypt.version>
 		<okhttp.version>3.14.3</okhttp.version>
 
-		<plume-framework.version>2.0.0-SNAPSHOT</plume-framework.version>
+		<plume-framework.version>2.0.0-beta3</plume-framework.version>
 	</properties>
 
 	<dependencyManagement>
