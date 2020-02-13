@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import javax.ws.rs.container.ContainerRequestContext;
 
+import com.coreoz.plume.admin.websession.WebSessionFingerprint;
 import com.coreoz.plume.admin.websession.WebSessionPermission;
 import com.coreoz.plume.admin.websession.WebSessionSigner;
 import com.coreoz.plume.jersey.security.permission.PermissionFeature;
@@ -15,27 +16,28 @@ import com.google.common.collect.ImmutableList;
  *
  * @param <T> A web session class implementing {@link WebSessionPermission}
  */
-public class WebSessionRequestPermissionProvider<T extends WebSessionPermission> implements PermissionRequestProvider {
+public class WebSessionRequestPermissionProvider<T extends WebSessionPermission & WebSessionFingerprint> implements PermissionRequestProvider {
 
 	private final WebSessionSigner webSessionSigner;
 	private final Class<T> webSessionClass;
+	private final boolean verifyCookieFingerprint;
 
-	public WebSessionRequestPermissionProvider(WebSessionSigner webSessionSigner, Class<T> webSessionClass) {
+	public WebSessionRequestPermissionProvider(WebSessionSigner webSessionSigner, Class<T> webSessionClass,
+			boolean verifyCookieFingerprint) {
 		this.webSessionSigner = webSessionSigner;
 		this.webSessionClass = webSessionClass;
+		this.verifyCookieFingerprint = verifyCookieFingerprint;
 	}
-
-	// TODO faire 2 méthodes statiques pour gérer la session + 2 implem de WebSessionRequestPermissionProvider
 
 	@Override
 	public String userInformation(ContainerRequestContext requestContext) {
-		WebSessionPermission session = JerseySessionParser.currentSessionInformation(requestContext, webSessionSigner, webSessionClass);
+		WebSessionPermission session = JerseySessionParser.currentSessionInformation(requestContext, webSessionSigner, webSessionClass, verifyCookieFingerprint);
 		return session == null ? "<no user connected>" : session.getUserName();
 	}
 
 	@Override
 	public Collection<String> correspondingPermissions(ContainerRequestContext requestContext) {
-		WebSessionPermission session = JerseySessionParser.currentSessionInformation(requestContext, webSessionSigner, webSessionClass);
+		WebSessionPermission session = JerseySessionParser.currentSessionInformation(requestContext, webSessionSigner, webSessionClass, verifyCookieFingerprint);
 		return session == null || session.getPermissions() == null ?
 			ImmutableList.of()
 			: session.getPermissions();

@@ -28,4 +28,8 @@ public class AdminSecurityConfigurationService {
 		return config.getBoolean("admin.session.use-fingerprint-cookie");
 	}
 
+	public boolean sessionFingerprintCookieHttpsOnly() {
+		return config.getBoolean("admin.session.fingerprint-cookie-https-only");
+	}
+
 }

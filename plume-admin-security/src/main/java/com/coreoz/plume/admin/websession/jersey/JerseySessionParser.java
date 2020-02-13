@@ -6,6 +6,9 @@ import java.util.function.BiPredicate;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Cookie;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.coreoz.plume.admin.websession.WebSessionFingerprint;
 import com.coreoz.plume.admin.websession.WebSessionSigner;
 import com.google.common.hash.Hashing;
@@ -15,6 +18,8 @@ import com.google.common.net.HttpHeaders;
  * Parse session from a {@link ContainerRequestContext} request
  */
 public class JerseySessionParser {
+
+	private static final Logger logger = LoggerFactory.getLogger(JerseySessionParser.class);
 
 	private static final BiPredicate<?, ?> ALWAYS_TRUE_BI_PREDICATE = (a, b) -> true;
 
@@ -35,9 +40,16 @@ public class JerseySessionParser {
 		return currentSessionInformationWithCheck(request, webSessionSigner, webSessionClass, JerseySessionParser::verifyFingerprintHash);
 	}
 
-	public static <T> T currentSessionInformation(ContainerRequestContext request,
-			WebSessionSigner webSessionSigner, Class<T> webSessionClass, boolean should) {
-		return currentSessionInformationWithCheck(request, webSessionSigner, webSessionClass, alwaysTrueBiPredicate());
+	public static <T extends WebSessionFingerprint> T currentSessionInformation(ContainerRequestContext request,
+			WebSessionSigner webSessionSigner, Class<T> webSessionClass, boolean verifyCookieFingerprint) {
+		return currentSessionInformationWithCheck(
+			request,
+			webSessionSigner,
+			webSessionClass,
+			verifyCookieFingerprint ?
+				(BiPredicate<ContainerRequestContext, T>) JerseySessionParser::verifyFingerprintHash
+				: alwaysTrueBiPredicate()
+		);
 	}
 
 	public static String hashFingerprint(String fingerprint) {
@@ -56,12 +68,22 @@ public class JerseySessionParser {
 	}
 
 	private static boolean verifyFingerprintHash(ContainerRequestContext request, String hashedFingerprint) {
-		Cookie fingerPrintCookie = request.getCookies().get(FINGERPRINT_COOKIE_NAME);
-		if(fingerPrintCookie == null || fingerPrintCookie.getValue() == null) {
+		Cookie fingerprintCookie = request.getCookies().get(FINGERPRINT_COOKIE_NAME);
+		if(fingerprintCookie == null || fingerprintCookie.getValue() == null) {
+			logger.warn("No fingerprint cookie provided (are you using HTTPS?), you can disable the "
+					+ "admin.session.use-fingerprint-cookie parameter if that is an issue "
+					+ "(though is lower the session security)");
 			return false;
 		}
 
-		return hashFingerprint(fingerPrintCookie.getValue()).equals(hashedFingerprint);
+		boolean isHashFingerprintValid = hashFingerprint(fingerprintCookie.getValue()).equals(hashedFingerprint);
+		if(!isHashFingerprintValid) {
+			logger.warn("The cookie fingerprint does not match the JWT token fingerprint hash, you can disable the "
+				+ "admin.session.use-fingerprint-cookie parameter if that is an issue "
+				+ "(though is lower the session security)");
+		}
+
+		return isHashFingerprintValid;
 	}
 
 	@SuppressWarnings("unchecked")

@@ -25,8 +25,9 @@ Installation
 3. Jersey web-services: `packages("com.coreoz.plume.admin.webservices")`
 4. Jersey admin security: `register(AdminSecurityFeature.class)`
 5. [Generate a JWT secret key](#configuration) and register it in your configuration: `admin.jwt-secret = "long_generated_password_to_secure_jwt_tokens"`
-6. SQL, see [setup files](plume-admin-ws/sql)
-7. Install a JS frontend like [Plume Admin UI for AngularJS](https://github.com/Coreoz/Plume-admin-ui-angularjs)
+6. For non-https environments (ie localhost for dev), set the configuration value: `admin.session.fingerprint-cookie-https-only = false` (this configuration value should be set to true in HTTPS environments like production)
+7. SQL, see [setup files](plume-admin-ws/sql)
+8. Install a JS frontend like [Plume Admin UI for AngularJS](https://github.com/Coreoz/Plume-admin-ui-angularjs)
 
 Current user access
 -------------------
@@ -63,6 +64,12 @@ admin.session.inative-duration = 15 minutes
 admin.login.max-attempts = 5
 admin.login.blocked-duration = 30 seconds
 admin.passwords.min-length = 0
+
+# if a secure cookie is emitted alongside the JWT token to prevent XSS attacks
+# see https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_Cheat_Sheet_for_Java.html for details
+admin.session.use-fingerprint-cookie = true
+# on localhost when using HTTP, this option must be set to false => this should be set to true at least on production
+admin.session.fingerprint-cookie-https-only = true
 
 # enable to ensure that users passwords are long enough
 admin.passwords.min-length = 0

@@ -47,7 +47,7 @@ import lombok.Getter;
 @Singleton
 public class SessionWs {
 
-	private static final FingerprintWithHash NULL_FINGERPRINT = new FingerprintWithHash(null, null);
+	public static final FingerprintWithHash NULL_FINGERPRINT = new FingerprintWithHash(null, null);
 
 	private final AdminUserService adminUserService;
 	private final JwtSessionSigner jwtSessionSigner;
@@ -62,6 +62,7 @@ public class SessionWs {
 
 	private final SecureRandom fingerprintGenerator;
 	private final boolean sessionUseFingerprintCookie;
+	private final boolean sessionFingerprintCookieHttpsOnly;
 
 	@Inject
 	public SessionWs(AdminUserService adminUserService,
@@ -84,6 +85,7 @@ public class SessionWs {
 
 		this.fingerprintGenerator = new SecureRandom();
 		this.sessionUseFingerprintCookie = adminSecurityConfigurationService.sessionUseFingerprintCookie();
+		this.sessionFingerprintCookieHttpsOnly = adminSecurityConfigurationService.sessionFingerprintCookieHttpsOnly();
 	}
 
 	@POST
@@ -160,7 +162,8 @@ public class SessionWs {
 	public ResponseBuilder withFingerprintCookie(ResponseBuilder response, String fingerprint) {
 		return response.header(
 			HttpHeaders.SET_COOKIE,
-			JerseySessionParser.FINGERPRINT_COOKIE_NAME + "=" + fingerprint + "; SameSite=Strict; HttpOnly; Secure"
+			JerseySessionParser.FINGERPRINT_COOKIE_NAME + "=" + fingerprint + "; SameSite=Strict; HttpOnly"
+			+ (sessionFingerprintCookieHttpsOnly ? "; Secure" : "")
 		);
 	}
 
