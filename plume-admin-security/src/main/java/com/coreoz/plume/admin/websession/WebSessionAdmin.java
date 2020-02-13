@@ -17,12 +17,13 @@ import lombok.experimental.Accessors;
 @Setter
 @Accessors(chain = true)
 @ToString
-public class WebSessionAdmin implements WebSessionPermission {
+public class WebSessionAdmin implements WebSessionPermission, WebSessionFingerprint {
 
 	@JsonSerialize(using = ToStringSerializer.class)
 	private long idUser;
 	private String userName;
 	private String fullName;
 	private Set<String> permissions;
+	private String hashedFingerprint;
 
 }

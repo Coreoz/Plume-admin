@@ -24,4 +24,12 @@ public class AdminSecurityConfigurationService {
 		return config.getString("admin.jwt-secret");
 	}
 
+	public boolean sessionUseFingerprintCookie() {
+		return config.getBoolean("admin.session.use-fingerprint-cookie");
+	}
+
+	public boolean sessionFingerprintCookieHttpsOnly() {
+		return config.getBoolean("admin.session.fingerprint-cookie-https-only");
+	}
+
 }
