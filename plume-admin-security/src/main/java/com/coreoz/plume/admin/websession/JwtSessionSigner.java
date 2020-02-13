@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtBuilder;
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 
@@ -30,17 +31,22 @@ public class JwtSessionSigner implements WebSessionSigner {
 	private final SignatureAlgorithm signatureAlgorithm;
 
 	private final ObjectMapper objectMapper;
-	private final TimeProvider timeProvider;
+
+	private final JwtParser jwtParser;
 
 	public JwtSessionSigner(String jwtSecret,
 			ObjectMapper objectMapper, TimeProvider timeProvider) {
-		this.signatureAlgorithm = SignatureAlgorithm.HS512;
+		this.signatureAlgorithm = SignatureAlgorithm.HS384;
 		this.signingKey = new SecretKeySpec(
 			jwtSecret.getBytes(),
 			signatureAlgorithm.getJcaName()
 		);
 		this.objectMapper = objectMapper;
-		this.timeProvider = timeProvider;
+		this.jwtParser = Jwts
+			.parserBuilder()
+			.setSigningKey(signingKey)
+			.setClock(() -> new Date(timeProvider.currentTime()))
+			.build();
 	}
 
 	/**
@@ -50,10 +56,7 @@ public class JwtSessionSigner implements WebSessionSigner {
 	@Override
 	public <T> T parseSession(String webSesionSerialized, Class<T> sessionClass) {
 		try {
-			Claims sessionAsMap = Jwts
-				.parser()
-				.setSigningKey(signingKey)
-				.setClock(() -> new Date(timeProvider.currentTime()))
+			Claims sessionAsMap = jwtParser
 				.parseClaimsJws(webSesionSerialized)
 				.getBody();
 			return objectMapper.convertValue(sessionAsMap, sessionClass);
@@ -73,7 +76,7 @@ public class JwtSessionSigner implements WebSessionSigner {
 	public String serializeSession(Object sessionInformation, Long expirationTime) {
 		JwtBuilder jwtBuilder = Jwts
 			.builder()
-			.signWith(signatureAlgorithm, signingKey)
+			.signWith(signingKey, signatureAlgorithm)
 			.setClaims(objectMapper.convertValue(sessionInformation, Map.class));
 
 		if(expirationTime != null) {

@@ -14,7 +14,7 @@
 	<description>Gather versions of various libraries used by Plume Admin</description>
 
 	<properties>
-		<jjwt.version>0.9.1</jjwt.version>
+		<jjwt.version>0.11.0</jjwt.version>
 		<jbcrypt.version>0.4.1</jbcrypt.version>
 		<okhttp.version>3.14.3</okhttp.version>
 
@@ -54,7 +54,17 @@
 
 			<dependency>
 				<groupId>io.jsonwebtoken</groupId>
-				<artifactId>jjwt</artifactId>
+				<artifactId>jjwt-api</artifactId>
+				<version>${jjwt.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.jsonwebtoken</groupId>
+				<artifactId>jjwt-impl</artifactId>
+				<version>${jjwt.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.jsonwebtoken</groupId>
+				<artifactId>jjwt-jackson</artifactId>
 				<version>${jjwt.version}</version>
 			</dependency>
 			<dependency>
