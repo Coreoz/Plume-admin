@@ -100,7 +100,7 @@ logApiScheduledJobs.scheduleJobs();
 
 Upgrade instructions
 --------------------
-See the [upgrade file](upgrade.md) to see the upgrade instructions.
+See the [releases notes](https://github.com/Coreoz/Plume-admin/releases) to see the upgrade instructions.
 
 Hibernate
 ---------
