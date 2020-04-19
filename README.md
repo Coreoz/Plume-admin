@@ -101,8 +101,3 @@ logApiScheduledJobs.scheduleJobs();
 Upgrade instructions
 --------------------
 See the [releases notes](https://github.com/Coreoz/Plume-admin/releases) to see the upgrade instructions.
-
-Hibernate
----------
-If hibernate is used, install Guice brige module: `install(new GuiceHibernateToQuerydslBridgeModule())`
-
