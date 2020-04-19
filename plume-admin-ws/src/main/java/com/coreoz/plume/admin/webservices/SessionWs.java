@@ -121,6 +121,7 @@ public class SessionWs {
 	}
 
 	public AuthenticatedUser authenticateUser(AdminCredentials credentials) {
+		Validators.checkRequired("Json creadentials", credentials);
 		Validators.checkRequired("users.USERNAME", credentials.getUserName());
 		Validators.checkRequired("users.PASSWORD", credentials.getPassword());
 
