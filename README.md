@@ -24,10 +24,11 @@ Installation
 2. Guice module: `install(new GuiceAdminWsWithDefaultsModule())`
 3. Jersey web-services: `packages("com.coreoz.plume.admin.webservices")`
 4. Jersey admin security: `register(AdminSecurityFeature.class)`
-5. [Generate a JWT secret key](#configuration) and register it in your configuration: `admin.jwt-secret = "long_generated_password_to_secure_jwt_tokens"`
-6. For non-https environments (ie localhost for dev), set the configuration value: `admin.session.fingerprint-cookie-https-only = false` (this configuration value should be set to true in HTTPS environments like production)
-7. SQL, see [setup files](plume-admin-ws/sql)
-8. Install a JS frontend like [Plume Admin UI for AngularJS](https://github.com/Coreoz/Plume-admin-ui-angularjs)
+5. Jersey security: If the access control mechanism is setup, you need to add the `RestrictToAdmin.class` access control annotation: `config.register(RequireExplicitAccessControlFeature.accessControlAnnotations(PublicApi.class, RestrictToAdmin.class));`
+6. [Generate a JWT secret key](#configuration) and register it in your configuration: `admin.jwt-secret = "long_generated_password_to_secure_jwt_tokens"`
+7. For non-https environments (ie localhost for dev), set the configuration value: `admin.session.fingerprint-cookie-https-only = false` (this configuration value should be set to true in HTTPS environments like production)
+8. SQL, see [setup files](plume-admin-ws/sql)
+9. Install a JS frontend like [Plume Admin UI for AngularJS](https://github.com/Coreoz/Plume-admin-ui-angularjs)
 
 Current user access
 -------------------
