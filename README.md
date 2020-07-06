@@ -46,7 +46,13 @@ register(new AbstractBinder() {
 
 Admin security
 --------------
-To use this module without Admin Web-services, an implementation of `WebSessionClassProvider` must be provided.
+To use this module without Admin Web-services, you may want to provide implementations of `AdminPermissionService`, `WebSessionSigner`, and `JwtSessionSigner`.
+As an example, here is what is defined in the Admin Web-services Guice configuration:
+```java
+bind(AdminPermissionService.class).to(AdminPermissionServiceBasic.class);
+bind(WebSessionSigner.class).toProvider(JwtSessionSignerProvider.class);
+bind(JwtSessionSigner.class).toProvider(JwtSessionSignerProvider.class);
+```
 
 Configuration
 -------------
