@@ -10,6 +10,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.ws.rs.QueryParam;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,8 +56,25 @@ public class LogApiService extends CrudService<LogApi> {
         }
     }
 
-    public List<LogApiTrimmed> fetchAllTrimmedLogs() {
-        return logApiDao.fetchTrimmedLogs();
+    public Paginate<LogApiTrimmed> fetchAllTrimmedLogs(
+        Integer page,
+        Integer limit,
+        String method,
+        Integer statusCode,
+        String apiName,
+        String url,
+        Instant startDate,
+        Instant endDate
+    ) {
+        Integer offset = (page - 1) * limit;
+        List<LogApiTrimmed> list = logApiDao.fetchTrimmedLogs(offset, limit, method, statusCode, apiName, url, startDate, endDate);
+        Long total = logApiDao.fetchCount(method, statusCode, apiName, url, startDate, endDate);
+        return Paginate.of(
+            total,
+            list,
+            page,
+            (int) Math.ceil((double) total / limit)
+        );
     }
 
     public LogApiBean fetchLogDetails(Long id) {

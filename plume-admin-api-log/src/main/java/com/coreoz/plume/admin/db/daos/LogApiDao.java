@@ -1,22 +1,24 @@
 package com.coreoz.plume.admin.db.daos;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
 import com.coreoz.plume.admin.db.generated.LogApi;
 import com.coreoz.plume.admin.db.generated.QLogApi;
 import com.coreoz.plume.admin.db.generated.QLogHeader;
 import com.coreoz.plume.db.querydsl.crud.CrudDaoQuerydsl;
 import com.coreoz.plume.db.querydsl.transaction.TransactionManagerQuerydsl;
+import com.google.common.base.Strings;
+import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.core.types.dsl.SimpleExpression;
 import com.querydsl.sql.SQLExpressions;
 import com.querydsl.sql.SQLQuery;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import java.time.Instant;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Singleton
 public class LogApiDao extends CrudDaoQuerydsl<LogApi> {
@@ -28,31 +30,120 @@ public class LogApiDao extends CrudDaoQuerydsl<LogApi> {
         super(transactionManager, QLogApi.logApi);
     }
 
-    public List<LogApiTrimmed> fetchTrimmedLogs() {
-        return transactionManager
-            .selectQuery()
-            .select(
-            	QLogApi.logApi.id,
-            	QLogApi.logApi.date,
-            	QLogApi.logApi.method,
-            	QLogApi.logApi.apiName,
-            	QLogApi.logApi.url,
-            	QLogApi.logApi.statusCode
-            )
-            .from(QLogApi.logApi)
+    private SQLQuery<Tuple> getLogsByFilters(
+		String method,
+		Integer statusCode,
+		String apiName,
+		String url,
+		Instant startDate,
+		Instant endDate
+	) {
+		BooleanExpression filters = applyFilters(method, statusCode, apiName, url, startDate, endDate);
+    	return transactionManager
+			.selectQuery()
+			.select(
+				QLogApi.logApi.id,
+				QLogApi.logApi.date,
+				QLogApi.logApi.method,
+				QLogApi.logApi.apiName,
+				QLogApi.logApi.url,
+				QLogApi.logApi.statusCode
+			)
+			.from(QLogApi.logApi)
+			.where(filters);
+	}
+
+	public Long fetchCount(
+		String method,
+		Integer statusCode,
+		String apiName,
+		String url,
+		Instant startDate,
+		Instant endDate
+	) {
+    	return getLogsByFilters(method, statusCode, apiName, url, startDate, endDate).fetchCount();
+	}
+
+    public List<LogApiTrimmed> fetchTrimmedLogs(
+		Integer offset,
+		Integer limit,
+		String method,
+		Integer statusCode,
+		String apiName,
+		String url,
+		Instant startDate,
+		Instant endDate
+	) {
+        return getLogsByFilters(method, statusCode, apiName, url, startDate, endDate)
+			.offset(offset)
+			.limit(limit)
             .orderBy(QLogApi.logApi.date.desc())
             .fetch()
             .stream()
             .map(tuple -> new LogApiTrimmed(
-            	tuple.get(QLogApi.logApi.id),
-            	tuple.get(QLogApi.logApi.date),
-            	tuple.get(QLogApi.logApi.method),
-            	tuple.get(QLogApi.logApi.apiName),
-            	tuple.get(QLogApi.logApi.url),
-            	tuple.get(QLogApi.logApi.statusCode)
-            ))
-            .collect(Collectors.toList());
+					tuple.get(QLogApi.logApi.id),
+					tuple.get(QLogApi.logApi.date),
+					tuple.get(QLogApi.logApi.method),
+					tuple.get(QLogApi.logApi.apiName),
+					tuple.get(QLogApi.logApi.url),
+					tuple.get(QLogApi.logApi.statusCode)
+				)
+			).collect(Collectors.toList());
     }
+
+    private BooleanExpression applyFilters(
+		String method,
+		Integer statusCode,
+		String apiName,
+		String url,
+		Instant startDate,
+		Instant endDate
+	) {
+		BooleanExpression methodFilter = Expressions.asBoolean(true).isTrue();
+		BooleanExpression statusCodeFilter = Expressions.asBoolean(true).isTrue();
+		BooleanExpression apiNameFilter = Expressions.asBoolean(true).isTrue();
+		BooleanExpression urlFilter = Expressions.asBoolean(true).isTrue();
+		BooleanExpression startDateFilter = Expressions.asBoolean(true).isTrue();
+		BooleanExpression endDateFilter = Expressions.asBoolean(true).isTrue();
+
+		if (!Strings.isNullOrEmpty(method)) {
+			methodFilter = Expressions.asBoolean(true).isFalse();
+			methodFilter = methodFilter.or(QLogApi.logApi.method.eq(method));
+		}
+		if (statusCode != null) {
+			statusCodeFilter = Expressions.asBoolean(true).isFalse();
+			statusCodeFilter = statusCodeFilter.or(
+				QLogApi.logApi.statusCode.eq(statusCode)
+			);
+		}
+		if (!Strings.isNullOrEmpty(apiName)) {
+			apiNameFilter = Expressions.asBoolean(true).isFalse();
+			apiNameFilter = apiNameFilter.or(
+				QLogApi.logApi.apiName.containsIgnoreCase(apiName)
+			);
+		}
+		if (!Strings.isNullOrEmpty(url)) {
+			urlFilter = Expressions.asBoolean(true).isFalse();
+			urlFilter = urlFilter.or(
+				QLogApi.logApi.url.containsIgnoreCase(url)
+			);
+		}
+
+		if (startDate != null) {
+			startDateFilter = Expressions.asBoolean(true).isFalse();
+			startDateFilter = startDateFilter.or(
+				QLogApi.logApi.date.goe(startDate)
+			);
+		}
+		if (endDate != null) {
+			endDateFilter = Expressions.asBoolean(true).isFalse();
+			endDateFilter = endDateFilter.or(
+				QLogApi.logApi.date.loe(endDate)
+			);
+		}
+
+		return methodFilter.and(statusCodeFilter).and(apiNameFilter).and(urlFilter).and(startDateFilter).and(endDateFilter);
+	}
 
     public List<String> listApiNames() {
         return transactionManager

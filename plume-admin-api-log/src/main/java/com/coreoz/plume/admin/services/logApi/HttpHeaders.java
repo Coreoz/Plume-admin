@@ -11,6 +11,6 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public class HttpHeaders {
-    private List<LogHeader> header;
+    private List<LogHeader> headers;
     private String mimeType;
 }
