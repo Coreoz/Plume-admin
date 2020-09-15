@@ -163,7 +163,7 @@ public class SessionWs {
 	public ResponseBuilder withFingerprintCookie(ResponseBuilder response, String fingerprint) {
 		return response.header(
 			HttpHeaders.SET_COOKIE,
-			JerseySessionParser.FINGERPRINT_COOKIE_NAME + "=" + fingerprint + "; SameSite=Strict; HttpOnly"
+			JerseySessionParser.FINGERPRINT_COOKIE_NAME + "=" + fingerprint + "; path=/; SameSite=Strict; HttpOnly"
 			+ (sessionFingerprintCookieHttpsOnly ? "; Secure" : "")
 		);
 	}
