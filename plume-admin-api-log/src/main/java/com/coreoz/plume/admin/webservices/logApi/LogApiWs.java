@@ -1,7 +1,12 @@
 package com.coreoz.plume.admin.webservices.logApi;
 
-import java.time.Instant;
-import java.util.List;
+import com.coreoz.plume.admin.db.daos.LogApiTrimmed;
+import com.coreoz.plume.admin.jersey.feature.RestrictToAdmin;
+import com.coreoz.plume.admin.services.logApi.LogApiBean;
+import com.coreoz.plume.admin.services.logApi.LogApiService;
+import com.coreoz.plume.admin.services.permission.ApiLogAdminPermissions;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -14,16 +19,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-
-import com.coreoz.plume.admin.db.daos.LogApiTrimmed;
-import com.coreoz.plume.admin.jersey.feature.RestrictToAdmin;
-import com.coreoz.plume.admin.services.logApi.LogApiBean;
-import com.coreoz.plume.admin.services.logApi.LogApiService;
-import com.coreoz.plume.admin.services.logApi.Paginate;
-import com.coreoz.plume.admin.services.permission.ApiLogAdminPermissions;
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import java.time.Instant;
+import java.util.List;
 
 @Path("/admin/logs")
 @Api("Application HTTP API trace")
@@ -41,8 +38,7 @@ public class LogApiWs {
 
     @GET
     @ApiOperation("Fetch API trimmed logs (without request/response bodies) by query filters")
-    public Paginate<LogApiTrimmed> fetchAllLogs(
-        @QueryParam("page") Integer page,
+    public List<LogApiTrimmed> fetchAllLogs(
         @QueryParam("limit") Integer limit,
         @QueryParam("method") String method,
         @QueryParam("statusCode") Integer statusCode,
@@ -51,9 +47,8 @@ public class LogApiWs {
         @QueryParam("startDate") Instant startDate,
         @QueryParam("endDate") Instant endDate
     ) {
-        if (page == null || page == 0) { page = 1; }
-        if (limit == null || limit == 0) { limit = 10; }
-        return logApiService.fetchAllTrimmedLogs(page, limit, method, statusCode, apiName, url, startDate, endDate);
+        if (limit == null || limit == 0) { limit = 50; }
+        return logApiService.fetchAllTrimmedLogs(limit, method, statusCode, apiName, url, startDate, endDate);
     }
 
     @GET
