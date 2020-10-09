@@ -45,10 +45,14 @@ public class AdminConfigurationService {
 
 	public long sessionInactiveDurationInMillis() {
 		long expireDuration = sessionExpireDurationInMillis();
-		long inactiveDuration = config.getDuration("admin.session.inative-duration", TimeUnit.MILLISECONDS);
+		long inactiveDuration = config.getDuration("admin.session.inactive-duration", TimeUnit.MILLISECONDS);
+		// TODO to be removed in plume 3.0.0
+		if(config.hasPath("admin.session.inative-duration")) {
+			inactiveDuration = config.getDuration("admin.session.inative-duration", TimeUnit.MILLISECONDS);
+		}
 		if(expireDuration > inactiveDuration) {
 			throw new RuntimeException(
-				"Inactive duration (admin.session.inative-duration), "
+				"Inactive duration (admin.session.inactive-duration), "
 				+ "must be greater than the expire duration (admin.session.expire-duration)"
 			);
 		}

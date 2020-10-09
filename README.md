@@ -67,7 +67,7 @@ admin.session.expire-duration = 1 minute
 # the duration after which the client should refresh the session token (must be lower than the expire duration)
 admin.session.refresh-duration = 20 seconds
 # the duration after which the client should stop refreshing the session token (must be greater than the expire duration)  
-admin.session.inative-duration = 15 minutes
+admin.session.inactive-duration = 15 minutes
 admin.login.max-attempts = 5
 admin.login.blocked-duration = 30 seconds
 admin.passwords.min-length = 0
