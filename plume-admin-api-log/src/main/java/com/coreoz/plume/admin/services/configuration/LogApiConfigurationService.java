@@ -42,4 +42,8 @@ public class LogApiConfigurationService {
 		return config.getBoolean("api.log.save-to-database");
 	}
 
+	public Integer defaultLimit() {
+		return config.getInt("api.log.default-limit");
+	}
+
 }

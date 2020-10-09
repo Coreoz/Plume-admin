@@ -2,6 +2,7 @@ package com.coreoz.plume.admin.webservices.logApi;
 
 import com.coreoz.plume.admin.db.daos.LogApiTrimmed;
 import com.coreoz.plume.admin.jersey.feature.RestrictToAdmin;
+import com.coreoz.plume.admin.services.configuration.LogApiConfigurationService;
 import com.coreoz.plume.admin.services.logApi.LogApiBean;
 import com.coreoz.plume.admin.services.logApi.LogApiService;
 import com.coreoz.plume.admin.services.permission.ApiLogAdminPermissions;
@@ -30,10 +31,12 @@ import java.util.List;
 @Singleton
 public class LogApiWs {
     private LogApiService logApiService;
+    private static Integer DEFAULT_LIMIT;
 
     @Inject
-    public LogApiWs(LogApiService logApiService) {
+    public LogApiWs(LogApiService logApiService, LogApiConfigurationService logApiConfigurationService) {
         this.logApiService = logApiService;
+        DEFAULT_LIMIT = logApiConfigurationService.defaultLimit();
     }
 
     @GET
@@ -47,7 +50,9 @@ public class LogApiWs {
         @QueryParam("startDate") Instant startDate,
         @QueryParam("endDate") Instant endDate
     ) {
-        if (limit == null || limit == 0) { limit = 50; }
+        if (limit == null || limit == 0) {
+            limit = DEFAULT_LIMIT;
+        }
         return logApiService.fetchAllTrimmedLogs(limit, method, statusCode, apiName, url, startDate, endDate);
     }
 
@@ -55,7 +60,7 @@ public class LogApiWs {
     @ApiOperation("Fetch the headers and the trimmed body of a request/response")
     @Path("/{idLog}")
     public LogApiBean details(@PathParam("idLog") Long id) {
-    	return logApiService.fetchLogDetails(id);
+        return logApiService.fetchLogDetails(id);
     }
 
     @GET
@@ -63,16 +68,16 @@ public class LogApiWs {
     @Path("/{idLog}/{isRequest}")
     public Response bodyFile(@PathParam("idLog") Long id, @PathParam("isRequest") Boolean isRequest) {
         return logApiService
-        	.findBodyPart(id, isRequest)
-        	.map(bodyPart -> Response
-        		.ok(bodyPart.getBody().getBytes())
-        		.header(
-        			"Content-Disposition",
-        			"attachment; filename=\""+ bodyPart.getApiName()+ "." + bodyPart.getFileExtension() + "\""
-        		)
-        		.build()
-        	)
-        	.orElseGet(() -> Response.status(Status.NOT_FOUND).build());
+            .findBodyPart(id, isRequest)
+            .map(bodyPart -> Response
+                .ok(bodyPart.getBody().getBytes())
+                .header(
+                    "Content-Disposition",
+                    "attachment; filename=\"" + bodyPart.getApiName() + "." + bodyPart.getFileExtension() + "\""
+                )
+                .build()
+            )
+            .orElseGet(() -> Response.status(Status.NOT_FOUND).build());
     }
 
 }
