@@ -1,22 +1,24 @@
 package com.coreoz.plume.admin.db.daos;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
 import com.coreoz.plume.admin.db.generated.LogApi;
 import com.coreoz.plume.admin.db.generated.QLogApi;
 import com.coreoz.plume.admin.db.generated.QLogHeader;
 import com.coreoz.plume.db.querydsl.crud.CrudDaoQuerydsl;
 import com.coreoz.plume.db.querydsl.transaction.TransactionManagerQuerydsl;
+import com.google.common.base.Strings;
+import com.querydsl.core.Tuple;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.core.types.dsl.SimpleExpression;
 import com.querydsl.sql.SQLExpressions;
 import com.querydsl.sql.SQLQuery;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import java.time.Instant;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Singleton
 public class LogApiDao extends CrudDaoQuerydsl<LogApi> {
@@ -28,31 +30,96 @@ public class LogApiDao extends CrudDaoQuerydsl<LogApi> {
         super(transactionManager, QLogApi.logApi);
     }
 
-    public List<LogApiTrimmed> fetchTrimmedLogs() {
-        return transactionManager
-            .selectQuery()
-            .select(
-            	QLogApi.logApi.id,
-            	QLogApi.logApi.date,
-            	QLogApi.logApi.method,
-            	QLogApi.logApi.apiName,
-            	QLogApi.logApi.url,
-            	QLogApi.logApi.statusCode
-            )
-            .from(QLogApi.logApi)
+    private SQLQuery<Tuple> buildFilterLogsQuery(
+		String method,
+		Integer statusCode,
+		String apiName,
+		String url,
+		Instant startDate,
+		Instant endDate
+	) {
+		BooleanExpression filters = applyFilters(method, statusCode, apiName, url, startDate, endDate);
+    	return transactionManager
+			.selectQuery()
+			.select(
+				QLogApi.logApi.id,
+				QLogApi.logApi.date,
+				QLogApi.logApi.method,
+				QLogApi.logApi.apiName,
+				QLogApi.logApi.url,
+				QLogApi.logApi.statusCode
+			)
+			.from(QLogApi.logApi)
+			.where(filters);
+	}
+
+    public List<LogApiTrimmed> fetchTrimmedLogs(
+		Integer limit,
+		String method,
+		Integer statusCode,
+		String apiName,
+		String url,
+		Instant startDate,
+		Instant endDate
+	) {
+        return buildFilterLogsQuery(method, statusCode, apiName, url, startDate, endDate)
+			.limit(limit)
             .orderBy(QLogApi.logApi.date.desc())
             .fetch()
             .stream()
             .map(tuple -> new LogApiTrimmed(
-            	tuple.get(QLogApi.logApi.id),
-            	tuple.get(QLogApi.logApi.date),
-            	tuple.get(QLogApi.logApi.method),
-            	tuple.get(QLogApi.logApi.apiName),
-            	tuple.get(QLogApi.logApi.url),
-            	tuple.get(QLogApi.logApi.statusCode)
-            ))
-            .collect(Collectors.toList());
+					tuple.get(QLogApi.logApi.id),
+					tuple.get(QLogApi.logApi.date),
+					tuple.get(QLogApi.logApi.method),
+					tuple.get(QLogApi.logApi.apiName),
+					tuple.get(QLogApi.logApi.url),
+					tuple.get(QLogApi.logApi.statusCode)
+				)
+			).collect(Collectors.toList());
     }
+
+    private BooleanExpression applyFilters(
+		String method,
+		Integer statusCode,
+		String apiName,
+		String url,
+		Instant startDate,
+		Instant endDate
+	) {
+		BooleanExpression filters = Expressions.asBoolean(true).isTrue();
+
+		if (!Strings.isNullOrEmpty(method)) {
+			filters = filters.and(QLogApi.logApi.method.eq(method));
+		}
+		if (statusCode != null) {
+			filters = filters.and(
+				QLogApi.logApi.statusCode.eq(statusCode)
+			);
+		}
+		if (!Strings.isNullOrEmpty(apiName)) {
+			filters = filters.and(
+				QLogApi.logApi.apiName.containsIgnoreCase(apiName)
+			);
+		}
+		if (!Strings.isNullOrEmpty(url)) {
+			filters = filters.and(
+				QLogApi.logApi.url.containsIgnoreCase(url)
+			);
+		}
+
+		if (startDate != null) {
+			filters = filters.and(
+				QLogApi.logApi.date.goe(startDate)
+			);
+		}
+		if (endDate != null) {
+			filters = filters.and(
+				QLogApi.logApi.date.loe(endDate)
+			);
+		}
+
+		return filters;
+	}
 
     public List<String> listApiNames() {
         return transactionManager

@@ -1,25 +1,23 @@
 package com.coreoz.plume.admin.services.logApi;
 
 
-import java.time.Duration;
-import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.coreoz.plume.admin.db.daos.LogApiDao;
 import com.coreoz.plume.admin.db.daos.LogApiTrimmed;
 import com.coreoz.plume.admin.db.generated.LogApi;
 import com.coreoz.plume.admin.services.configuration.LogApiConfigurationService;
 import com.coreoz.plume.db.crud.CrudService;
 import com.coreoz.plume.services.time.TimeProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 @Singleton
 public class LogApiService extends CrudService<LogApi> {
@@ -55,8 +53,16 @@ public class LogApiService extends CrudService<LogApi> {
         }
     }
 
-    public List<LogApiTrimmed> fetchAllTrimmedLogs() {
-        return logApiDao.fetchTrimmedLogs();
+    public List<LogApiTrimmed> fetchAllTrimmedLogs(
+        Integer limit,
+        String method,
+        Integer statusCode,
+        String apiName,
+        String url,
+        Instant startDate,
+        Instant endDate
+    ) {
+        return logApiDao.fetchTrimmedLogs(limit, method, statusCode, apiName, url, startDate, endDate);
     }
 
     public LogApiBean fetchLogDetails(Long id) {
