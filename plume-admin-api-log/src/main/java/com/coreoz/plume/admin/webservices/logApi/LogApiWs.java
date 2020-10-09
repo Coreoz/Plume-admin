@@ -1,13 +1,7 @@
 package com.coreoz.plume.admin.webservices.logApi;
 
-import com.coreoz.plume.admin.db.daos.LogApiTrimmed;
-import com.coreoz.plume.admin.jersey.feature.RestrictToAdmin;
-import com.coreoz.plume.admin.services.configuration.LogApiConfigurationService;
-import com.coreoz.plume.admin.services.logApi.LogApiBean;
-import com.coreoz.plume.admin.services.logApi.LogApiService;
-import com.coreoz.plume.admin.services.permission.ApiLogAdminPermissions;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import java.time.Instant;
+import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -20,8 +14,16 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import java.time.Instant;
-import java.util.List;
+
+import com.coreoz.plume.admin.db.daos.LogApiTrimmed;
+import com.coreoz.plume.admin.jersey.feature.RestrictToAdmin;
+import com.coreoz.plume.admin.services.configuration.LogApiConfigurationService;
+import com.coreoz.plume.admin.services.logApi.LogApiBean;
+import com.coreoz.plume.admin.services.logApi.LogApiService;
+import com.coreoz.plume.admin.services.permission.ApiLogAdminPermissions;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 @Path("/admin/logs")
 @Api("Application HTTP API trace")
@@ -31,12 +33,12 @@ import java.util.List;
 @Singleton
 public class LogApiWs {
     private LogApiService logApiService;
-    private static Integer DEFAULT_LIMIT;
+    private Integer maxLogsToFetch;
 
     @Inject
     public LogApiWs(LogApiService logApiService, LogApiConfigurationService logApiConfigurationService) {
         this.logApiService = logApiService;
-        DEFAULT_LIMIT = logApiConfigurationService.defaultLimit();
+        this.maxLogsToFetch = logApiConfigurationService.defaultLimit();
     }
 
     @GET
@@ -50,8 +52,8 @@ public class LogApiWs {
         @QueryParam("startDate") Instant startDate,
         @QueryParam("endDate") Instant endDate
     ) {
-        if (limit == null || limit == 0) {
-            limit = DEFAULT_LIMIT;
+        if (limit == null || limit == 0 || limit > maxLogsToFetch) {
+            limit = maxLogsToFetch;
         }
         return logApiService.fetchAllTrimmedLogs(limit, method, statusCode, apiName, url, startDate, endDate);
     }
