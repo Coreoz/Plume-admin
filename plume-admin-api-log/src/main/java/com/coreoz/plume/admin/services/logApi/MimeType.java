@@ -16,7 +16,8 @@ enum MimeType {
     ATOM_XML("application/atom+xml", "xml"),
     HTML("text/html", "html"),
     JSON("application/json", "json"),
-    TEXT("text/plain", "txt");
+    TEXT("text/plain", "txt"),
+    PDF("application/pdf", "pdf");
 
     private final String mimeType;
     private final String fileExtension;

@@ -8,12 +8,12 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public class LogInterceptApiBean {
-    private String url;
-    private String method;
-    private int statusCode;
-    private String bodyRequest;
-    private String bodyResponse;
-    private List<HttpHeader> headerRequest;
-    private List<HttpHeader> headerResponse;
-    private String apiName;
+    private final String url;
+    private final String method;
+    private final int statusCode;
+    private final String bodyRequest;
+    private final String bodyResponse;
+    private final List<HttpHeader> headerRequest;
+    private final List<HttpHeader> headerResponse;
+    private final String apiName;
 }

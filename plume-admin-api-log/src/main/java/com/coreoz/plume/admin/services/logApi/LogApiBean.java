@@ -14,16 +14,16 @@ import lombok.Getter;
 @Getter
 public class LogApiBean {
     @JsonSerialize(using = ToStringSerializer.class)
-    private Long id;
-    private String api;
-    private String url;
-    private Instant date;
-    private String method;
-    private Integer statusCode;
-    private String bodyRequest;
-    private String bodyResponse;
-    private HttpHeaders headerRequest;
-    private HttpHeaders headerResponse;
-    private Boolean isCompleteTextRequest;
-    private Boolean isCompleteTextResponse;
+    private final Long id;
+    private final String api;
+    private final String url;
+    private final Instant date;
+    private final String method;
+    private final Integer statusCode;
+    private final String bodyRequest;
+    private final String bodyResponse;
+    private final HttpHeaders headerRequest;
+    private final HttpHeaders headerResponse;
+    private final Boolean isCompleteTextRequest;
+    private final Boolean isCompleteTextResponse;
 }

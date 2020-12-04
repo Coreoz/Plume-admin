@@ -16,16 +16,12 @@ import javax.inject.Singleton;
 @Singleton
 public class RetrofitHelperLogApi {
 
-
     private final LogApiService logApiService;
-
 
     @Inject
     public RetrofitHelperLogApi(LogApiService logApiService) {
         this.logApiService = logApiService;
     }
-
-
 
     public OkHttpClient.Builder debugLoggingHttpClient(String apiName) {
         return new OkHttpClient.Builder()

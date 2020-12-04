@@ -12,7 +12,7 @@ import com.coreoz.plume.db.crud.CrudService;
 @Singleton
 public class LogHeaderService extends CrudService<LogHeader> {
 
-    private LogHeaderDao logHeaderDao;
+    private final LogHeaderDao logHeaderDao;
 
     @Inject
     public LogHeaderService(LogHeaderDao logHeaderDao) {
