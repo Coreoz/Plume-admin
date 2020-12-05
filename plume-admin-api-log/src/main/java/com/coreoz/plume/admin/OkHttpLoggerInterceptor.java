@@ -33,6 +33,7 @@ import java.util.function.BiPredicate;
 public class OkHttpLoggerInterceptor implements Interceptor {
 
     private static final Logger logger = LoggerFactory.getLogger("api.http");
+    private static final BiPredicate<Request, Response> ALWAYS_TRUE_BI_PREDICATE = (request, response) -> true;
 
     private final String apiName;
     private final LogApiService logApiService;
@@ -45,7 +46,7 @@ public class OkHttpLoggerInterceptor implements Interceptor {
     }
 
     public OkHttpLoggerInterceptor(String apiName, LogApiService logApiService) {
-        this(apiName, logApiService, (request, response) -> true);
+        this(apiName, logApiService, ALWAYS_TRUE_BI_PREDICATE);
     }
 
     @NotNull
@@ -74,7 +75,7 @@ public class OkHttpLoggerInterceptor implements Interceptor {
         if (hasRequestBody) {
             requestHeaders = this.handleRequestBodyAngGetHeaders(request);
         } else {
-            logger.debug("--> END " + request.method());
+            logger.debug("--> END {}", request.method());
         }
 
         long startNs = System.nanoTime();
@@ -92,14 +93,21 @@ public class OkHttpLoggerInterceptor implements Interceptor {
 
         long contentLength = responseBody.contentLength();
         String bodySize = contentLength != -1L ? contentLength + "-byte" : "unknown-length";
-        logger.debug("<-- " + response.code() + (response.message().isEmpty() ? "" : ' ' + response.message()) + ' ' + response.request().url() + " (" + tookMs + "ms" + ", " + bodySize + " body" + ')');
+        String responseMessage = response.message().isEmpty() ? "-- no message --" : response.message();
+        logger.debug("<-- {} {} {} ({} ms, {} body)",
+            response.code(),
+            responseMessage,
+            response.request().url(),
+            tookMs,
+            bodySize
+        );
 
         Headers headers = response.headers();
         int i = 0;
 
         for (int count = headers.size(); i < count; ++i) {
             responseHeaders.add(new HttpHeader(headers.name(i), headers.value(i)));
-            logger.debug(headers.name(i) + ": " + headers.value(i));
+            logger.debug("{}: {}", headers.name(i), headers.value(i));
         }
 
         if (HttpHeaders.hasBody(response)) {
@@ -135,7 +143,7 @@ public class OkHttpLoggerInterceptor implements Interceptor {
 
                 if (!isPlaintext(buffer)) {
                     logger.debug("");
-                    logger.debug("<-- END HTTP (binary " + buffer.size() + "-byte body omitted)");
+                    logger.debug("<-- END HTTP (binary {}-byte body omitted)", buffer.size());
                     return response;
                 }
 
@@ -145,9 +153,9 @@ public class OkHttpLoggerInterceptor implements Interceptor {
                 }
 
                 if (gzippedLength != null) {
-                    logger.debug("<-- END HTTP (" + buffer.size() + "-byte, " + gzippedLength + "-gzipped-byte body)");
+                    logger.debug("<-- END HTTP ({}-byte, {}-gzipped-byte body)", buffer.size(), gzippedLength);
                 } else {
-                    logger.debug("<-- END HTTP (" + buffer.size() + "-byte body)");
+                    logger.debug("<-- END HTTP ({}-byte body)", buffer.size());
                 }
             }
         } else {
@@ -192,11 +200,11 @@ public class OkHttpLoggerInterceptor implements Interceptor {
         RequestBody requestBody = request.body();
         if (requestBody.contentType() != null) {
             requestHeaders.add(new HttpHeader("Content-Type", requestBody.contentType().toString()));
-            logger.debug("Content-Type: " + requestBody.contentType());
+            logger.debug("Content-Type: {}", requestBody.contentType());
         }
 
         if (requestBody.contentLength() != -1L) {
-            logger.debug("Content-Length: " + requestBody.contentLength());
+            logger.debug("Content-Length: {}", requestBody.contentLength());
         }
 
         Headers headers = request.headers();
@@ -206,11 +214,11 @@ public class OkHttpLoggerInterceptor implements Interceptor {
             String name = headers.name(i);
             if (!"Content-Type".equalsIgnoreCase(name) && !"Content-Length".equalsIgnoreCase(name)) {
                 requestHeaders.add(new HttpHeader(headers.name(i), headers.value(i)));
-                logger.debug(name + ": " + headers.value(i));
+                logger.debug("{}: {}", name, headers.value(i));
             }
         }
         if (this.bodyHasUnknownEncoding(request.headers())) {
-            logger.debug("--> END " + request.method() + " (encoded body omitted)");
+            logger.debug("--> END {} (encoded body omitted)", request.method());
         } else {
             Buffer buffer = new Buffer();
             requestBody.writeTo(buffer);
@@ -223,9 +231,9 @@ public class OkHttpLoggerInterceptor implements Interceptor {
             logger.debug("");
             if (isPlaintext(buffer)) {
                 logger.debug(buffer.readString(charset));
-                logger.debug("--> END " + request.method() + " (" + requestBody.contentLength() + "-byte body)");
+                logger.debug("--> END {} ({}-byte body)", request.method(), requestBody.contentLength());
             } else {
-                logger.debug("--> END " + request.method() + " (binary " + requestBody.contentLength() + "-byte body omitted)");
+                logger.debug("--> END {} (binary {}-byte body omitted)", request.method(), requestBody.contentLength());
             }
         }
         return requestHeaders;

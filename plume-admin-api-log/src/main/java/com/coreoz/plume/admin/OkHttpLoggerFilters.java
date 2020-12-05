@@ -10,7 +10,7 @@ import java.util.Set;
 @Setter
 @Getter
 @NoArgsConstructor
-class OkHttpLoggerFilters {
+public class OkHttpLoggerFilters {
     private Set<String> filteredEndPoints;
     private Set<String> filteredMethods;
     private Map<String, String> filteredResponseHeaders;

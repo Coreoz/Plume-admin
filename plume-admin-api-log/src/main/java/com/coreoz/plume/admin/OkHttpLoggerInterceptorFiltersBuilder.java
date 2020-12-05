@@ -1,6 +1,5 @@
 package com.coreoz.plume.admin;
 
-import com.sun.research.ws.wadl.HTTPMethods;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.slf4j.Logger;
@@ -33,8 +32,8 @@ public class OkHttpLoggerInterceptorFiltersBuilder {
 
     public OkHttpLoggerInterceptorFiltersBuilder addFilteredMethod(String method) {
         try {
-            HTTPMethods methodToAdd = HTTPMethods.fromValue(method);
-            this.filteredMethods.add(methodToAdd.value());
+            HttpMethod methodToAdd = HttpMethod.valueOf(method);
+            this.filteredMethods.add(methodToAdd.name());
         } catch (IllegalArgumentException e) {
             return this;
         }
@@ -55,40 +54,44 @@ public class OkHttpLoggerInterceptorFiltersBuilder {
         okHttpLoggerFilters.setFilteredEndPoints(this.filteredEndPoints);
         okHttpLoggerFilters.setFilteredResponseHeaders(this.filteredResponseHeaders);
         okHttpLoggerFilters.setFilteredMethods(this.filteredMethods);
-        return (request, response) ->
-            this.shouldRequestMustBeFiltered(request)
-                || this.shouldResponseMustBeFiltered(response);
+        return createFilterFunctionFromParameters(okHttpLoggerFilters);
     }
 
-    private boolean shouldRequestMustBeFiltered(Request request) {
-        if (this.filterByEndpoint(request)) {
+    public static BiPredicate<Request, Response> createFilterFunctionFromParameters(OkHttpLoggerFilters okHttpLoggerFilters) {
+        return (request, response) ->
+            shouldRequestMustBeFiltered(request, okHttpLoggerFilters)
+                || shouldResponseMustBeFiltered(response, okHttpLoggerFilters);
+    }
+
+    private static boolean shouldRequestMustBeFiltered(Request request, OkHttpLoggerFilters okHttpLoggerFilters) {
+        if (filterByEndpoint(request, okHttpLoggerFilters.getFilteredEndPoints())) {
             logger.info("Request won't be logged because its endpoint is filtered");
             return true;
         }
-        if (this.filterByMethod(request)) {
+        if (filterByMethod(request, okHttpLoggerFilters.getFilteredMethods())) {
             logger.info("Request won't be logged because its method is filtered");
             return true;
         }
         return false;
     }
 
-    private boolean shouldResponseMustBeFiltered(Response response) {
-        if (this.filterByResponseHeaders(response)) {
+    private static boolean shouldResponseMustBeFiltered(Response response, OkHttpLoggerFilters okHttpLoggerFilters) {
+        if (filterByResponseHeaders(response, okHttpLoggerFilters.getFilteredResponseHeaders())) {
             logger.info("Request won't be logged because one of its header is filtered");
             return true;
         }
         return false;
     }
 
-    private boolean filterByResponseHeaders(Response response) {
-        return this.filteredResponseHeaders.entrySet().stream().anyMatch(httpHeadersStringEntry -> {
+    private static boolean filterByResponseHeaders(Response response, Map<String, String> filteredResponseHeaders) {
+        return filteredResponseHeaders.entrySet().stream().anyMatch(httpHeadersStringEntry -> {
             String headerValue = response.header(httpHeadersStringEntry.getKey());
             return headerValue != null && headerValue.equals(httpHeadersStringEntry.getValue());
         });
     }
 
-    private boolean filterByEndpoint(Request request) {
-        return this.filteredEndPoints.stream().anyMatch(endpoint -> {
+    private static boolean filterByEndpoint(Request request, Set<String> filteredEndPoints) {
+        return filteredEndPoints.stream().anyMatch(endpoint -> {
             List<String> segments = request.url().pathSegments();
             String[] endpointFilteredSegments = endpoint.split("/");
             if (segments.size() != endpointFilteredSegments.length) {
@@ -102,8 +105,8 @@ public class OkHttpLoggerInterceptorFiltersBuilder {
         });
     }
 
-    private boolean filterByMethod(Request request) {
-        return this.filteredMethods.stream().anyMatch(method ->
+    private static boolean filterByMethod(Request request, Set<String> filteredMethods) {
+        return filteredMethods.stream().anyMatch(method ->
             request.method().equalsIgnoreCase(method)
         );
     }

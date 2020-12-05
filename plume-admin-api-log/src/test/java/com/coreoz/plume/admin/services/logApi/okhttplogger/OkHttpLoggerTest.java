@@ -1,12 +1,11 @@
 package com.coreoz.plume.admin.services.logApi.okhttplogger;
 
-import com.coreoz.plume.admin.services.logApi.LogApiService;
-
-import javax.inject.Inject;
+import org.junit.Test;
 
 public class OkHttpLoggerTest {
 
-    @Inject
-    LogApiService logApiService;
+    @Test
+    public void check_function_initialization() {
+    }
 
 }
