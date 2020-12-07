@@ -55,8 +55,8 @@ public class OkHttpLoggerInterceptor implements Interceptor {
         Request request = chain.request();
         Connection connection = chain.connection();
 
-        List<HttpHeader> requestHeaders = new ArrayList<>();
-        List<HttpHeader> responseHeaders = new ArrayList<>();
+        List<HttpHeader> requestHeaders;
+        List<HttpHeader> responseHeaders;
         RequestBody requestBody = request.body();
         Buffer requestBodyBuffer = getRequestBodyBuffer(requestBody);
         String requestBodyString = getStringFromBuffer(requestBodyBuffer);
@@ -66,13 +66,15 @@ public class OkHttpLoggerInterceptor implements Interceptor {
             requestStartMessage = requestStartMessage + " (" + requestBody.contentLength() + "-byte body)";
         }
         logger.debug(requestStartMessage);
+
+        Headers chainRequestHeaders = request.headers();
+        requestHeaders = getAllHeaders(chainRequestHeaders, false);
+
         if (requestBody != null) {
             MediaType contentType = requestBody.contentType();
             if (contentType != null) {
                 requestHeaders.add(getContentTypeHeader(requestBody));
             }
-            Headers headers = request.headers();
-            requestHeaders.addAll(getAllHeaders(headers, false));
 
             if (this.bodyHasUnknownEncoding(request.headers())) {
                 logger.debug("--> END {} (encoded body omitted)", request.method());
@@ -118,8 +120,8 @@ public class OkHttpLoggerInterceptor implements Interceptor {
             bodySize
         );
 
-        Headers headers = response.headers();
-        responseHeaders = getAllHeaders(headers, true);
+        Headers chainResponseHeaders = response.headers();
+        responseHeaders = getAllHeaders(chainResponseHeaders, true);
 
         if (HttpHeaders.promisesBody(response)) {
             if (this.bodyHasUnknownEncoding(response.headers())) {
@@ -130,7 +132,7 @@ public class OkHttpLoggerInterceptor implements Interceptor {
                 Buffer buffer = source.getBuffer();
                 responseBodyString = getStringFromBuffer(buffer);
 
-                if ("gzip".equalsIgnoreCase(headers.get("Content-Encoding"))) {
+                if ("gzip".equalsIgnoreCase(chainResponseHeaders.get("Content-Encoding"))) {
                     long gzippedLength = buffer.size();
                     try (GzipSource gzippedResponseBody = new GzipSource(buffer.clone())) {
                         buffer = new Buffer();
