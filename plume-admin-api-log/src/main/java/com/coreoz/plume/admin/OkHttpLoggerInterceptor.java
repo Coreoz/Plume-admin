@@ -33,7 +33,7 @@ import java.util.function.BiPredicate;
 public class OkHttpLoggerInterceptor implements Interceptor {
 
     private static final Logger logger = LoggerFactory.getLogger("api.http");
-    private static final BiPredicate<Request, Response> ALWAYS_TRUE_BI_PREDICATE = (request, response) -> true;
+    private static final BiPredicate<Request, Response> ALWAYS_FALSE_BI_PREDICATE = (request, response) -> false;
 
     private final String apiName;
     private final LogApiService logApiService;
@@ -46,34 +46,49 @@ public class OkHttpLoggerInterceptor implements Interceptor {
     }
 
     public OkHttpLoggerInterceptor(String apiName, LogApiService logApiService) {
-        this(apiName, logApiService, ALWAYS_TRUE_BI_PREDICATE);
+        this(apiName, logApiService, ALWAYS_FALSE_BI_PREDICATE);
     }
 
     @NotNull
     @Override
     public Response intercept(Chain chain) throws IOException {
         Request request = chain.request();
-
-        request.url().encodedPath();
+        Connection connection = chain.connection();
 
         List<HttpHeader> requestHeaders = new ArrayList<>();
         List<HttpHeader> responseHeaders = new ArrayList<>();
         RequestBody requestBody = request.body();
-        boolean hasRequestBody = requestBody != null;
-        String requestBodyString = null;
-        if (hasRequestBody) {
-            Buffer bufferRq = new Buffer();
-            requestBody.writeTo(bufferRq);
-            requestBodyString = bufferRq.clone().readString(StandardCharsets.UTF_8);
-        }
-        Connection connection = chain.connection();
+        Buffer requestBodyBuffer = getRequestBodyBuffer(requestBody);
+        String requestBodyString = getStringFromBuffer(requestBodyBuffer);
+
         String requestStartMessage = "--> " + request.method() + ' ' + request.url() + (connection != null ? " " + connection.protocol() : "");
-        if (hasRequestBody) {
+        if (requestBody != null) {
             requestStartMessage = requestStartMessage + " (" + requestBody.contentLength() + "-byte body)";
         }
         logger.debug(requestStartMessage);
-        if (hasRequestBody) {
-            requestHeaders = this.handleRequestBodyAngGetHeaders(request);
+        if (requestBody != null) {
+            MediaType contentType = requestBody.contentType();
+            if (contentType != null) {
+                requestHeaders.add(getContentTypeHeader(requestBody));
+            }
+            Headers headers = request.headers();
+            requestHeaders.addAll(getAllHeaders(headers, false));
+
+            if (this.bodyHasUnknownEncoding(request.headers())) {
+                logger.debug("--> END {} (encoded body omitted)", request.method());
+            } else {
+                Charset charset = StandardCharsets.UTF_8;
+                if (contentType != null) {
+                    charset = contentType.charset(StandardCharsets.UTF_8);
+                }
+
+                if (isPlaintext(requestBodyBuffer)) {
+                    logger.debug(requestBodyBuffer.readString(charset));
+                    logger.debug("--> END {} ({}-byte body)", request.method(), requestBody.contentLength());
+                } else {
+                    logger.debug("--> END {} (binary {}-byte body omitted)", request.method(), requestBody.contentLength());
+                }
+            }
         } else {
             logger.debug("--> END {}", request.method());
         }
@@ -83,13 +98,14 @@ public class OkHttpLoggerInterceptor implements Interceptor {
         Response response = this.executeRequestAndGetResponse(chain, request, requestBodyString, requestHeaders);
 
         if (this.okHttpLoggerFiltersFunction.test(request, response)) {
-            logger.info("Ok Http logger filtered");
+            logger.debug("--> OkHttpRequest is filtered");
+            logger.debug("--> END {}", request.method());
             return response;
         }
 
-        Buffer bufferRs = null;
         long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNs);
         ResponseBody responseBody = response.body();
+        String responseBodyString = null;
 
         long contentLength = responseBody.contentLength();
         String bodySize = contentLength != -1L ? contentLength + "-byte" : "unknown-length";
@@ -103,36 +119,26 @@ public class OkHttpLoggerInterceptor implements Interceptor {
         );
 
         Headers headers = response.headers();
-        int i = 0;
+        responseHeaders = getAllHeaders(headers, true);
 
-        for (int count = headers.size(); i < count; ++i) {
-            responseHeaders.add(new HttpHeader(headers.name(i), headers.value(i)));
-            logger.debug("{}: {}", headers.name(i), headers.value(i));
-        }
-
-        if (HttpHeaders.hasBody(response)) {
+        if (HttpHeaders.promisesBody(response)) {
             if (this.bodyHasUnknownEncoding(response.headers())) {
                 logger.debug("<-- END HTTP (encoded body omitted)");
             } else {
-                BufferedSource source = responseBody.source();
-                source.request(9223372036854775807L);
+                BufferedSource source = responseBody.source().peek();
+                source.request(Long.MAX_VALUE);
                 Buffer buffer = source.getBuffer();
-                bufferRs = source.getBuffer();
-                Long gzippedLength = null;
-                if ("gzip".equalsIgnoreCase(headers.get("Content-Encoding"))) {
-                    gzippedLength = buffer.size();
-                    GzipSource gzippedResponseBody = null;
+                responseBodyString = getStringFromBuffer(buffer);
 
-                    try {
-                        gzippedResponseBody = new GzipSource(buffer.clone());
+                if ("gzip".equalsIgnoreCase(headers.get("Content-Encoding"))) {
+                    long gzippedLength = buffer.size();
+                    try (GzipSource gzippedResponseBody = new GzipSource(buffer.clone())) {
                         buffer = new Buffer();
                         buffer.writeAll(gzippedResponseBody);
-                        bufferRs.writeAll(gzippedResponseBody);
-                    } finally {
-                        if (gzippedResponseBody != null) {
-                            gzippedResponseBody.close();
-                        }
                     }
+                    logger.debug("<-- END HTTP ({}-byte, {}-gzipped-byte body)", buffer.size(), gzippedLength);
+                } else {
+                    logger.debug("<-- END HTTP ({}-byte body)", buffer.size());
                 }
 
                 Charset charset = StandardCharsets.UTF_8;
@@ -151,12 +157,6 @@ public class OkHttpLoggerInterceptor implements Interceptor {
                     logger.debug("");
                     logger.debug(buffer.clone().readString(charset));
                 }
-
-                if (gzippedLength != null) {
-                    logger.debug("<-- END HTTP ({}-byte, {}-gzipped-byte body)", buffer.size(), gzippedLength);
-                } else {
-                    logger.debug("<-- END HTTP ({}-byte body)", buffer.size());
-                }
             }
         } else {
             logger.debug("<-- END HTTP");
@@ -167,7 +167,7 @@ public class OkHttpLoggerInterceptor implements Interceptor {
             request.method(),
             response.code(),
             requestBodyString,
-            bufferRs == null ? null : bufferRs.clone().readString(StandardCharsets.UTF_8),
+            responseBodyString,
             requestHeaders,
             responseHeaders,
             this.apiName
@@ -190,53 +190,9 @@ public class OkHttpLoggerInterceptor implements Interceptor {
             }
 
             return true;
-        } catch (EOFException var6) {
+        } catch (EOFException eofException) {
             return false;
         }
-    }
-
-    private List<HttpHeader> handleRequestBodyAngGetHeaders(Request request) throws IOException {
-        List<HttpHeader> requestHeaders = new ArrayList<>();
-        RequestBody requestBody = request.body();
-        if (requestBody.contentType() != null) {
-            requestHeaders.add(new HttpHeader("Content-Type", requestBody.contentType().toString()));
-            logger.debug("Content-Type: {}", requestBody.contentType());
-        }
-
-        if (requestBody.contentLength() != -1L) {
-            logger.debug("Content-Length: {}", requestBody.contentLength());
-        }
-
-        Headers headers = request.headers();
-        int i = 0;
-
-        for (int count = headers.size(); i < count; ++i) {
-            String name = headers.name(i);
-            if (!"Content-Type".equalsIgnoreCase(name) && !"Content-Length".equalsIgnoreCase(name)) {
-                requestHeaders.add(new HttpHeader(headers.name(i), headers.value(i)));
-                logger.debug("{}: {}", name, headers.value(i));
-            }
-        }
-        if (this.bodyHasUnknownEncoding(request.headers())) {
-            logger.debug("--> END {} (encoded body omitted)", request.method());
-        } else {
-            Buffer buffer = new Buffer();
-            requestBody.writeTo(buffer);
-            Charset charset = StandardCharsets.UTF_8;
-            MediaType contentType = requestBody.contentType();
-            if (contentType != null) {
-                charset = contentType.charset(StandardCharsets.UTF_8);
-            }
-
-            logger.debug("");
-            if (isPlaintext(buffer)) {
-                logger.debug(buffer.readString(charset));
-                logger.debug("--> END {} ({}-byte body)", request.method(), requestBody.contentLength());
-            } else {
-                logger.debug("--> END {} (binary {}-byte body omitted)", request.method(), requestBody.contentLength());
-            }
-        }
-        return requestHeaders;
     }
 
     private Response executeRequestAndGetResponse(
@@ -269,6 +225,40 @@ public class OkHttpLoggerInterceptor implements Interceptor {
     private boolean bodyHasUnknownEncoding(Headers headers) {
         String contentEncoding = headers.get("Content-Encoding");
         return contentEncoding != null && !contentEncoding.equalsIgnoreCase("identity") && !contentEncoding.equalsIgnoreCase("gzip");
+    }
+
+    private static HttpHeader getContentTypeHeader(RequestBody requestBody) throws IOException {
+        logger.debug("Content-Type: {}", requestBody.contentType());
+        logger.debug("Content-Length: {}", requestBody.contentLength());
+        return new HttpHeader("Content-Type", requestBody.contentType().toString());
+    }
+
+    private static List<HttpHeader> getAllHeaders(Headers headers, boolean withContentType) {
+        List<HttpHeader> httpHeaders = new ArrayList<>();
+        for (int count = 0; count < headers.size(); count++) {
+            String name = headers.name(count);
+            if (withContentType || !"Content-Type".equalsIgnoreCase(name) && !"Content-Length".equalsIgnoreCase(name)) {
+                httpHeaders.add(new HttpHeader(headers.name(count), headers.value(count)));
+                logger.debug("{}: {}", name, headers.value(count));
+            }
+        }
+        return httpHeaders;
+    }
+
+    private static String getStringFromBuffer(Buffer buffer) {
+        if (buffer == null) {
+            return null;
+        }
+        return buffer.clone().readString(StandardCharsets.UTF_8);
+    }
+
+    private static Buffer getRequestBodyBuffer(RequestBody requestBody) throws IOException {
+        if (requestBody == null) {
+            return null;
+        }
+        Buffer bufferRq = new Buffer();
+        requestBody.writeTo(bufferRq);
+        return bufferRq;
     }
 
 }
