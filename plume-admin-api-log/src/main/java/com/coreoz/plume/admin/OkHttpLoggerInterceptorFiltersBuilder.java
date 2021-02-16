@@ -2,8 +2,6 @@ package com.coreoz.plume.admin;
 
 import okhttp3.Request;
 import okhttp3.Response;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,8 +10,6 @@ import java.util.Set;
 import java.util.function.BiPredicate;
 
 public class OkHttpLoggerInterceptorFiltersBuilder {
-    private static final Logger logger = LoggerFactory.getLogger("api.http");
-
     private final Set<String> filteredEndPoints;
     private final Set<String> filteredMethods;
     private final Map<String, String> filteredResponseHeaders;
@@ -35,11 +31,7 @@ public class OkHttpLoggerInterceptorFiltersBuilder {
     }
 
     public OkHttpLoggerInterceptorFiltersBuilder filterResponseHeaderValue(String header, String value) {
-        try {
-            this.filteredResponseHeaders.put(header, value);
-        } catch (IllegalArgumentException e) {
-            return this;
-        }
+        this.filteredResponseHeaders.put(header, value);
         return this;
     }
 

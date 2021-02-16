@@ -11,9 +11,9 @@ import java.util.function.BiPredicate;
 
 @Value(staticConstructor = "of")
 public class OkHttpLoggerFilters {
-    private final Set<String> filteredEndPoints;
-    private final Set<String> filteredMethods;
-    private final Map<String, String> filteredResponseHeaders;
+    Set<String> filteredEndPoints;
+    Set<String> filteredMethods;
+    Map<String, String> filteredResponseHeaders;
 
     public BiPredicate<Request, Response> createFilterFunctionFromParameters() {
         return (request, response) ->
