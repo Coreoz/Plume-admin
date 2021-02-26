@@ -19,6 +19,7 @@ import com.coreoz.plume.admin.db.daos.LogApiTrimmed;
 import com.coreoz.plume.admin.jersey.feature.RestrictToAdmin;
 import com.coreoz.plume.admin.services.configuration.LogApiConfigurationService;
 import com.coreoz.plume.admin.services.logApi.LogApiBean;
+import com.coreoz.plume.admin.services.logApi.LogApiFilters;
 import com.coreoz.plume.admin.services.logApi.LogApiService;
 import com.coreoz.plume.admin.services.permission.ApiLogAdminPermissions;
 
@@ -66,11 +67,18 @@ public class LogApiWs {
     }
 
     @GET
+    @ApiOperation("Fetch the headers and the trimmed body of a request/response")
+    @Path("/filters")
+    public LogApiFilters filters() {
+        return logApiService.fetchAvailableFilters();
+    }
+
+    @GET
     @ApiOperation("Download the body of a request or a response")
     @Path("/{idLog}/{isRequest}")
     public Response bodyFile(@PathParam("idLog") Long id, @PathParam("isRequest") Boolean isRequest) {
         return logApiService
-            .findBodyPart(id, isRequest)
+            .findBodyPart(id, isRequest != null && isRequest)
             .map(bodyPart -> Response
                 .ok(bodyPart.getBody().getBytes())
                 .header(
