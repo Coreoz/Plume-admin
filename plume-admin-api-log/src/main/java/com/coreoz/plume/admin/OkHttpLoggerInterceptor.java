@@ -36,22 +36,30 @@ public class OkHttpLoggerInterceptor implements Interceptor {
     private final String apiName;
     private final LogApiService logApiService;
     private final Predicate<Request> requestFilterPredicate;
-    private final Predicate<Response> responseFilterPredicate;
+    private final LogEntryTransformer logEntryTransformer;
 
     public OkHttpLoggerInterceptor(
         String apiName,
         LogApiService logApiService,
         Predicate<Request> requestFilterPredicate,
-        Predicate<Response> responseFilterPredicate
+        LogEntryTransformer logEntryTransformer
     ) {
         this.apiName = apiName;
         this.logApiService = logApiService;
         this.requestFilterPredicate = requestFilterPredicate;
-        this.responseFilterPredicate = responseFilterPredicate;
+        this.logEntryTransformer = logEntryTransformer;
     }
 
     public OkHttpLoggerInterceptor(String apiName, LogApiService logApiService) {
-        this(apiName, logApiService, request -> true, response -> true);
+        this(apiName, logApiService, request -> true, (request, response, body) -> true);
+    }
+
+    public OkHttpLoggerInterceptor(String apiName, LogApiService logApiService, Predicate<Request> requestFilterPredicate) {
+        this(apiName, logApiService, requestFilterPredicate, (request, response, body) -> true);
+    }
+
+    public OkHttpLoggerInterceptor(String apiName, LogApiService logApiService, LogEntryTransformer logEntryTransformer) {
+        this(apiName, logApiService, request -> true, logEntryTransformer);
     }
 
     @NotNull
@@ -88,7 +96,7 @@ public class OkHttpLoggerInterceptor implements Interceptor {
         long tookMs = System.currentTimeMillis() - startMs;
 
         if (!this.requestFilterPredicate.test(request)) {
-            logger.debug("--> {} is marked as filtered", request.url());
+            logger.debug("--> Request {} is marked as filtered", request.url());
             logger.debug("--> END {}", requestMethod);
             return response;
         }
@@ -133,10 +141,14 @@ public class OkHttpLoggerInterceptor implements Interceptor {
             bodySize
         );
 
-        if (!this.responseFilterPredicate.test(response)) {
-            logger.debug("--> response {} is marked as filtered", request.url());
-            logger.debug("--> END {}", requestMethod);
-            return response;
+        if (this.logEntryTransformer.negate().log(request, response, requestBodyString)) {
+            logger.debug("--> Body of request {} won't be saved", request.url());
+            requestBodyString = "Request body filtered (using the logEntryTransformer)";
+        }
+
+        if (this.logEntryTransformer.negate().log(request, response, responseBodyString)) {
+            logger.debug("--> Body of response {} won't be saved", request.url());
+            responseBodyString = "Response body filtered (using the logEntryTransformer)";
         }
 
         LogInterceptApiBean logInterceptApiBean = new LogInterceptApiBean(
@@ -149,6 +161,7 @@ public class OkHttpLoggerInterceptor implements Interceptor {
             responseHeaders,
             this.apiName
         );
+
         logApiService.saveLog(logInterceptApiBean);
         return response;
     }
