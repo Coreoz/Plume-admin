@@ -1,4 +1,4 @@
-package com.coreoz.plume.admin.services.logApi;
+package com.coreoz.plume.admin.services.logapi;
 
 import com.coreoz.plume.admin.db.daos.LogApiDao;
 import com.coreoz.plume.admin.db.daos.LogApiTrimmed;
@@ -8,7 +8,6 @@ import com.coreoz.plume.admin.services.configuration.LogApiConfigurationService;
 import com.coreoz.plume.db.crud.CrudService;
 import com.coreoz.plume.services.time.TimeProvider;
 import com.querydsl.core.Tuple;
-import com.querydsl.core.types.dsl.NumberExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

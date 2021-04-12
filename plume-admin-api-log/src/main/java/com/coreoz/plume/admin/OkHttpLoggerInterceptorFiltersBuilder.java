@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 
 public class OkHttpLoggerInterceptorFiltersBuilder {
     private final Set<String> filteredEndPoints;
@@ -20,7 +20,7 @@ public class OkHttpLoggerInterceptorFiltersBuilder {
         this.filteredResponseHeaders = new HashMap<>();
     }
 
-    public OkHttpLoggerInterceptorFiltersBuilder filterEndPoint(String endpoint) {
+    public OkHttpLoggerInterceptorFiltersBuilder filterEndpoint(String endpoint) {
         this.filteredEndPoints.add(endpoint);
         return this;
     }
@@ -35,12 +35,17 @@ public class OkHttpLoggerInterceptorFiltersBuilder {
         return this;
     }
 
-    public BiPredicate<Request, Response> build() {
-        OkHttpLoggerFilters okHttpLoggerFilters = OkHttpLoggerFilters.of(
+    public Predicate<Request> buildRequestFilter() {
+        return OkHttpLoggerInterceptorFilters.createRequestFilterFunctionFromParameters(
+            this.filteredEndPoints,
+            this.filteredMethods
+        );
+    }
+    public Predicate<Response> buildResponseFilter() {
+        return OkHttpLoggerInterceptorFilters.createResponseFilterFunctionFromParameters(
             this.filteredEndPoints,
             this.filteredMethods,
             this.filteredResponseHeaders
         );
-        return okHttpLoggerFilters.createFilterFunctionFromParameters();
     }
 }

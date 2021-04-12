@@ -1,7 +1,7 @@
 package com.coreoz.plume.admin;
 
 
-import com.coreoz.plume.admin.services.logApi.LogApiService;
+import com.coreoz.plume.admin.services.logapi.LogApiService;
 import okhttp3.OkHttpClient;
 
 

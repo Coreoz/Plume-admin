@@ -3,7 +3,7 @@ package com.coreoz.plume.admin.db.daos;
 import com.coreoz.plume.admin.db.generated.LogApi;
 import com.coreoz.plume.admin.db.generated.QLogApi;
 import com.coreoz.plume.admin.db.generated.QLogHeader;
-import com.coreoz.plume.admin.services.logApi.LogApiFilters;
+import com.coreoz.plume.admin.services.logapi.LogApiFilters;
 import com.coreoz.plume.db.querydsl.crud.CrudDaoQuerydsl;
 import com.coreoz.plume.db.querydsl.transaction.TransactionManagerQuerydsl;
 import com.google.common.base.Strings;

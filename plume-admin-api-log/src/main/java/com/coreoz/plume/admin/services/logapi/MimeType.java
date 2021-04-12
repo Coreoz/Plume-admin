@@ -1,4 +1,4 @@
-package com.coreoz.plume.admin.services.logApi;
+package com.coreoz.plume.admin.services.logapi;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,7 +17,7 @@ enum MimeType {
     HTML("text/html", "html"),
     JSON("application/json", "json"),
     TEXT("text/plain", "txt"),
-    PDF("application/pdf", "pdf");
+    ;
 
     private final String mimeType;
     private final String fileExtension;

@@ -1,8 +1,8 @@
 package com.coreoz.plume.admin;
 
-import com.coreoz.plume.admin.services.logApi.HttpHeader;
-import com.coreoz.plume.admin.services.logApi.LogApiService;
-import com.coreoz.plume.admin.services.logApi.LogInterceptApiBean;
+import com.coreoz.plume.admin.services.logapi.HttpHeader;
+import com.coreoz.plume.admin.services.logapi.LogApiService;
+import com.coreoz.plume.admin.services.logapi.LogInterceptApiBean;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import lombok.NonNull;
@@ -28,26 +28,30 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 
 public class OkHttpLoggerInterceptor implements Interceptor {
-
     private static final Logger logger = LoggerFactory.getLogger("api.http");
-    private static final BiPredicate<Request, Response> ALWAYS_FALSE_BI_PREDICATE = (request, response) -> false;
 
     private final String apiName;
     private final LogApiService logApiService;
-    private final BiPredicate<Request, Response> loggingFilter;
+    private final Predicate<Request> requestFilterPredicate;
+    private final Predicate<Response> responseFilterPredicate;
 
-    public OkHttpLoggerInterceptor(String apiName, LogApiService logApiService, BiPredicate<Request, Response> okHttpLoggerFiltersFunction) {
+    public OkHttpLoggerInterceptor(
+        String apiName,
+        LogApiService logApiService,
+        Predicate<Request> requestFilterPredicate,
+        Predicate<Response> responseFilterPredicate
+    ) {
         this.apiName = apiName;
         this.logApiService = logApiService;
-        this.loggingFilter = okHttpLoggerFiltersFunction;
+        this.requestFilterPredicate = requestFilterPredicate;
+        this.responseFilterPredicate = responseFilterPredicate;
     }
 
     public OkHttpLoggerInterceptor(String apiName, LogApiService logApiService) {
-        this(apiName, logApiService, ALWAYS_FALSE_BI_PREDICATE);
+        this(apiName, logApiService, request -> true, response -> true);
     }
 
     @NotNull
@@ -74,14 +78,16 @@ public class OkHttpLoggerInterceptor implements Interceptor {
             logger.debug("--> END {}", requestMethod);
         }
 
+        long startMs = System.currentTimeMillis();
         Response response = executeRequest(
             chain,
             request,
             requestBodyString,
             requestHeaders
         );
+        long tookMs = System.currentTimeMillis() - startMs;
 
-        if (this.loggingFilter.test(request, response)) {
+        if (!this.requestFilterPredicate.test(request)) {
             logger.debug("--> {} is marked as filtered", request.url());
             logger.debug("--> END {}", requestMethod);
             return response;
@@ -92,8 +98,6 @@ public class OkHttpLoggerInterceptor implements Interceptor {
         ResponseBody responseBody = response.body();
         String responseBodyString = null;
 
-        long startNs = System.nanoTime();
-        long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNs);
         long contentLength;
         String responseMessage = "-- no message --";
         String bodySize = "unknown-length";
@@ -110,7 +114,7 @@ public class OkHttpLoggerInterceptor implements Interceptor {
                 return response;
             }
             if (HttpHeaders.promisesBody(response)) {
-                responseBodyString = logResponseBody(responseBody, chainResponseHeaders, buffer);
+                responseBodyString = readAndLogResponseBody(responseBody, chainResponseHeaders, buffer);
             } else {
                 logger.debug("<-- END HTTP");
             }
@@ -128,6 +132,12 @@ public class OkHttpLoggerInterceptor implements Interceptor {
             tookMs,
             bodySize
         );
+
+        if (!this.responseFilterPredicate.test(response)) {
+            logger.debug("--> response {} is marked as filtered", request.url());
+            logger.debug("--> END {}", requestMethod);
+            return response;
+        }
 
         LogInterceptApiBean logInterceptApiBean = new LogInterceptApiBean(
             request.url().toString(),
@@ -227,7 +237,7 @@ public class OkHttpLoggerInterceptor implements Interceptor {
         return requestBodyString;
     }
 
-    private static String logResponseBody(ResponseBody responseBody, Headers chainResponseHeaders, Buffer buffer) throws IOException {
+    private static String readAndLogResponseBody(ResponseBody responseBody, Headers chainResponseHeaders, Buffer buffer) throws IOException {
         String responseBodyString = null;
         if (bodyHasUnknownEncoding(chainResponseHeaders)) {
             logger.debug("<-- END HTTP (encoded body omitted)");
