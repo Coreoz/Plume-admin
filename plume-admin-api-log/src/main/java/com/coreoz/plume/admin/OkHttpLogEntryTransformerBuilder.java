@@ -10,13 +10,15 @@ public class OkHttpLogEntryTransformerBuilder {
     private final Set<String> filteredEndpoints;
     private final Set<String> filteredMethods;
     private final Map<String, String> filteredResponseHeaders;
-    private int maxBytes;
+    private boolean forAll;
+    private int maxChar;
 
     public OkHttpLogEntryTransformerBuilder() {
         this.filteredEndpoints = new HashSet<>();
         this.filteredMethods = new HashSet<>();
         this.filteredResponseHeaders = new HashMap<>();
-        this.maxBytes = -1;
+        this.forAll = false;
+        this.maxChar = -1;
     }
 
     public OkHttpLogEntryTransformerBuilder forEndpoint(String endpoint) {
@@ -38,15 +40,36 @@ public class OkHttpLogEntryTransformerBuilder {
         return this;
     }
 
-    public OkHttpLogEntryTransformerBuilder forMaxBodyBytes(int maxBytes) {
-        this.maxBytes = maxBytes;
+    public OkHttpLogEntryTransformerBuilder forAll() {
+        this.forAll = true;
         return this;
     }
 
+    public OkHttpLogEntryTransformerBuilder forMaxBodyChar(int maxChar) {
+        this.maxChar = maxChar;
+        return this;
+    }
+
+    /**
+     * This method builds a {@link LogEntryTransformer} from arguments
+     * {@link #forEndpoint(String)} : add an endpoint to a list to be filtered (ex: /hello/world)
+     * {@link #forMethod(HttpMethod)} : add an {@link HttpMethod} to a list to be filtered (ex: POST)
+     * {@link #forResponseHeaderValue(String, String)} : add an header with a value to a map to be filtered (ex: <"Content-Type", "application/pdf">)
+     * {@link #forAll()} : add a limit if defined for all traces
+     * {@link #forMaxBodyChar(int)} : set a limit for traces
+     *
+     * @return a {@link LogEntryTransformer} that transforms a {@link com.coreoz.plume.admin.services.logapi.LogInterceptApiBean} accordingly
+     */
     public LogEntryTransformer build() {
-        return (request, response, body) -> !OkHttpLoggerMatchUtils.matchRequestEndpoints(request.url(), this.filteredEndpoints)
-            && !OkHttpLoggerMatchUtils.matchRequestMethods(request.method(), this.filteredMethods)
-            && !OkHttpLoggerMatchUtils.matchResponseHeaders(response, this.filteredResponseHeaders)
-            && !(body != null && body.getBytes().length <= maxBytes);
+        return (request, response, logInterceptApiBean) -> {
+            boolean isNotTransformable = !forAll
+                && !OkHttpLoggerMatchUtils.matchRequestEndpoints(request.url(), this.filteredEndpoints)
+                && !OkHttpLoggerMatchUtils.matchRequestMethods(request.method(), this.filteredMethods)
+                && !OkHttpLoggerMatchUtils.matchResponseHeaders(response, this.filteredResponseHeaders);
+
+            return isNotTransformable
+                ? logInterceptApiBean
+                : LogEntryTransformer.limitBodySizeTransformer(this.maxChar).transform(request, response, logInterceptApiBean);
+        };
     }
 }

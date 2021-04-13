@@ -51,11 +51,11 @@ public class OkHttpLoggerInterceptor implements Interceptor {
     }
 
     public OkHttpLoggerInterceptor(String apiName, LogApiService logApiService) {
-        this(apiName, logApiService, request -> true, (request, response, body) -> true);
+        this(apiName, logApiService, request -> true, (request, response, trace) -> trace);
     }
 
     public OkHttpLoggerInterceptor(String apiName, LogApiService logApiService, Predicate<Request> requestFilterPredicate) {
-        this(apiName, logApiService, requestFilterPredicate, (request, response, body) -> true);
+        this(apiName, logApiService, requestFilterPredicate, (request, response, trace) -> trace);
     }
 
     public OkHttpLoggerInterceptor(String apiName, LogApiService logApiService, LogEntryTransformer logEntryTransformer) {
@@ -141,16 +141,6 @@ public class OkHttpLoggerInterceptor implements Interceptor {
             bodySize
         );
 
-        if (this.logEntryTransformer.negate().log(request, response, requestBodyString)) {
-            logger.debug("--> Body of request {} won't be saved", request.url());
-            requestBodyString = "Request body filtered (using the logEntryTransformer)";
-        }
-
-        if (this.logEntryTransformer.negate().log(request, response, responseBodyString)) {
-            logger.debug("--> Body of response {} won't be saved", request.url());
-            responseBodyString = "Response body filtered (using the logEntryTransformer)";
-        }
-
         LogInterceptApiBean logInterceptApiBean = new LogInterceptApiBean(
             request.url().toString(),
             request.method(),
@@ -162,7 +152,7 @@ public class OkHttpLoggerInterceptor implements Interceptor {
             this.apiName
         );
 
-        logApiService.saveLog(logInterceptApiBean);
+        logApiService.saveLog(this.logEntryTransformer.transform(request, response, logInterceptApiBean));
         return response;
     }
 

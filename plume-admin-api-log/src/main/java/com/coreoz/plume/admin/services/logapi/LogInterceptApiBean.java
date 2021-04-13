@@ -4,16 +4,18 @@ import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 
-@AllArgsConstructor
+@Setter
 @Getter
+@AllArgsConstructor
 public class LogInterceptApiBean {
-    private final String url;
-    private final String method;
-    private final int statusCode;
-    private final String bodyRequest;
-    private final String bodyResponse;
-    private final List<HttpHeader> headerRequest;
-    private final List<HttpHeader> headerResponse;
-    private final String apiName;
+    private String url;
+    private String method;
+    private int statusCode;
+    private String bodyRequest;
+    private String bodyResponse;
+    private List<HttpHeader> headerRequest;
+    private List<HttpHeader> headerResponse;
+    private String apiName;
 }
