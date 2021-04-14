@@ -12,7 +12,7 @@ import java.util.function.Predicate;
  *
  * The static method {@link #alwaysTrue()} initiate the predicate
  *
- * The default method {@link #filterEndpoint(String)} filters the request
+ * The default method {@link #filterEndpointStartsWith(String)} filters the request
  * by its endpoint
  *
  * The default method {@link #filterMethod(HttpMethod)} filter the request
@@ -25,7 +25,7 @@ public interface RequestPredicate extends Predicate<Request> {
         return request -> true;
     }
 
-    default RequestPredicate filterEndpoint(String endpointToFilter) {
+    default RequestPredicate filterEndpointStartsWith(String endpointToFilter) {
         return request -> test(request)
             && OkHttpMatchers.matchRequestEndpointStartsWith(request.url(), endpointToFilter);
     }

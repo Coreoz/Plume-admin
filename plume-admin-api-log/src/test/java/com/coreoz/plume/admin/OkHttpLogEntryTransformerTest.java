@@ -54,7 +54,7 @@ public class OkHttpLogEntryTransformerTest {
         int limit = 20;
         LogEntryTransformer transformer = LogEntryTransformer.limitBodySizeTransformer(limit)
             .applyOnlyToRequests(
-                RequestPredicate.alwaysTrue().filterEndpoint("/bye/world")
+                RequestPredicate.alwaysTrue().filterEndpointStartsWith("/bye/world")
             );
         Request request = generatePostRequest("/hello/world", 30);
         Response response = generateResponse(request, "header", "value", 30);
@@ -73,7 +73,7 @@ public class OkHttpLogEntryTransformerTest {
         int limit = 20;
         LogEntryTransformer transformer = LogEntryTransformer.limitBodySizeTransformer(limit)
             .applyOnlyToRequests(
-                RequestPredicate.alwaysTrue().filterEndpoint("/hello/world")
+                RequestPredicate.alwaysTrue().filterEndpointStartsWith("/hello/world")
             );
         Request request = generatePostRequest("/hello/world", 30);
         Response response = generateResponse(request, "header", "value", 30);

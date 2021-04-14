@@ -3,7 +3,6 @@ package com.coreoz.plume.admin;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
 
-import java.util.List;
 import java.util.Objects;
 
 public class OkHttpMatchers {
@@ -21,7 +20,7 @@ public class OkHttpMatchers {
         Objects.requireNonNull(url);
         Objects.requireNonNull(filteredEndPoint);
 
-        return String.format("/%s", String.join("/", url.pathSegments())).startsWith(filteredEndPoint);
+        return ("/" + String.join("/", url.pathSegments())).startsWith(filteredEndPoint);
     }
 
     public static boolean matchRequestMethod(String method, String filteredMethod) {
