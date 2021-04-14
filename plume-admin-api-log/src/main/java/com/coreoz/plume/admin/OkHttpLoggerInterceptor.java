@@ -70,6 +70,11 @@ public class OkHttpLoggerInterceptor implements Interceptor {
         Request request = chain.request();
         Connection connection = chain.connection();
 
+        if (!this.requestFilterPredicate.test(request)) {
+            logger.debug("--> Request {} is marked as filtered", request.url());
+            return chain.proceed(request);
+        }
+
         Headers chainRequestHeaders = request.headers();
         List<HttpHeader> requestHeaders = readHeaders(chainRequestHeaders);
         RequestBody requestBody = request.body();
@@ -96,12 +101,6 @@ public class OkHttpLoggerInterceptor implements Interceptor {
             requestHeaders
         );
         long tookMs = System.currentTimeMillis() - startMs;
-
-        if (!this.requestFilterPredicate.test(request)) {
-            logger.debug("--> Request {} is marked as filtered", request.url());
-            logger.debug("--> END {}", requestMethod);
-            return response;
-        }
 
         Headers chainResponseHeaders = response.headers();
         List<HttpHeader> responseHeaders = readHeaders(chainResponseHeaders);
