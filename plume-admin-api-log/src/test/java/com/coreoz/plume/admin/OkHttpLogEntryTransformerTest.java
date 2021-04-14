@@ -91,12 +91,7 @@ public class OkHttpLogEntryTransformerTest {
     public void transformer_must_transform_if_limit_and_filtered_by_response_header() {
         int limit = 20;
         LogEntryTransformer transformer = LogEntryTransformer.limitBodySizeTransformer(limit)
-            .applyOnlyToResponses(
-                ResponsePredicate.alwaysTrue().filterHeader(
-                    "header",
-                    "value"
-                )
-            );
+            .applyOnlyToResponsesWithHeader("header", "value");
         Request request = generatePostRequest("/hello/world", 30);
         Response response = generateResponse(request, "header", "value", 30);
 

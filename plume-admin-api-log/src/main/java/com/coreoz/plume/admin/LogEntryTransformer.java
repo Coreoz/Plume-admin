@@ -38,6 +38,12 @@ public interface LogEntryTransformer {
                 : apiTrace;
     }
 
+    default LogEntryTransformer applyOnlyToResponsesWithHeader(String headerName, String headerValue) {
+        return applyOnlyToResponses(
+            response -> OkHttpMatchers.matchResponseHeaders(response.headers(), headerName, headerValue)
+        );
+    }
+
     static LogEntryTransformer limitBodySizeTransformer(int bodyCharLengthLimit) {
         return (request, response, apiTrace) -> {
             if (bodyCharLengthLimit < 0) {

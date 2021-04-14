@@ -27,7 +27,7 @@ public interface RequestPredicate extends Predicate<Request> {
 
     default RequestPredicate filterEndpoint(String endpointToFilter) {
         return request -> test(request)
-            && OkHttpMatchers.matchRequestEndpoint(request.url(), endpointToFilter);
+            && OkHttpMatchers.matchRequestEndpointStartsWith(request.url(), endpointToFilter);
     }
 
     default RequestPredicate filterMethod(HttpMethod method) {

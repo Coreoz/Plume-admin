@@ -8,10 +8,6 @@ import java.util.Objects;
 
 public class OkHttpMatchers {
 
-    private OkHttpMatchers() {
-        // empty constructor
-    }
-
     public static boolean matchResponseHeaders(Headers headers, String filteredHeaderName, String filteredHeaderValue) {
         Objects.requireNonNull(headers);
         Objects.requireNonNull(filteredHeaderName);
@@ -21,21 +17,11 @@ public class OkHttpMatchers {
         return headerValue != null && headerValue.equals(filteredHeaderValue);
     }
 
-    public static boolean matchRequestEndpoint(HttpUrl url, String filteredEndPoint) {
+    public static boolean matchRequestEndpointStartsWith(HttpUrl url, String filteredEndPoint) {
         Objects.requireNonNull(url);
         Objects.requireNonNull(filteredEndPoint);
 
-        List<String> segments = url.pathSegments();
-        // substring : for an endpoint /hello/world, split returns ['', 'hello', 'world'], we must delete the first element
-        String[] endpointFilteredSegments = filteredEndPoint.substring(1).split("/");
-        if (segments.size() != endpointFilteredSegments.length) {
-            return false;
-        }
-        boolean areAllTheSame = true;
-        for (int i = 0; i < endpointFilteredSegments.length; i++) {
-            areAllTheSame = areAllTheSame && endpointFilteredSegments[i].equals(segments.get(i));
-        }
-        return areAllTheSame;
+        return String.format("/%s", String.join("/", url.pathSegments())).startsWith(filteredEndPoint);
     }
 
     public static boolean matchRequestMethod(String method, String filteredMethod) {
