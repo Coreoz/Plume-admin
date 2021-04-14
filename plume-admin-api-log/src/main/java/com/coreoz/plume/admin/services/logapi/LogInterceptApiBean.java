@@ -1,12 +1,14 @@
-package com.coreoz.plume.admin.services.logApi;
+package com.coreoz.plume.admin.services.logapi;
 
 import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 
-@AllArgsConstructor
+@Setter
 @Getter
+@AllArgsConstructor
 public class LogInterceptApiBean {
     private String url;
     private String method;

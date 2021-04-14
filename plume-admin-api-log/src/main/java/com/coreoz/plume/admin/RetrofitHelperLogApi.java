@@ -1,7 +1,7 @@
 package com.coreoz.plume.admin;
 
 
-import com.coreoz.plume.admin.services.logApi.LogApiService;
+import com.coreoz.plume.admin.services.logapi.LogApiService;
 import okhttp3.OkHttpClient;
 
 
@@ -16,16 +16,12 @@ import javax.inject.Singleton;
 @Singleton
 public class RetrofitHelperLogApi {
 
-
     private final LogApiService logApiService;
-
 
     @Inject
     public RetrofitHelperLogApi(LogApiService logApiService) {
         this.logApiService = logApiService;
     }
-
-
 
     public OkHttpClient.Builder debugLoggingHttpClient(String apiName) {
         return new OkHttpClient.Builder()

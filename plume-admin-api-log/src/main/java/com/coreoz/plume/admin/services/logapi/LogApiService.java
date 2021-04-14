@@ -1,12 +1,13 @@
-package com.coreoz.plume.admin.services.logApi;
-
+package com.coreoz.plume.admin.services.logapi;
 
 import com.coreoz.plume.admin.db.daos.LogApiDao;
 import com.coreoz.plume.admin.db.daos.LogApiTrimmed;
 import com.coreoz.plume.admin.db.generated.LogApi;
+import com.coreoz.plume.admin.db.generated.QLogApi;
 import com.coreoz.plume.admin.services.configuration.LogApiConfigurationService;
 import com.coreoz.plume.db.crud.CrudService;
 import com.coreoz.plume.services.time.TimeProvider;
+import com.querydsl.core.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +23,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 @Singleton
 public class LogApiService extends CrudService<LogApi> {
 
-	private static final Logger logger = LoggerFactory.getLogger(LogApiService.class);
+    private static final Logger logger = LoggerFactory.getLogger(LogApiService.class);
 
     private final LogApiDao logApiDao;
     private final LogHeaderService logHeaderService;
@@ -36,7 +37,7 @@ public class LogApiService extends CrudService<LogApi> {
 
     @Inject
     public LogApiService(LogApiDao logApiDao, LogHeaderService logHeaderService,
-    		LogApiConfigurationService configurationService, TimeProvider timeProvider) {
+                         LogApiConfigurationService configurationService, TimeProvider timeProvider) {
         super(logApiDao);
         this.logApiDao = logApiDao;
         this.logHeaderService = logHeaderService;
@@ -48,8 +49,8 @@ public class LogApiService extends CrudService<LogApi> {
         this.saveToDatabase = configurationService.saveToDatabase();
 
         this.logsToBeSaved = new LinkedBlockingQueue<>();
-        if(saveToDatabase) {
-        	new Thread(this::insertWaitingLogs, "Http Log API Async saving").start();
+        if (saveToDatabase) {
+            new Thread(this::insertWaitingLogs, "Http Log API Async saving").start();
         }
     }
 
@@ -66,64 +67,63 @@ public class LogApiService extends CrudService<LogApi> {
     }
 
     public LogApiBean fetchLogDetails(Long id) {
-        LogApi log = findById(id);
-        HttpHeaders headerRequest = logHeaderService.getHeaderForApi(id, HttpPart.REQUEST);
-        HttpHeaders headerResponse = logHeaderService.getHeaderForApi(id, HttpPart.RESPONSE);
-        String bodyRequest = log.getBodyRequest();
-        String bodyResponse = log.getBodyResponse();
-        boolean isCompleteTextRequest = true;
-        boolean isCompleteTextResponse = true;
-        // TODO should be done in SQL directly
-        if (bodyRequest != null && bodyRequest.length() > bodyMaxCharsDisplayed) {
-            isCompleteTextRequest = false;
-            bodyRequest = bodyRequest.substring(0, bodyMaxCharsDisplayed);
+        Optional<Tuple> log = this.logApiDao.findByIdWithMaxLength(id, this.bodyMaxCharsDisplayed);
+        if (!log.isPresent()) {
+            return null;
         }
-        if (bodyResponse != null && bodyResponse.length() > bodyMaxCharsDisplayed) {
-            isCompleteTextResponse = false;
-            bodyResponse = bodyResponse.substring(0, bodyMaxCharsDisplayed);
-        }
+        Tuple tuple = log.get();
+        HttpHeaders headerRequest = this.logHeaderService.getHeaderForApi(id, HttpPart.REQUEST);
+        HttpHeaders headerResponse = this.logHeaderService.getHeaderForApi(id, HttpPart.RESPONSE);
         return new LogApiBean(
-            log.getId(),
-            log.getApiName(),
-            log.getUrl(),
-            log.getDate(),
-            log.getMethod(),
-            log.getStatusCode(),
-            bodyRequest,
-            bodyResponse,
+            tuple.get(QLogApi.logApi.id),
+            tuple.get(QLogApi.logApi.apiName),
+            tuple.get(QLogApi.logApi.url),
+            tuple.get(QLogApi.logApi.date),
+            tuple.get(QLogApi.logApi.method),
+            tuple.get(QLogApi.logApi.statusCode),
+            tuple.get(QLogApi.logApi.bodyRequest),
+            tuple.get(QLogApi.logApi.bodyResponse),
             headerRequest,
             headerResponse,
-            isCompleteTextRequest,
-            isCompleteTextResponse
+            isTooLong(tuple.get(QLogApi.logApi.bodyRequest.length())),
+            isTooLong(tuple.get(QLogApi.logApi.bodyResponse.length()))
         );
     }
 
-	public Optional<HttpBodyPart> findBodyPart(Long id, Boolean isRequest) {
-		return Optional
-			.ofNullable(findById(id))
-			.map(log -> new HttpBodyPart(
-				log.getApiName(),
-				isRequest ? log.getBodyRequest() : log.getBodyResponse(),
-				MimeType
-					.guessResponseMimeType(logHeaderService.findHeaders(
-						id,
-						isRequest ? HttpPart.REQUEST : HttpPart.RESPONSE
-					))
-					.map(MimeType::getFileExtension)
-					.orElse("txt")
-			));
-	}
+    public Optional<HttpBodyPart> findBodyPart(Long id, boolean isRequest) {
+        return Optional
+            .ofNullable(findById(id))
+            .map(log -> new HttpBodyPart(
+                log.getApiName(),
+                isRequest ? log.getBodyRequest() : log.getBodyResponse(),
+                MimeType
+                    .guessResponseMimeType(logHeaderService.findHeaders(
+                        id,
+                        isRequest ? HttpPart.REQUEST : HttpPart.RESPONSE
+                    ))
+                    .map(MimeType::getFileExtension)
+                    .orElse("txt")
+            ));
+    }
+
+    public LogApiFilters fetchAvailableFilters() {
+        return this.logApiDao.fetchAvailableFilters();
+    }
 
     public void saveLog(LogInterceptApiBean interceptedLog) {
-        if(saveToDatabase) {
+        if (saveToDatabase) {
             logsToBeSaved.add(interceptedLog);
         }
     }
 
+    private boolean isTooLong(Integer length) {
+        return length != null && length > this.bodyMaxCharsDisplayed;
+    }
+
     private void insertWaitingLogs() {
-    	while(true) {
-    		try {
-				LogInterceptApiBean logToSave = logsToBeSaved.take();
+        while (true) {
+            try {
+                LogInterceptApiBean logToSave = logsToBeSaved.take();
 
 		        LogApi log = new LogApi();
 		        log.setDate(Instant.now());
@@ -134,17 +134,17 @@ public class LogApiService extends CrudService<LogApi> {
 		        log.setBodyResponse(logToSave.getBodyResponse());
 		        log.setApiName(logToSave.getApiName());
 
-	        	logApiDao.save(log);
-	        	for(HttpHeader requestHeader : logToSave.getHeaderRequest()) {
-	        		logHeaderService.saveHeader(requestHeader, HttpPart.REQUEST, log.getId());
-	        	}
-	        	for(HttpHeader responseHeader : logToSave.getHeaderResponse()) {
-	        		logHeaderService.saveHeader(responseHeader, HttpPart.RESPONSE, log.getId());
-	        	}
-			} catch (Throwable e) {
-				logger.error("Error saving HTTP log", e);
-			}
-    	}
+                logApiDao.save(log);
+                for (HttpHeader requestHeader : logToSave.getHeaderRequest()) {
+                    logHeaderService.saveHeader(requestHeader, HttpPart.REQUEST, log.getId());
+                }
+                for (HttpHeader responseHeader : logToSave.getHeaderResponse()) {
+                    logHeaderService.saveHeader(responseHeader, HttpPart.RESPONSE, log.getId());
+                }
+            } catch (Throwable e) {
+                logger.error("Error saving HTTP log", e);
+            }
+        }
     }
 
     // clean up

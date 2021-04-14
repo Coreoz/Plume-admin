@@ -1,4 +1,4 @@
-package com.coreoz.plume.admin.services.logApi;
+package com.coreoz.plume.admin.services.logapi;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -6,6 +6,6 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public class HttpHeader {
-    private String name;
-    private String value;
+    private final String name;
+    private final String value;
 }

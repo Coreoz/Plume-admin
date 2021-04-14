@@ -3,19 +3,22 @@ package com.coreoz.plume.admin;
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.coreoz.plume.admin.services.logApi.HttpHeader;
-import com.coreoz.plume.admin.services.logApi.LogApiService;
-import com.coreoz.plume.admin.services.logApi.LogInterceptApiBean;
+import com.coreoz.plume.admin.services.logapi.HttpHeader;
+import com.coreoz.plume.admin.services.logapi.LogApiService;
+import com.coreoz.plume.admin.services.logapi.LogInterceptApiBean;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
+import lombok.NonNull;
 import okhttp3.Connection;
 import okhttp3.Headers;
 import okhttp3.Interceptor;
@@ -30,89 +33,159 @@ import okio.BufferedSource;
 import okio.GzipSource;
 
 public class OkHttpLoggerInterceptor implements Interceptor {
-
-    private static final Charset UTF8 = Charset.forName("UTF-8");
+    private static final Logger logger = LoggerFactory.getLogger("api.http");
 
     private final String apiName;
     private final LogApiService logApiService;
-    private final Logger logger;
+    private final Predicate<Request> requestFilterPredicate;
+    private final LogEntryTransformer logEntryTransformer;
 
-    public OkHttpLoggerInterceptor(String apiName, LogApiService logApiService) {
+    public OkHttpLoggerInterceptor(
+        String apiName,
+        LogApiService logApiService,
+        Predicate<Request> requestFilterPredicate,
+        LogEntryTransformer logEntryTransformer
+    ) {
         this.apiName = apiName;
         this.logApiService = logApiService;
-        this.logger = LoggerFactory.getLogger("api.http");
+        this.requestFilterPredicate = requestFilterPredicate;
+        this.logEntryTransformer = logEntryTransformer;
     }
 
+    public OkHttpLoggerInterceptor(String apiName, LogApiService logApiService) {
+        this(apiName, logApiService, request -> true, (request, response, trace) -> trace);
+    }
+
+    public OkHttpLoggerInterceptor(String apiName, LogApiService logApiService, Predicate<Request> requestFilterPredicate) {
+    	this(apiName, logApiService, requestFilterPredicate, (request, response, trace) -> trace);
+    }
+
+    public OkHttpLoggerInterceptor(String apiName, LogApiService logApiService, LogEntryTransformer logEntryTransformer) {
+        this(apiName, logApiService, request -> true, logEntryTransformer);
+    }
+
+    @NotNull
     @Override
     public Response intercept(Chain chain) throws IOException {
         Request request = chain.request();
-
-        List<HttpHeader> requestHeaders = new ArrayList<>();
-        List<HttpHeader> responseHeaders = new ArrayList<>();
-        RequestBody requestBody = request.body();
-        boolean hasRequestBody = requestBody != null;
-        String requestBodyString = null;
-        if (hasRequestBody) {
-        	Buffer bufferRq = new Buffer();
-            requestBody.writeTo(bufferRq);
-            requestBodyString = bufferRq.clone().readString(UTF8);
-        }
         Connection connection = chain.connection();
-        String requestStartMessage = "--> " + request.method() + ' ' + request.url() + (connection != null ? " " + connection.protocol() : "");
-        if (hasRequestBody) {
-            requestStartMessage = requestStartMessage + " (" + requestBody.contentLength() + "-byte body)";
+
+        if (!this.requestFilterPredicate.test(request)) {
+            logger.debug("--> Request {} is marked as filtered", request.url());
+            return chain.proceed(request);
         }
-        this.logger.debug(requestStartMessage);
-        if (hasRequestBody) {
-            if (requestBody.contentType() != null) {
-            	requestHeaders.add(new HttpHeader("Content-Type", requestBody.contentType().toString()));
-                this.logger.debug("Content-Type: " + requestBody.contentType());
-            }
 
-            if (requestBody.contentLength() != -1L) {
-                this.logger.debug("Content-Length: " + requestBody.contentLength());
-            }
+        Headers chainRequestHeaders = request.headers();
+        List<HttpHeader> requestHeaders = readHeaders(chainRequestHeaders);
+        RequestBody requestBody = request.body();
+        String requestMethod = request.method();
+        String requestBodyString = null;
 
-            Headers headers = request.headers();
-            int i = 0;
+        String requestStartMessage = String.format("--> %s %s%s", request.method(), request.url(), (connection != null ? " " + connection.protocol() : ""));
+        if (requestBody != null) {
+            requestStartMessage = String.format("%s (%s-byte body)", requestStartMessage, requestBody.contentLength());
+        }
+        logger.debug(requestStartMessage);
 
-            for (int count = headers.size(); i < count; ++i) {
-                String name = headers.name(i);
-                if (!"Content-Type".equalsIgnoreCase(name) && !"Content-Length".equalsIgnoreCase(name)) {
-                	requestHeaders.add(new HttpHeader(headers.name(i), headers.value(i)));
-                    this.logger.debug(name + ": " + headers.value(i));
-                }
+        if (requestBody != null) {
+            requestBodyString = logRequestBody(requestBody, requestMethod, bodyHasUnknownEncoding(chainRequestHeaders));
+        } else {
+            logger.debug("--> END {}", requestMethod);
+        }
+
+        long startMs = System.currentTimeMillis();
+        Response response = executeRequest(
+            chain,
+            request,
+            requestBodyString,
+            requestHeaders
+        );
+        long tookMs = System.currentTimeMillis() - startMs;
+
+        Headers chainResponseHeaders = response.headers();
+        List<HttpHeader> responseHeaders = readHeaders(chainResponseHeaders);
+        ResponseBody responseBody = response.body();
+        String responseBodyString = null;
+
+        long contentLength;
+        String responseMessage = "-- no message --";
+        String bodySize = "unknown-length";
+
+        if (responseBody != null) {
+            contentLength = responseBody.contentLength();
+            bodySize = contentLength != -1L ? contentLength + "-byte" : "unknown-length";
+            responseMessage = response.message().isEmpty() ? "-- no message --" : response.message();
+
+            Buffer buffer = responseBodyToBuffer(responseBody);
+            if (!isPlaintext(buffer)) {
+                logger.debug("");
+                logger.debug("<-- END HTTP (binary {}-byte body omitted)", buffer.size());
+                return response;
             }
-            if (this.bodyHasUnknownEncoding(request.headers())) {
-                this.logger.debug("--> END " + request.method() + " (encoded body omitted)");
+            if (HttpHeaders.promisesBody(response)) {
+                responseBodyString = readAndLogResponseBody(responseBody, chainResponseHeaders, buffer);
             } else {
-                Buffer buffer = new Buffer();
-                requestBody.writeTo(buffer);
-                Charset charset = UTF8;
-                MediaType contentType = requestBody.contentType();
-                if (contentType != null) {
-                    charset = contentType.charset(UTF8);
-                }
-
-                this.logger.debug("");
-                if (isPlaintext(buffer)) {
-                    this.logger.debug(buffer.readString(charset));
-                    this.logger.debug("--> END " + request.method() + " (" + requestBody.contentLength() + "-byte body)");
-                } else {
-                    this.logger.debug("--> END " + request.method() + " (binary " + requestBody.contentLength() + "-byte body omitted)");
-                }
+                logger.debug("<-- END HTTP");
+            }
+            if (contentLength != -1L) {
+                logger.debug(responseBodyString);
             }
         } else {
-            this.logger.debug("--> END " + request.method());
+            logger.debug("--> END {}", requestMethod);
         }
 
-        long startNs = System.nanoTime();
+        logger.debug("<-- {} {} {} ({} ms, {} body)",
+            response.code(),
+            responseMessage,
+            response.request().url(),
+            tookMs,
+            bodySize
+        );
 
-        Response response;
+        LogInterceptApiBean logInterceptApiBean = new LogInterceptApiBean(
+            request.url().toString(),
+            request.method(),
+            response.code(),
+            requestBodyString,
+            responseBodyString,
+            requestHeaders,
+            responseHeaders,
+            this.apiName
+        );
+
+        logApiService.saveLog(this.logEntryTransformer.transform(request, response, logInterceptApiBean));
+        return response;
+    }
+
+    static boolean isPlaintext(Buffer buffer) {
         try {
-            response = chain.proceed(request);
+            Buffer prefix = new Buffer();
+            long byteCount = Math.min(buffer.size(), 64L);
+            buffer.copyTo(prefix, 0L, byteCount);
+
+            for (int i = 0; i < 16 && !prefix.exhausted(); ++i) {
+                int codePoint = prefix.readUtf8CodePoint();
+                if (Character.isISOControl(codePoint) && !Character.isWhitespace(codePoint)) {
+                    return false;
+                }
+            }
+
+            return true;
+        } catch (EOFException eofException) {
+            return false;
+        }
+    }
+
+    private Response executeRequest(
+        Chain chain,
+        Request request,
+        String requestBodyString,
+        List<HttpHeader> requestHeaders
+    ) throws IOException {
+        try {
+            return chain.proceed(request);
         } catch (Exception e) {
-            this.logger.debug("<-- HTTP FAILED: ", e);
+            logger.debug("<-- HTTP FAILED : {}", e.getMessage());
 
             LogInterceptApiBean logInterceptApiBean = new LogInterceptApiBean(
                 request.url().toString(),
@@ -128,112 +201,107 @@ public class OkHttpLoggerInterceptor implements Interceptor {
 
             throw e;
         }
-
-        Buffer bufferRs = null;
-        long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNs);
-        ResponseBody responseBody = response.body();
-
-        long contentLength = responseBody.contentLength();
-        String bodySize = contentLength != -1L ? contentLength + "-byte" : "unknown-length";
-        this.logger.debug("<-- " + response.code() + (response.message().isEmpty() ? "" : ' ' + response.message()) + ' ' + response.request().url() + " (" + tookMs + "ms" + ", " + bodySize + " body" + ')');
-
-        Headers headers = response.headers();
-        int i = 0;
-
-        for (int count = headers.size(); i < count; ++i) {
-        	responseHeaders.add(new HttpHeader(headers.name(i), headers.value(i)));
-            this.logger.debug(headers.name(i) + ": " + headers.value(i));
-        }
-
-        if (HttpHeaders.hasBody(response)) {
-            if (this.bodyHasUnknownEncoding(response.headers())) {
-                this.logger.debug("<-- END HTTP (encoded body omitted)");
-            } else {
-                BufferedSource source = responseBody.source();
-                source.request(9223372036854775807L);
-                Buffer buffer = source.getBuffer();
-                bufferRs = source.getBuffer();
-                Long gzippedLength = null;
-                if ("gzip".equalsIgnoreCase(headers.get("Content-Encoding"))) {
-                    gzippedLength = buffer.size();
-                    GzipSource gzippedResponseBody = null;
-
-                    try {
-                        gzippedResponseBody = new GzipSource(buffer.clone());
-                        buffer = new Buffer();
-                        buffer.writeAll(gzippedResponseBody);
-                        bufferRs.writeAll(gzippedResponseBody);
-                    } finally {
-                        if (gzippedResponseBody != null) {
-                            gzippedResponseBody.close();
-                        }
-                    }
-                }
-
-                Charset charset = UTF8;
-                MediaType contentType = responseBody.contentType();
-                if (contentType != null) {
-                    charset = contentType.charset(UTF8);
-                }
-
-                if (!isPlaintext(buffer)) {
-                    this.logger.debug("");
-                    this.logger.debug("<-- END HTTP (binary " + buffer.size() + "-byte body omitted)");
-                    return response;
-                }
-
-                if (contentLength != 0L) {
-                    this.logger.debug("");
-                    this.logger.debug(buffer.clone().readString(charset));
-                }
-
-                if (gzippedLength != null) {
-                    this.logger.debug("<-- END HTTP (" + buffer.size() + "-byte, " + gzippedLength + "-gzipped-byte body)");
-                } else {
-                    this.logger.debug("<-- END HTTP (" + buffer.size() + "-byte body)");
-                }
-            }
-        } else {
-            this.logger.debug("<-- END HTTP");
-        }
-
-        LogInterceptApiBean logInterceptApiBean = new LogInterceptApiBean(
-            request.url().toString(),
-            request.method(),
-            response.code(),
-            requestBodyString,
-            bufferRs == null ? null : bufferRs.clone().readString(UTF8),
-            requestHeaders,
-            responseHeaders,
-            this.apiName
-        );
-        logApiService.saveLog(logInterceptApiBean);
-        return response;
     }
 
-    static boolean isPlaintext(Buffer buffer) {
-        try {
-            Buffer prefix = new Buffer();
-            long byteCount = buffer.size() < 64L ? buffer.size() : 64L;
-            buffer.copyTo(prefix, 0L, byteCount);
-
-            for(int i = 0; i < 16 && !prefix.exhausted(); ++i) {
-                int codePoint = prefix.readUtf8CodePoint();
-                if (Character.isISOControl(codePoint) && !Character.isWhitespace(codePoint)) {
-                    return false;
-                }
-            }
-
-            return true;
-        } catch (EOFException var6) {
-            return false;
-        }
-    }
-
-    private boolean bodyHasUnknownEncoding(Headers headers) {
+    private static boolean bodyHasUnknownEncoding(Headers headers) {
         String contentEncoding = headers.get("Content-Encoding");
-        return contentEncoding != null && !contentEncoding.equalsIgnoreCase("identity") && !contentEncoding.equalsIgnoreCase("gzip");
+        return contentEncoding != null
+            && !contentEncoding.equalsIgnoreCase("identity")
+            && !contentEncoding.equalsIgnoreCase("gzip");
     }
 
+    private static String logRequestBody(@NonNull RequestBody requestBody, String method, boolean hasUnknownEncoding) throws IOException {
+        String requestBodyString;
+        Buffer requestBodyBuffer = requestBodyToBuffer(requestBody);
+        MediaType contentType = requestBody.contentType();
+
+        if (contentType != null) {
+            logger.debug("Content-Type: {}", requestBody.contentType());
+            logger.debug("Content-Length: {}", requestBody.contentLength());
+        }
+
+        if (!hasUnknownEncoding) {
+            requestBodyString = bufferToString(requestBodyBuffer, StandardCharsets.UTF_8);
+            logger.debug("--> END {} (encoded body omitted)", method);
+        } else {
+            Charset charset = StandardCharsets.UTF_8;
+            if (contentType != null) {
+                charset = contentType.charset(StandardCharsets.UTF_8);
+            }
+            requestBodyString = bufferToString(requestBodyBuffer, charset);
+
+            if (isPlaintext(requestBodyBuffer)) {
+                logger.debug(requestBodyString);
+                logger.debug("--> END {} ({}-byte body)", method, requestBody.contentLength());
+            } else {
+                logger.debug("--> END {} (binary {}-byte body omitted)", method, requestBody.contentLength());
+            }
+        }
+
+        return requestBodyString;
+    }
+
+    private static String readAndLogResponseBody(ResponseBody responseBody, Headers chainResponseHeaders, Buffer buffer) throws IOException {
+        String responseBodyString = null;
+        if (bodyHasUnknownEncoding(chainResponseHeaders)) {
+            logger.debug("<-- END HTTP (encoded body omitted)");
+        } else {
+            if ("gzip".equalsIgnoreCase(chainResponseHeaders.get("Content-Encoding"))) {
+                long gzippedLength = buffer.size();
+                try (GzipSource gzippedResponseBody = new GzipSource(buffer.clone())) {
+                    buffer = new Buffer();
+                    buffer.writeAll(gzippedResponseBody);
+                }
+                logger.debug("<-- END HTTP ({}-byte, {}-gzipped-byte body)", buffer.size(), gzippedLength);
+            } else {
+                logger.debug("<-- END HTTP ({}-byte body)", buffer.size());
+            }
+
+            Charset charset = StandardCharsets.UTF_8;
+            MediaType contentType = responseBody.contentType();
+            if (contentType != null) {
+                charset = contentType.charset(StandardCharsets.UTF_8);
+            }
+
+            responseBodyString = bufferToString(buffer, charset);
+        }
+        return responseBodyString;
+    }
+
+    private static List<HttpHeader> readHeaders(Headers headers) {
+        List<HttpHeader> httpHeaders = new ArrayList<>();
+        for (int count = 0; count < headers.size(); count++) {
+            String name = headers.name(count);
+            String headerValue = headers.value(count);
+            httpHeaders.add(new HttpHeader(headers.name(count), headerValue));
+            logger.debug("{}: {}", name, headerValue);
+        }
+        return httpHeaders;
+    }
+
+    private static String bufferToString(Buffer buffer, Charset charset) {
+        if (buffer == null) {
+            return null;
+        }
+        return buffer.clone().readString(charset);
+    }
+
+    private static Buffer requestBodyToBuffer(RequestBody requestBody) throws IOException {
+        if (requestBody == null) {
+            return null;
+        }
+        Buffer bufferRq = new Buffer();
+        requestBody.writeTo(bufferRq);
+        return bufferRq;
+    }
+
+    private static Buffer responseBodyToBuffer(ResponseBody responseBody) throws IOException {
+        if (responseBody == null) {
+            return null;
+        }
+        final BufferedSource source = responseBody.source();
+        source.request(Long.MAX_VALUE);
+        return source.getBuffer();
+    }
 
 }

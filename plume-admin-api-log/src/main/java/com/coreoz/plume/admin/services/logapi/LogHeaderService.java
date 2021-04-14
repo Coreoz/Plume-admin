@@ -1,4 +1,4 @@
-package com.coreoz.plume.admin.services.logApi;
+package com.coreoz.plume.admin.services.logapi;
 
 import java.util.List;
 
@@ -12,7 +12,7 @@ import com.coreoz.plume.db.crud.CrudService;
 @Singleton
 public class LogHeaderService extends CrudService<LogHeader> {
 
-    private LogHeaderDao logHeaderDao;
+    private final LogHeaderDao logHeaderDao;
 
     @Inject
     public LogHeaderService(LogHeaderDao logHeaderDao) {

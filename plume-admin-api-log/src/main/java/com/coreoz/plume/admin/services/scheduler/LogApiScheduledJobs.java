@@ -4,7 +4,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import com.coreoz.plume.admin.services.configuration.LogApiConfigurationService;
-import com.coreoz.plume.admin.services.logApi.LogApiService;
+import com.coreoz.plume.admin.services.logapi.LogApiService;
 import com.coreoz.wisp.Scheduler;
 import com.coreoz.wisp.schedule.Schedules;
 

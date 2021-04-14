@@ -1,4 +1,4 @@
-package com.coreoz.plume.admin.webservices.logApi;
+package com.coreoz.plume.admin.webservices.logapi;
 
 import java.time.Instant;
 import java.util.List;
@@ -18,22 +18,23 @@ import javax.ws.rs.core.Response.Status;
 import com.coreoz.plume.admin.db.daos.LogApiTrimmed;
 import com.coreoz.plume.admin.jersey.feature.RestrictToAdmin;
 import com.coreoz.plume.admin.services.configuration.LogApiConfigurationService;
-import com.coreoz.plume.admin.services.logApi.LogApiBean;
-import com.coreoz.plume.admin.services.logApi.LogApiService;
-import com.coreoz.plume.admin.services.permission.ApiLogAdminPermissions;
+import com.coreoz.plume.admin.services.logapi.LogApiBean;
+import com.coreoz.plume.admin.services.logapi.LogApiFilters;
+import com.coreoz.plume.admin.services.logapi.LogApiService;
+import com.coreoz.plume.admin.services.permission.LogApiAdminPermissions;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
-@Path("/admin/logs")
+@Path("/admin")
 @Api("Application HTTP API trace")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-@RestrictToAdmin(ApiLogAdminPermissions.MANAGE_API_LOGS)
+@RestrictToAdmin(LogApiAdminPermissions.MANAGE_API_LOGS)
 @Singleton
 public class LogApiWs {
-    private LogApiService logApiService;
-    private Integer maxLogsToFetch;
+    private final LogApiService logApiService;
+    private final Integer maxLogsToFetch;
 
     @Inject
     public LogApiWs(LogApiService logApiService, LogApiConfigurationService logApiConfigurationService) {
@@ -43,6 +44,7 @@ public class LogApiWs {
 
     @GET
     @ApiOperation("Fetch API trimmed logs (without request/response bodies) by query filters")
+    @Path("/logs")
     public List<LogApiTrimmed> fetchAllLogs(
         @QueryParam("limit") Integer limit,
         @QueryParam("method") String method,
@@ -60,17 +62,17 @@ public class LogApiWs {
 
     @GET
     @ApiOperation("Fetch the headers and the trimmed body of a request/response")
-    @Path("/{idLog}")
+    @Path("/logs/{idLog}")
     public LogApiBean details(@PathParam("idLog") Long id) {
         return logApiService.fetchLogDetails(id);
     }
 
     @GET
     @ApiOperation("Download the body of a request or a response")
-    @Path("/{idLog}/{isRequest}")
+    @Path("/logs/{idLog}/{isRequest}")
     public Response bodyFile(@PathParam("idLog") Long id, @PathParam("isRequest") Boolean isRequest) {
         return logApiService
-            .findBodyPart(id, isRequest)
+            .findBodyPart(id, isRequest != null && isRequest)
             .map(bodyPart -> Response
                 .ok(bodyPart.getBody().getBytes())
                 .header(
@@ -80,6 +82,13 @@ public class LogApiWs {
                 .build()
             )
             .orElseGet(() -> Response.status(Status.NOT_FOUND).build());
+    }
+
+    @GET
+    @ApiOperation("Fetch the headers and the trimmed body of a request/response")
+    @Path("/logs-filters")
+    public LogApiFilters filters() {
+        return logApiService.fetchAvailableFilters();
     }
 
 }

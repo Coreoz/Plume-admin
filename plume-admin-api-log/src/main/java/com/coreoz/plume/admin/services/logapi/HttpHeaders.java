@@ -1,4 +1,4 @@
-package com.coreoz.plume.admin.services.logApi;
+package com.coreoz.plume.admin.services.logapi;
 
 
 import java.util.List;
@@ -11,6 +11,6 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public class HttpHeaders {
-    private List<LogHeader> headers;
-    private String mimeType;
+    private final List<LogHeader> headers;
+    private final String mimeType;
 }

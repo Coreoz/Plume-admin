@@ -3,6 +3,7 @@ package com.coreoz.plume.admin.db.daos;
 import com.coreoz.plume.admin.db.generated.LogApi;
 import com.coreoz.plume.admin.db.generated.QLogApi;
 import com.coreoz.plume.admin.db.generated.QLogHeader;
+import com.coreoz.plume.admin.services.logapi.LogApiFilters;
 import com.coreoz.plume.db.querydsl.crud.CrudDaoQuerydsl;
 import com.coreoz.plume.db.querydsl.transaction.TransactionManagerQuerydsl;
 import com.google.common.base.Strings;
@@ -16,17 +17,21 @@ import com.querydsl.sql.SQLQuery;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.sql.Connection;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Singleton
 public class LogApiDao extends CrudDaoQuerydsl<LogApi> {
 
-	private static final NumberPath<Long> ID_SQL_PATH = Expressions.numberPath(Long.class, "id");
+    private static final NumberPath<Long> ID_SQL_PATH = Expressions.numberPath(Long.class, "id");
 
     @Inject
-    public LogApiDao(TransactionManagerQuerydsl transactionManager) {
+    public LogApiDao(
+        TransactionManagerQuerydsl transactionManager
+    ) {
         super(transactionManager, QLogApi.logApi);
     }
 
@@ -118,13 +123,55 @@ public class LogApiDao extends CrudDaoQuerydsl<LogApi> {
 			);
 		}
 
-		return filters;
+        return filters;
+    }
+
+	public Optional<Tuple> findByIdWithMaxLength(Long id, int maxLength) {
+		return Optional.ofNullable(
+			this.transactionManager.selectQuery()
+				.select(
+					QLogApi.logApi.id,
+					QLogApi.logApi.statusCode,
+					QLogApi.logApi.apiName,
+					QLogApi.logApi.date,
+					QLogApi.logApi.method,
+					QLogApi.logApi.url,
+					QLogApi.logApi.bodyRequest.substring(0, maxLength).as(QLogApi.logApi.bodyRequest),
+					QLogApi.logApi.bodyResponse.substring(0, maxLength).as(QLogApi.logApi.bodyResponse),
+					QLogApi.logApi.bodyRequest.length(),
+					QLogApi.logApi.bodyRequest.length()
+				)
+				.from(QLogApi.logApi)
+				.where(QLogApi.logApi.id.eq(id))
+				.fetchOne()
+		);
 	}
 
+    public LogApiFilters fetchAvailableFilters() {
+        return this.transactionManager.executeAndReturn(connection ->
+            LogApiFilters.of(
+                this.listApiNames(connection),
+                this.listStatusCodes(connection)
+            )
+        );
+    }
+
     public List<String> listApiNames() {
+        return this.transactionManager.executeAndReturn(this::listApiNames);
+    }
+
+    private List<String> listApiNames(Connection connection) {
         return transactionManager
-            .selectQuery()
+            .selectQuery(connection)
             .select(QLogApi.logApi.apiName)
+            .distinct()
+            .from(QLogApi.logApi)
+            .fetch();
+    }
+
+    private List<Integer> listStatusCodes(Connection connection) {
+        return this.transactionManager.selectQuery(connection)
+            .select(QLogApi.logApi.statusCode)
             .distinct()
             .from(QLogApi.logApi)
             .fetch();

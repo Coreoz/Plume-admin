@@ -1,4 +1,4 @@
-package com.coreoz.plume.admin.services.logApi;
+package com.coreoz.plume.admin.services.logapi;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,7 +16,8 @@ enum MimeType {
     ATOM_XML("application/atom+xml", "xml"),
     HTML("text/html", "html"),
     JSON("application/json", "json"),
-    TEXT("text/plain", "txt");
+    TEXT("text/plain", "txt"),
+    ;
 
     private final String mimeType;
     private final String fileExtension;
