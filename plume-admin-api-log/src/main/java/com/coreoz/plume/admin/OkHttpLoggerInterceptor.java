@@ -1,10 +1,23 @@
 package com.coreoz.plume.admin;
 
+import java.io.EOFException;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
+
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.coreoz.plume.admin.services.logapi.HttpHeader;
 import com.coreoz.plume.admin.services.logapi.LogApiService;
 import com.coreoz.plume.admin.services.logapi.LogInterceptApiBean;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+
 import lombok.NonNull;
 import okhttp3.Connection;
 import okhttp3.Headers;
@@ -18,17 +31,6 @@ import okhttp3.internal.http.HttpHeaders;
 import okio.Buffer;
 import okio.BufferedSource;
 import okio.GzipSource;
-import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.EOFException;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Predicate;
 
 public class OkHttpLoggerInterceptor implements Interceptor {
     private static final Logger logger = LoggerFactory.getLogger("api.http");
@@ -55,7 +57,7 @@ public class OkHttpLoggerInterceptor implements Interceptor {
     }
 
     public OkHttpLoggerInterceptor(String apiName, LogApiService logApiService, Predicate<Request> requestFilterPredicate) {
-        this(apiName, logApiService, requestFilterPredicate, (request, response, trace) -> trace);
+    	this(apiName, logApiService, requestFilterPredicate, (request, response, trace) -> trace);
     }
 
     public OkHttpLoggerInterceptor(String apiName, LogApiService logApiService, LogEntryTransformer logEntryTransformer) {

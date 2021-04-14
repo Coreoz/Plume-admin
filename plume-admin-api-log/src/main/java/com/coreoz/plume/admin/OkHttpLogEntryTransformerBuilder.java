@@ -63,9 +63,9 @@ public class OkHttpLogEntryTransformerBuilder {
     public LogEntryTransformer build() {
         return (request, response, logInterceptApiBean) -> {
             boolean isNotTransformable = !forAll
-                && !OkHttpLoggerMatchUtils.matchRequestEndpoints(request.url(), this.filteredEndpoints)
-                && !OkHttpLoggerMatchUtils.matchRequestMethods(request.method(), this.filteredMethods)
-                && !OkHttpLoggerMatchUtils.matchResponseHeaders(response, this.filteredResponseHeaders);
+                && !OkHttpMatchers.matchRequestEndpoints(request.url(), this.filteredEndpoints)
+                && !OkHttpMatchers.matchRequestMethods(request.method(), this.filteredMethods)
+                && !OkHttpMatchers.matchResponseHeaders(response, this.filteredResponseHeaders);
 
             return isNotTransformable
                 ? logInterceptApiBean

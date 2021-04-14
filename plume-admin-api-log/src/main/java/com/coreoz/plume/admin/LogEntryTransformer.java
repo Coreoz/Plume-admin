@@ -1,6 +1,9 @@
 package com.coreoz.plume.admin;
 
+import java.util.function.Predicate;
+
 import com.coreoz.plume.admin.services.logapi.LogInterceptApiBean;
+
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -17,6 +20,25 @@ import okhttp3.Response;
 @FunctionalInterface
 public interface LogEntryTransformer {
     LogInterceptApiBean transform(Request request, Response response, LogInterceptApiBean trace);
+
+    default LogEntryTransformer andApply(LogEntryTransformer otherTransformerToApplyAfter) {
+    	return (request, response, apiTrace) -> otherTransformerToApplyAfter
+    			.transform(request, response, transform(request, response, apiTrace));
+    }
+
+    default LogEntryTransformer applyOnlyToRequests(Predicate<Request> allowRequestPredicate) {
+    	return (request, response, apiTrace) ->
+    		allowRequestPredicate.test(request) ?
+    			transform(request, response, apiTrace)
+    			: apiTrace;
+    }
+
+    default LogEntryTransformer applyOnlyToResponses(Predicate<Response> allowResponsePredicate) {
+    	return (request, response, apiTrace) ->
+    	allowResponsePredicate.test(response) ?
+    			transform(request, response, apiTrace)
+    			: apiTrace;
+    }
 
     static LogEntryTransformer limitBodySizeTransformer(int bodyCharLengthLimit) {
         return (request, response, apiTrace) -> {

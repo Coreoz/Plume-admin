@@ -26,7 +26,7 @@ public class OkHttpLoggerInterceptorFiltersBuilder {
     }
 
     public Predicate<Request> build() {
-        return request -> !OkHttpLoggerMatchUtils.matchRequestEndpoints(request.url(), filteredEndpoints)
-            && !OkHttpLoggerMatchUtils.matchRequestMethods(request.method(), filteredMethods);
+        return request -> !OkHttpMatchers.matchRequestEndpoints(request.url(), filteredEndpoints)
+            && !OkHttpMatchers.matchRequestMethods(request.method(), filteredMethods);
     }
 }
