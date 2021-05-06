@@ -54,6 +54,8 @@ bind(WebSessionSigner.class).toProvider(JwtSessionSignerProvider.class);
 bind(JwtSessionSigner.class).toProvider(JwtSessionSignerProvider.class);
 ```
 
+To [read more](plume-admin-security) about JWT customization
+
 Configuration
 -------------
 To generate JWT secret, [LastPass generator](https://lastpass.com/generatepassword.php) can be used with a password length of about 50 characters.
