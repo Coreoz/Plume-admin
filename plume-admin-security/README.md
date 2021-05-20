@@ -1,19 +1,20 @@
 # Plume Admin Security
 
-## General use
+## Plume Admin general use
 
-For general use, please check the [main documentation](https://github.com/Coreoz/Plume-admin)
+For general use, please check the [main Plume Admin documentation](https://github.com/Coreoz/Plume-admin)
 
 
 ## Creating my own permission workflow using Plume
 
-For general use [WebSessionAdmin](src/main/java/com/coreoz/plume/admin/websession/WebSessionAdmin.java) is provided, but you might want to add differents informations in your jwt token.
+For general use [WebSessionAdmin](src/main/java/com/coreoz/plume/admin/websession/WebSessionAdmin.java) is provided, but you might want to add other fields in your JWT token.
+This guide describe how to handle your own JWT token based session and how to secure your API: this way API endpoints you configure will require a valid JWT session in order to be accessed.
 
 
 
 ### 1. Create your own JWT object
 
-You'll need an object that implement both [WebSessionPermission](src/main/java/com/coreoz/plume/admin/websession/WebSessionPermission) and [WebSesssionFingerprint](src/main/java/com/coreoz/plume/admin/websession/WebSesssionFingerprint).
+You'll need an object that implement both [WebSessionPermission](src/main/java/com/coreoz/plume/admin/websession/WebSessionPermission.java) and [WebSessionFingerprint](src/main/java/com/coreoz/plume/admin/websession/WebSessionFingerprint.java).
 For example:
 
 ```java
@@ -29,6 +30,8 @@ public class MyWebSession implements WebSessionPermission, WebSessionFingerprint
 }
 ```
 
+If you don't need session permissions and/or fingerprints, you'll need to implement your own [RequestPermissionProvider](src/main/java/com/coreoz/plume/admin/websession/jersey/WebSessionRequestPermissionProvider.java),
+and specify that you web session won't extend WebSessionPermission and/or WebSessionFingerprint.
 
 
 ### 2. Create the bean that will be return by your login webservice
@@ -70,13 +73,13 @@ And your token object to your jwt token string
 ```java
 String jwtToken = webSessionSigner.serializeSession(
                 convertToJWTSession(user),
-                timeProvider.currentTime() + Duration.ofHours(TOKEN_DURATION_HOUR).toMillis()
+                timeProvider.currentTime() + TOKEN_EXPIRY_DURATION.toMillis()
             );
 ```
 
 
 
-### 4. Add security to match my token and my webservices
+### 4. Add security to my webservices by adding a filter on jwt permission in Jersey
 
 By default you might be using [AdminSecurityFeature](src/main/java/com/coreoz/plume/admin/guice/jersey/feature/AdminSecurityFeature.java), but this is tied to both [WebSessionAdmin](src/main/java/com/coreoz/plume/admin/websession/WebSessionAdmin.java) and [RestrictToAdmin](src/main/java/com/coreoz/plume/admin/guice/jersey/feature/RestrictToAdmin.java)
 
@@ -111,6 +114,8 @@ public class SecurityFeature implements DynamicFeature {
 ```
 
 In your Jersey config file make sure the annotation is registered and add your new `SecurityFeature`
+You'll need to add any custom Annotation.
+
 ```java
 config.register(RequireExplicitAccessControlFeature.accessControlAnnotations(RestrictTo.class, PublicApi.class));
 config.register(SecurityFeature.class);
@@ -119,7 +124,7 @@ config.register(SecurityFeature.class);
 You can now secure your webservices using the `RestrictTo` annotation and the permission string that will be verified to be in your token:
 
 ```java
-@RestrictTo(JWTPermission.BASIC_RIGHT)
+@RestrictTo(JwtPermission.BASIC_RIGHT)
 public class UtilisateurWs {
 [...]
 }
@@ -148,7 +153,7 @@ public class MyWebSessionFactory implements Factory<MyWebSession> {
     }
   
     @Override
-    public void dispose(JWTPermission arg0) {
+    public void dispose(JwtPermission arg0) {
       // unused
     }
   
