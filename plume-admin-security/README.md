@@ -11,7 +11,6 @@ For general use [WebSessionAdmin](src/main/java/com/coreoz/plume/admin/websessio
 This guide describe how to handle your own JWT token based session and how to secure your API: this way API endpoints you configure will require a valid JWT session in order to be accessed.
 
 
-
 ### 1. Create your own JWT object
 
 You'll need an object that implement both [WebSessionPermission](src/main/java/com/coreoz/plume/admin/websession/WebSessionPermission.java) and [WebSessionFingerprint](src/main/java/com/coreoz/plume/admin/websession/WebSessionFingerprint.java).
@@ -50,7 +49,6 @@ public class LoginBean {
 ```
 
 
-
 ### 3. Generate your return bean using your token
 
 For this step, you should have bind the JWT Signer and have a JWT secret like detailed in the [main documentation](https://github.com/Coreoz/Plume-admin).
@@ -76,7 +74,6 @@ String jwtToken = webSessionSigner.serializeSession(
                 timeProvider.currentTime() + TOKEN_EXPIRY_DURATION.toMillis()
             );
 ```
-
 
 
 ### 4. Add security to my webservices by adding a filter on jwt permission in Jersey
@@ -153,7 +150,7 @@ public class MyWebSessionFactory implements Factory<MyWebSession> {
     }
   
     @Override
-    public void dispose(JwtPermission arg0) {
+    public void dispose(JwtPermission permission) {
       // unused
     }
   
@@ -179,7 +176,6 @@ You might want to disable fingerprint on your development environnement in case 
 admin.session.fingerprint-cookie-https-only = false
 admin.session.use-fingerprint-cookie = false
 ```
-
 
 
 ### 5. Getting back the information from the token
