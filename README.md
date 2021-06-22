@@ -86,6 +86,29 @@ WS System module
 ----------------
 To set up the module, install the Plume Schedule module in `ApplicationModule`: `install(new GuiceSchedulerModule());`
 
+Password encryption
+-------------------
+To add encryption to any given string, for example a password before adding it in database, you'll want to implement an HashService. One is already provided in Plume:
+
+```java
+bind(HashService.class).to(BCryptHashService.class);
+```
+
+Note that this service is already bound if you are already using `GuiceAdminWsModule` or `GuiceAdminWsWithDefaultsModule`; 
+
+You'll use it to hash the password:
+
+```java
+userDB.setPassword(hashService.hashPassword(userBean.getPassword()));
+```
+
+and to check if the provided password match the one registered:
+
+```java
+if (hashService.checkPassword(loginBean.getPassword(), userDB.getPassword())) {
+  // Password is correct
+}
+```
 
 HTTP API Log module
 -------------------
