@@ -14,11 +14,11 @@
 	<description>Gather versions of various libraries used by Plume Admin</description>
 
 	<properties>
-		<jjwt.version>0.11.1</jjwt.version>
-		<jbcrypt.version>0.4.1</jbcrypt.version>
-		<okhttp.version>4.5.0</okhttp.version>
+		<jjwt.version>0.11.2</jjwt.version>
+		<jbcrypt.version>0.4.3</jbcrypt.version>
+		<okhttp.version>4.9.1</okhttp.version>
 
-		<plume-framework.version>2.0.1</plume-framework.version>
+		<plume-framework.version>2.1.0</plume-framework.version>
 	</properties>
 
 	<dependencyManagement>
