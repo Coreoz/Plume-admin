@@ -56,7 +56,7 @@ public class OkHttpLoggerInterceptor implements Interceptor {
         this(apiName, logApiService, request -> true, (request, response, trace) -> trace);
     }
 
-    public OkHttpLoggerInterceptor(String apiName, LogApiService logApiService, Predicate<Request> requestFilterPredicate) {
+    public OkHttpLoggerInterceptor(String apiName, LogApiService logApiService, RequestPredicate requestFilterPredicate) {
     	this(apiName, logApiService, requestFilterPredicate, (request, response, trace) -> trace);
     }
 

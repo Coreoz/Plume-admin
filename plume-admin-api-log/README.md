@@ -13,7 +13,7 @@ Installation
     <artifactId>plume-admin-ws-system</artifactId>
 </dependency>
 ```
-2. Configure the new permission for the admin user to access the API: `ApiLogAdminPermissions.MANAGE_API_LOGS`
+2. Configure the new permission for the admin user to access the API: `LogApiAdminPermissions.MANAGE_API_LOGS`
 3. SQL, see [setup files](sql)
 4. Configuring the API with OkHttp:
   a. In the API Java class, add a dependency to `LogApiService`

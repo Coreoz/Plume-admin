@@ -1,8 +1,8 @@
 package com.coreoz.plume.admin;
 
-import okhttp3.Request;
-
 import java.util.function.Predicate;
+
+import okhttp3.Request;
 
 /**
  * Represent a predicate of a {@link Request}
@@ -25,6 +25,9 @@ public interface RequestPredicate extends Predicate<Request> {
         return request -> true;
     }
 
+    /**
+     * Filter endpoint, for example '/api/orders'
+     */
     default RequestPredicate filterEndpointStartsWith(String endpointToFilter) {
         return request -> test(request)
             && OkHttpMatchers.matchRequestEndpointStartsWith(request.url(), endpointToFilter);
