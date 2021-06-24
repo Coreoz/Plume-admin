@@ -39,6 +39,44 @@ public GitHubApi(ObjectMapper objectMapper, LogApiService logApiService) {
 }
 ```
 
+Filter & transform logs
+-----------------------
+
+Filtering and transforming the logs is possible using the `OkHttpLoggerInterceptor`:
+- `OkHttpLoggerInterceptor(String apiName, LogApiService logApiService, RequestPredicate requestFilterPredicate)`: to only filter requests
+- `OkHttpLoggerInterceptor(String apiName, LogApiService logApiService, LogEntryTransformer logEntryTransformer)`: to transform logs and to filter requests/responses
+
+Example to omit logging requests that start with `/api/orders`:
+```java
+new OkHttpLoggerInterceptor(
+  "Github",
+  logApiService,
+  RequestPredicate.alwaysTrue().filterEndpointStartsWith("/api/orders")
+)
+```
+
+Example to log only the first 1024 chars of the request/response body:
+```java
+new OkHttpLoggerInterceptor(
+  "Github",
+  logApiService,
+  LogEntryTransformer.limitBodySizeTransformer(1024)
+)
+```
+
+Example to log only the first 1024 chars of the request/response body and to omit logging requests that start with `/api/orders`:
+```java
+new OkHttpLoggerInterceptor(
+  "Github",
+  logApiService,
+  LogEntryTransformer
+    .limitBodySizeTransformer(1024)
+    .applyOnlyToRequests(RequestPredicate.alwaysTrue().filterEndpointStartsWith("/api/orders"))
+)
+```
+
+`LogEntryTransformer` and `RequestPredicate` are interfaces, so the possibilities of transforming and filtering are prettry much endless.
+
 Configuration
 -------------
 

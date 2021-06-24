@@ -132,6 +132,8 @@ logApiScheduledJobs.scheduleJobs();
 ```
 - [See SQL files](plume-admin-api-log/sql/)
 
+Advanced configuration is detailed in the [Log API module](plume-admin-api-log/#filter-transform-logs)
+
 Upgrade instructions
 --------------------
 See the [releases notes](https://github.com/Coreoz/Plume-admin/releases) to see the upgrade instructions.
