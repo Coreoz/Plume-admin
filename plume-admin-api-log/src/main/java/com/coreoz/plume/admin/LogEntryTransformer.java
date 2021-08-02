@@ -50,11 +50,13 @@ public interface LogEntryTransformer {
             if (bodyCharLengthLimit < 0) {
                 return apiTrace;
             }
-            if (apiTrace.getBodyRequest().length() > bodyCharLengthLimit) {
-                apiTrace.setBodyRequest(apiTrace.getBodyRequest().substring(0, bodyCharLengthLimit));
+            String bodyRequest = apiTrace.getBodyRequest();
+            if (bodyRequest != null && bodyRequest.length() > bodyCharLengthLimit) {
+                apiTrace.setBodyRequest(bodyRequest.substring(0, bodyCharLengthLimit));
             }
-            if (apiTrace.getBodyResponse().length() > bodyCharLengthLimit) {
-                apiTrace.setBodyResponse(apiTrace.getBodyResponse().substring(0, bodyCharLengthLimit));
+            String bodyResponse = apiTrace.getBodyResponse();
+            if (bodyResponse != null && bodyResponse.length() > bodyCharLengthLimit) {
+                apiTrace.setBodyResponse(bodyResponse.substring(0, bodyCharLengthLimit));
             }
             return apiTrace;
         };
