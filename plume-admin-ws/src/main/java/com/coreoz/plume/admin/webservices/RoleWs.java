@@ -2,14 +2,6 @@ package com.coreoz.plume.admin.webservices;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
 
 import com.coreoz.plume.admin.jersey.feature.RestrictToAdmin;
 import com.coreoz.plume.admin.services.permissions.AdminPermissions;
@@ -20,11 +12,19 @@ import com.coreoz.plume.admin.webservices.validation.AdminWsError;
 import com.coreoz.plume.jersey.errors.Validators;
 import com.coreoz.plume.jersey.errors.WsException;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 @Path("/admin/roles")
-@Api(value = "Manage roles")
+@Tag(name = "admin-roles", description = "Manage roles")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @RestrictToAdmin(AdminPermissions.MANAGE_ROLES)
@@ -39,14 +39,14 @@ public class RoleWs {
 	}
 
 	@GET
-	@ApiOperation(value = "Fetch all permissions available and the association between roles"
+	@Operation(description = "Fetch all permissions available and the association between roles"
 			+ " and permissions")
 	public RolesAndPermissions permissions() {
 		return roleService.findRoleWithPermissions();
 	}
 
 	@POST
-	@ApiOperation(value="Create or update a role with its permissions")
+	@Operation(description = "Create or update a role with its permissions")
 	public RoleWithPermissions save(RoleWithPermissions roleWithPermissions) {
 		Validators.checkRequired("roles.LABEL", roleWithPermissions.getLabel());
 
@@ -59,7 +59,7 @@ public class RoleWs {
 
 	@Path("{idRole}")
 	@DELETE
-	@ApiOperation(value="Delete a role")
+	@Operation(description = "Delete a role")
 	public void delete(@PathParam("idRole") long idRole) {
 		roleService.deleteWithPermissions(idRole);
 	}

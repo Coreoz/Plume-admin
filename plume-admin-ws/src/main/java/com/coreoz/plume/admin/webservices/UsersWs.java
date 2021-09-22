@@ -4,15 +4,6 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
 
 import com.coreoz.plume.admin.db.generated.AdminUser;
 import com.coreoz.plume.admin.jersey.feature.RestrictToAdmin;
@@ -29,11 +20,20 @@ import com.coreoz.plume.jersey.errors.WsException;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 @Path("/admin/users")
-@Api(value = "Manage admin users")
+@Tag(name = "admin-users", description = "Manage admin users")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @RestrictToAdmin(AdminPermissions.MANAGE_USERS)
@@ -53,7 +53,7 @@ public class UsersWs {
 	}
 
 	@GET
-	@ApiOperation(value = "Fetch all admin users")
+	@Operation(description = "Fetch all admin users")
 	public AdminUsersDetails fetchAll() {
 		return AdminUsersDetails.of(
 			adminUserService
@@ -66,7 +66,7 @@ public class UsersWs {
 	}
 
 	@PUT
-	@ApiOperation(value = "Update a user")
+	@Operation(description = "Update a user")
 	public void update(AdminUserParameters parameters) {
 		validateAdminUserParameters(parameters);
 		Validators.checkRequired("users.ID", parameters.getId());
@@ -75,7 +75,7 @@ public class UsersWs {
 	}
 
 	@POST
-	@ApiOperation(value = "Add a user")
+	@Operation(description = "Add a user")
 	public AdminUserDetails create(AdminUserParameters parameters) {
 		validateAdminUserParameters(parameters);
 		Validators.checkRequired("users.PASSWORD", parameters.getPassword());
@@ -85,7 +85,7 @@ public class UsersWs {
 
 	@DELETE
 	@Path("{idUser}")
-	@ApiOperation(value = "Delete a user")
+	@Operation(description = "Delete a user")
 	public void delete(@PathParam("idUser") long idUser) {
 		adminUserService.delete(idUser);
 	}

@@ -4,14 +4,6 @@ import java.security.SecureRandom;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
 
 import com.coreoz.plume.admin.security.login.LoginFailAttemptsManager;
 import com.coreoz.plume.admin.services.configuration.AdminConfigurationService;
@@ -33,13 +25,21 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
 import com.google.common.net.HttpHeaders;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Path("/admin/session")
-@Api(value = "Manage the administration session")
+@Tag(name = "admin-session", description = "Manage the administration session")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 // This API is marked as public, since it must be accessed without any authentication
@@ -89,7 +89,7 @@ public class SessionWs {
 	}
 
 	@POST
-	@ApiOperation(value = "Authenticate a user and create a session token")
+	@Operation(description = "Authenticate a user and create a session token")
 	public Response authenticate(AdminCredentials credentials) {
 		// first user needs to be authenticated (an exception will be raised otherwise)
 		AuthenticatedUser authenticatedUser = authenticateUser(credentials);
@@ -104,7 +104,7 @@ public class SessionWs {
 
 	@PUT
 	@Consumes(MediaType.TEXT_PLAIN)
-	@ApiOperation(value = "Renew a valid session token")
+	@Operation(description = "Renew a valid session token")
 	public AdminSession renew(String webSessionSerialized) {
 		Validators.checkRequired("sessionToken", webSessionSerialized);
 
