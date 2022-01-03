@@ -1,20 +1,23 @@
 package com.coreoz.plume.admin;
 
-import com.coreoz.plume.admin.services.logapi.LogInterceptApiBean;
-import com.google.common.collect.ImmutableList;
-import lombok.SneakyThrows;
-import okhttp3.MediaType;
-import okhttp3.Protocol;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
-import okio.Buffer;
+import java.io.IOException;
+
 import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.IOException;
+import com.coreoz.plume.admin.services.logapi.LogInterceptApiBean;
+import com.google.common.collect.ImmutableList;
+
+import lombok.SneakyThrows;
+import okhttp3.MediaType;
+import okhttp3.Protocol;
+import okhttp3.Request;
+import okhttp3.Request.Builder;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
+import okio.Buffer;
 
 public class OkHttpLogEntryTransformerTest {
 
@@ -155,6 +158,22 @@ public class OkHttpLogEntryTransformerTest {
     }
 
     @Test
+    public void transformer_must_not_fail_if_body_is_empty() {
+        int limit = 100;
+        LogEntryTransformer transformer = LogEntryTransformer.limitBodySizeTransformer(limit);
+        Request request = generatePostRequest("/hello/world", 0);
+        Response response = generateResponse(request, "header", "value", 0);
+
+        LogInterceptApiBean generatedTrace = generatedTrace(request, response);
+        String bodyRequest = generatedTrace.getBodyRequest();
+        String bodyResponse = generatedTrace.getBodyResponse();
+
+        LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
+        Assert.assertEquals(bodyRequest, transformedTrace.getBodyRequest());
+        Assert.assertEquals(bodyResponse, transformedTrace.getBodyResponse());
+    }
+
+    @Test
     public void transformer_must_apply_second_transformer() {
         int limit = 100;
         String dummyText = "Dummy Text";
@@ -175,14 +194,22 @@ public class OkHttpLogEntryTransformerTest {
     }
 
     private static Request generatePostRequest(String endpoint, int length) {
+        Builder request = new Request.Builder().url("https://test.coco.com" + endpoint);
+        if (length == 0) {
+            return request.get().build();
+        }
         RequestBody body = RequestBody.create(RandomString.make(length), MediaType.parse("text/plain"));
-        return new Request.Builder().post(body).url("https://test.coco.com" + endpoint).build();
+        return request.post(body).build();
     }
 
     private static Response generateResponse(Request request, String headerName, String headerValue, int length) {
+        okhttp3.Response.Builder response = new Response.Builder().header(headerName, headerValue).request(request).code(200)
+                .protocol(Protocol.HTTP_1_1).message("");
+        if (length == 0) {
+            return response.build();
+        }
         ResponseBody body = ResponseBody.create(RandomString.make(length), MediaType.parse("text/plain"));
-        return new Response.Builder().body(body).header(headerName, headerValue).request(request).code(200)
-            .protocol(Protocol.HTTP_1_1).message("").build();
+        return response.body(body).build();
     }
 
     @SneakyThrows
@@ -192,7 +219,7 @@ public class OkHttpLogEntryTransformerTest {
             request.method(),
             response.code(),
             requestBodyToBuffer(request.body()),
-            response.body().string(),
+            response.body() == null ? null : response.body().string(),
             ImmutableList.of(),
             ImmutableList.of(),
             "TEST"

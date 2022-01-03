@@ -5,6 +5,17 @@ import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import com.coreoz.plume.admin.db.daos.LogApiTrimmed;
+import com.coreoz.plume.admin.jersey.feature.RestrictToAdmin;
+import com.coreoz.plume.admin.services.configuration.LogApiConfigurationService;
+import com.coreoz.plume.admin.services.logapi.LogApiBean;
+import com.coreoz.plume.admin.services.logapi.LogApiFilters;
+import com.coreoz.plume.admin.services.logapi.LogApiService;
+import com.coreoz.plume.admin.services.permission.LogApiAdminPermissions;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -15,19 +26,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import com.coreoz.plume.admin.db.daos.LogApiTrimmed;
-import com.coreoz.plume.admin.jersey.feature.RestrictToAdmin;
-import com.coreoz.plume.admin.services.configuration.LogApiConfigurationService;
-import com.coreoz.plume.admin.services.logapi.LogApiBean;
-import com.coreoz.plume.admin.services.logapi.LogApiFilters;
-import com.coreoz.plume.admin.services.logapi.LogApiService;
-import com.coreoz.plume.admin.services.permission.LogApiAdminPermissions;
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-
 @Path("/admin")
-@Api("Application HTTP API trace")
+@Tag(name = "admin-logs", description = "Application HTTP API trace")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 @RestrictToAdmin(LogApiAdminPermissions.MANAGE_API_LOGS)
@@ -43,7 +43,7 @@ public class LogApiWs {
     }
 
     @GET
-    @ApiOperation("Fetch API trimmed logs (without request/response bodies) by query filters")
+    @Operation(description = "Fetch API trimmed logs (without request/response bodies) by query filters")
     @Path("/logs")
     public List<LogApiTrimmed> fetchAllLogs(
         @QueryParam("limit") Integer limit,
@@ -61,14 +61,14 @@ public class LogApiWs {
     }
 
     @GET
-    @ApiOperation("Fetch the headers and the trimmed body of a request/response")
+    @Operation(description = "Fetch the headers and the trimmed body of a request/response")
     @Path("/logs/{idLog}")
     public LogApiBean details(@PathParam("idLog") Long id) {
         return logApiService.fetchLogDetails(id);
     }
 
     @GET
-    @ApiOperation("Download the body of a request or a response")
+    @Operation(description = "Download the body of a request or a response")
     @Path("/logs/{idLog}/{isRequest}")
     public Response bodyFile(@PathParam("idLog") Long id, @PathParam("isRequest") Boolean isRequest) {
         return logApiService
@@ -85,7 +85,7 @@ public class LogApiWs {
     }
 
     @GET
-    @ApiOperation("Fetch the headers and the trimmed body of a request/response")
+    @Operation(description = "Fetch the headers and the trimmed body of a request/response")
     @Path("/logs-filters")
     public LogApiFilters filters() {
         return logApiService.fetchAvailableFilters();
