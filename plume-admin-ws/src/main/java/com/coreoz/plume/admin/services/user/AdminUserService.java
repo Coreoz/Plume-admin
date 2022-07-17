@@ -1,6 +1,7 @@
 package com.coreoz.plume.admin.services.user;
 
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -22,26 +23,31 @@ public class AdminUserService extends CrudService<AdminUser> {
 	private final AdminRoleService adminRoleService;
 	private final HashService hashService;
 	private final TimeProvider timeProvider;
+	private final TimedAuthenticationSecurer timedAuthenticationSecurer;
 
 	@Inject
 	public AdminUserService(AdminUserDao adminUserDao, AdminRoleService adminRoleService,
-			HashService hashService, TimeProvider timeProvider) {
+			HashService hashService, TimeProvider timeProvider,
+			TimedAuthenticationSecurer timedAuthenticationSecurer) {
 		super(adminUserDao);
 
 		this.adminUserDao = adminUserDao;
 		this.adminRoleService = adminRoleService;
 		this.hashService = hashService;
 		this.timeProvider = timeProvider;
+		this.timedAuthenticationSecurer = timedAuthenticationSecurer;
 	}
 
-	public Optional<AuthenticatedUser> authenticate(String userName, String password) {
-		return adminUserDao
-				.findByUserName(userName)
-				.filter(user -> hashService.checkPassword(password, user.getPassword()))
-				.map(user -> AuthenticatedUserAdmin.of(
-					user,
-					ImmutableSet.copyOf(adminRoleService.findRolePermissions(user.getIdRole()))
-				));
+	public CompletableFuture<Optional<AuthenticatedUser>> authenticate(String userName, String password) {
+		return timedAuthenticationSecurer.verifyPasswordAuthentication(
+			adminUserDao.findByUserName(userName),
+			AdminUser::getPassword,
+			password
+		)
+		.thenApply((optionalUser) -> optionalUser.map(user -> AuthenticatedUserAdmin.of(
+			user,
+			ImmutableSet.copyOf(adminRoleService.findRolePermissions(user.getIdRole()))
+		)));
 	}
 
 	public void update(AdminUserParameters parameters) {

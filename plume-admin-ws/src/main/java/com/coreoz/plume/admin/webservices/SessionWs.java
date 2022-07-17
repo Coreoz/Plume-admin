@@ -4,6 +4,14 @@ import java.security.SecureRandom;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 
 import com.coreoz.plume.admin.security.login.LoginFailAttemptsManager;
 import com.coreoz.plume.admin.services.configuration.AdminConfigurationService;
@@ -27,14 +35,6 @@ import com.google.common.net.HttpHeaders;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -88,6 +88,7 @@ public class SessionWs {
 		this.sessionFingerprintCookieHttpsOnly = adminSecurityConfigurationService.sessionFingerprintCookieHttpsOnly();
 	}
 
+	// TODO passer sur un mode @Suspended final AsyncResponse asyncResponse
 	@POST
 	@Operation(description = "Authenticate a user and create a session token")
 	public Response authenticate(AdminCredentials credentials) {
