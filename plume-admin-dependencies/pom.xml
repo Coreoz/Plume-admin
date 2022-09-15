@@ -14,9 +14,9 @@
 	<description>Gather versions of various libraries used by Plume Admin</description>
 
 	<properties>
-		<jjwt.version>0.11.2</jjwt.version>
+		<jjwt.version>0.11.5</jjwt.version>
 		<jbcrypt.version>0.4.3</jbcrypt.version>
-		<okhttp.version>4.9.3</okhttp.version>
+		<okhttp.version>4.10.0</okhttp.version>
 
 		<plume-framework.version>4.0.0</plume-framework.version>
 	</properties>
