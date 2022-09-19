@@ -10,7 +10,7 @@ it provides Jersey web services to build an administration area.
 If you are looking for a JavaScript frontened that uses these web-services,
 check out the [Plume Admin UI for React](https://github.com/Coreoz/create-plume-react-project).
 
-Looking for a demo? Check out the [Plume Demo project](https://github.com/Coreoz/Plume-demo/tree/master/plume-demo-full-guice-jersey).
+Looking for a demo? Check out the [Plume Demo project](https://github.com/Coreoz/Plume-showcase).
 
 Installation
 ------------
