@@ -13,20 +13,17 @@ import com.coreoz.plume.admin.services.hash.HashService;
 import com.coreoz.plume.services.time.TimeProvider;
 
 /**
- *
+ * Provide a way to protect against timing attacks
  */
 @Singleton
 public class TimedAuthenticationSecurer {
 
-	private static final String INITIAL_PASSWORD_SEED = "password";
+	private static final String INITIAL_PASSWORD_FOR_TIME_CALIBRATION = "password";
 	private static final long UNSET_LAST_DURATION = -1L;
-	private static final Void VOID_FUTURE = (Void) new Object();
 
 	private final HashService hashService;
 	private final TimeProvider timeProvider;
 	private final ExecutorService executorService;
-	// TODO soit on ajoute directement ça au scheduler, soit il existe un autre moyen simple de faire ça
-	// private final Scheduler scheduler;
 	private long lastDurationInMillis;
 
 	@Inject
@@ -41,33 +38,35 @@ public class TimedAuthenticationSecurer {
 		this.lastDurationInMillis = UNSET_LAST_DURATION;
 	}
 
-	public<USER> CompletableFuture<Optional<USER>> verifyPasswordAuthentication(
-		Optional<USER> user,
-		Function<USER, String> hashedPasswordExtractor,
+	public<U> CompletableFuture<Optional<U>> verifyPasswordAuthentication(
+		Optional<U> user,
+		Function<U, String> hashedPasswordExtractor,
 		String passwordCandidate
 	) {
-		CompletableFuture<Optional<USER>> verifyPasswordPromise = verifyPassword(user, hashedPasswordExtractor, passwordCandidate);
+		CompletableFuture<Optional<U>> verifyPasswordPromise = verifyPassword(user, hashedPasswordExtractor, passwordCandidate);
 		return CompletableFuture
 			.allOf(verifyPasswordPromise, waitRandomly(user.isPresent()))
-			.thenApply((voidResult) -> verifyPasswordPromise.getNow(Optional.empty()));
+			.thenApply(voidResult -> verifyPasswordPromise.getNow(Optional.empty()));
 	}
 
-	private<USER> CompletableFuture<Optional<USER>> verifyPassword(
-		Optional<USER> user,
-		Function<USER, String> hashedPasswordExtractor,
+	public void initialize() {
+		waitRandomly(false);
+	}
+
+	private<U> CompletableFuture<Optional<U>> verifyPassword(
+		Optional<U> user,
+		Function<U, String> hashedPasswordExtractor,
 		String passwordCandidate
 	) {
 		if (user.isEmpty()) {
 			// no user, no verification to be made
 			return CompletableFuture.completedFuture(Optional.empty());
 		}
-		USER presentUser = user.get();
+		U presentUser = user.get();
 		return passwordVerification(
 			hashedPasswordExtractor.apply(presentUser),
 			passwordCandidate
-		).thenApply((passwordValidationResult) -> {
-			return passwordValidationResult ? Optional.of(presentUser) : Optional.empty();
-		});
+		).thenApply(passwordValidationResult ->	Boolean.TRUE.equals(passwordValidationResult) ? Optional.of(presentUser) : Optional.empty());
 	}
 
 	private CompletableFuture<Void> waitRandomly(boolean isUserFound) {
@@ -77,13 +76,13 @@ public class TimedAuthenticationSecurer {
 				// then it means the hashing function will be called.
 				// So there is no need to add an extra delay to calibrate
 				// the hashing function duration
-				return CompletableFuture.completedFuture(VOID_FUTURE);
+				return CompletableFuture.completedFuture(null);
 			}
-			String hashedSeedPassword = hashService.hashPassword(INITIAL_PASSWORD_SEED);
-			return passwordVerification(hashedSeedPassword, INITIAL_PASSWORD_SEED)
-				.thenApply((unusedValue) -> VOID_FUTURE);
+			String hashedSeedPassword = hashService.hashPassword(INITIAL_PASSWORD_FOR_TIME_CALIBRATION);
+			return passwordVerification(hashedSeedPassword, INITIAL_PASSWORD_FOR_TIME_CALIBRATION)
+				.thenApply(unusedValue -> null);
 		}
-		// TODO surement passer par Wisp ou autre pour notifier la fin de l'attente
+		return AsyncSleepInOrder.sleepAsync(lastDurationInMillis);
 	}
 
 	private CompletableFuture<Boolean> passwordVerification(String hashedPassword, String candidatePassword) {
@@ -99,5 +98,4 @@ public class TimedAuthenticationSecurer {
 		lastDurationInMillis = timeProvider.currentTime() - currentTimeInMillis;
 		return hasVerificationPassed;
 	}
-
 }

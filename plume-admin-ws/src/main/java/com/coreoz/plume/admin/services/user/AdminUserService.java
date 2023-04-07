@@ -44,7 +44,7 @@ public class AdminUserService extends CrudService<AdminUser> {
 			AdminUser::getPassword,
 			password
 		)
-		.thenApply((optionalUser) -> optionalUser.map(user -> AuthenticatedUserAdmin.of(
+		.thenApply(optionalUser -> optionalUser.map(user -> AuthenticatedUserAdmin.of(
 			user,
 			ImmutableSet.copyOf(adminRoleService.findRolePermissions(user.getIdRole()))
 		)));

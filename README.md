@@ -28,7 +28,8 @@ Installation
 6. [Generate a JWT secret key](#configuration) and register it in your configuration: `admin.jwt-secret = "long_generated_password_to_secure_jwt_tokens"`
 7. For non-https environments (ie localhost for dev), set the configuration value: `admin.session.fingerprint-cookie-https-only = false` (this configuration value should be set to true in HTTPS environments like production)
 8. SQL, see [setup files](plume-admin-ws/sql)
-9. Install a JS frontend like [Plume Admin UI for React](https://github.com/Coreoz/create-plume-react-project)
+9. To initialize the protection against timing attack, add `injector.getInstance(TimedAuthenticationSecurer.class).initialize();` in the entry point of the application `WebApplication`
+10. Install a JS frontend like [Plume Admin UI for React](https://github.com/Coreoz/create-plume-react-project)
 
 Current user access
 -------------------
@@ -113,6 +114,14 @@ if (hashService.checkPassword(loginBean.getPassword(), userDB.getPassword())) {
   // Password is correct
 }
 ```
+
+Protection against time based attack
+------------------------------------
+By default Plume Admin authentication provides protection against time based attack.
+
+For custom authentication, `TimedAuthenticationSecurer.verifyPasswordAuthentication` should be used to protect it against time based attack.
+
+A usage can be found in `SessionWs`.
 
 HTTP API Log module
 -------------------

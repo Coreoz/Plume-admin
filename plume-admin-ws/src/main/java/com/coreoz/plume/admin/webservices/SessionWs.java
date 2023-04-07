@@ -1,6 +1,8 @@
 package com.coreoz.plume.admin.webservices;
 
 import java.security.SecureRandom;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -9,6 +11,8 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -29,7 +33,6 @@ import com.coreoz.plume.jersey.errors.Validators;
 import com.coreoz.plume.jersey.errors.WsException;
 import com.coreoz.plume.jersey.security.permission.PublicApi;
 import com.coreoz.plume.services.time.TimeProvider;
-import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
 import com.google.common.net.HttpHeaders;
 
@@ -88,19 +91,26 @@ public class SessionWs {
 		this.sessionFingerprintCookieHttpsOnly = adminSecurityConfigurationService.sessionFingerprintCookieHttpsOnly();
 	}
 
-	// TODO passer sur un mode @Suspended final AsyncResponse asyncResponse
 	@POST
 	@Operation(description = "Authenticate a user and create a session token")
-	public Response authenticate(AdminCredentials credentials) {
+	public void authenticate(@Suspended final AsyncResponse asyncResponse, AdminCredentials credentials) {
 		// first user needs to be authenticated (an exception will be raised otherwise)
-		AuthenticatedUser authenticatedUser = authenticateUser(credentials);
-		// if the client is authenticated, the fingerprint can be generated if needed
-		FingerprintWithHash fingerprintWithHash = sessionUseFingerprintCookie ? generateFingerprint() : NULL_FINGERPRINT;
-		return withFingerprintCookie(
-			Response.ok(toAdminSession(toWebSession(authenticatedUser, fingerprintWithHash.getHash()))),
-			fingerprintWithHash.getFingerprint()
-		)
-		.build();
+		authenticateUser(credentials)
+			.thenAccept(authenticatedUser -> {
+				// if the client is authenticated, the fingerprint can be generated if needed
+				FingerprintWithHash fingerprintWithHash = sessionUseFingerprintCookie ? generateFingerprint() : NULL_FINGERPRINT;
+				asyncResponse.resume(
+					withFingerprintCookie(
+						Response.ok(toAdminSession(toWebSession(authenticatedUser, fingerprintWithHash.getHash()))),
+						fingerprintWithHash.getFingerprint()
+					)
+					.build()
+				);
+			})
+			.exceptionally(error -> {
+				asyncResponse.resume(error);
+				return null;
+			});
 	}
 
 	@PUT
@@ -121,7 +131,7 @@ public class SessionWs {
 		return toAdminSession(parsedSession);
 	}
 
-	public AuthenticatedUser authenticateUser(AdminCredentials credentials) {
+	public CompletableFuture<AuthenticatedUser> authenticateUser(AdminCredentials credentials) {
 		Validators.checkRequired("Json creadentials", credentials);
 		Validators.checkRequired("users.USERNAME", credentials.getUserName());
 		Validators.checkRequired("users.PASSWORD", credentials.getPassword());
@@ -129,16 +139,16 @@ public class SessionWs {
 		if(credentials.getUserName() != null && failAttemptsManager.isBlocked(credentials.getUserName())) {
 			throw new WsException(
 				AdminWsError.TOO_MANY_WRONG_ATTEMPS,
-				ImmutableList.of(String.valueOf(blockedDurationInSeconds))
+				List.of(String.valueOf(blockedDurationInSeconds))
 			);
 		}
 
 		return adminUserService
 			.authenticate(credentials.getUserName(), credentials.getPassword())
-			.orElseThrow(() -> {
+			.thenApply(authenticatedUser -> authenticatedUser.orElseThrow(() -> {
 				failAttemptsManager.addAttempt(credentials.getUserName());
 				return new WsException(AdminWsError.WRONG_LOGIN_OR_PASSWORD);
-			});
+			}));
 	}
 
 	public WebSessionPermission toWebSession(AuthenticatedUser user, String hashedFingerprint) {
