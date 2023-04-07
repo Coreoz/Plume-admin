@@ -2,7 +2,6 @@ package com.coreoz.plume.admin;
 
 import java.io.IOException;
 
-import org.assertj.core.internal.bytebuddy.utility.RandomString;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -10,6 +9,7 @@ import com.coreoz.plume.admin.services.logapi.LogInterceptApiBean;
 import com.google.common.collect.ImmutableList;
 
 import lombok.SneakyThrows;
+import net.bytebuddy.utility.RandomString;
 import okhttp3.MediaType;
 import okhttp3.Protocol;
 import okhttp3.Request;

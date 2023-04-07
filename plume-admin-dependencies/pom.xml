@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>com.coreoz</groupId>
 		<artifactId>plume-admin-parent</artifactId>
-		<version>3.0.1-SNAPSHOT</version>
+		<version>4.1.1-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>plume-admin-dependencies</artifactId>
@@ -14,11 +14,11 @@
 	<description>Gather versions of various libraries used by Plume Admin</description>
 
 	<properties>
-		<jjwt.version>0.11.2</jjwt.version>
+		<jjwt.version>0.11.5</jjwt.version>
 		<jbcrypt.version>0.4.3</jbcrypt.version>
-		<okhttp.version>4.9.3</okhttp.version>
+		<okhttp.version>4.10.0</okhttp.version>
 
-		<plume-framework.version>3.0.1-SNAPSHOT</plume-framework.version>
+		<plume-framework.version>4.1.0</plume-framework.version>
 	</properties>
 
 	<dependencyManagement>
