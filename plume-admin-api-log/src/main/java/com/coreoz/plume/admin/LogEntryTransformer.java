@@ -1,9 +1,11 @@
 package com.coreoz.plume.admin;
 
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import com.coreoz.plume.admin.services.logapi.LogInterceptApiBean;
 
+import com.google.common.base.Strings;
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -22,6 +24,33 @@ public interface LogEntryTransformer {
 
     default LogEntryTransformer andApply(LogEntryTransformer otherTransformerToApplyAfter) {
         return (request, response, apiTrace) -> otherTransformerToApplyAfter
+            .transform(request, response, transform(request, response, apiTrace));
+    }
+
+    private LogEntryTransformer jsonFieldTransformer(String regex, String replacement) {
+        if (regex.isEmpty()) {
+            return (request, response, apiTrace) -> apiTrace;
+        } else {
+            Pattern compiledRegex = Pattern.compile(regex);
+
+            return (request, response, apiTrace) -> {
+                if (!Strings.isNullOrEmpty(apiTrace.getBodyRequest())) {
+                    apiTrace.setBodyRequest(
+                        compiledRegex.matcher(apiTrace.getBodyRequest()).replaceAll(replacement)
+                    );
+                }
+                if (!Strings.isNullOrEmpty(apiTrace.getBodyResponse())) {
+                    apiTrace.setBodyResponse(
+                        compiledRegex.matcher(apiTrace.getBodyResponse()).replaceAll(replacement)
+                    );
+                }
+                return apiTrace;
+            };
+        }
+    }
+
+    default LogEntryTransformer hideJsonFields(String regex, String replacement) {
+        return (request, response, apiTrace) -> this.jsonFieldTransformer(regex, replacement)
             .transform(request, response, transform(request, response, apiTrace));
     }
 
