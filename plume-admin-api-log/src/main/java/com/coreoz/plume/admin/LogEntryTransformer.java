@@ -20,52 +20,52 @@ import okhttp3.Response;
  */
 @FunctionalInterface
 public interface LogEntryTransformer {
-    LogInterceptApiBean transform(Request request, Response response, LogInterceptApiBean trace);
+    LogInterceptApiBean transform(Request request, Response response, LogInterceptApiBean okhttpApiCallTrace);
 
     default LogEntryTransformer andApply(LogEntryTransformer otherTransformerToApplyAfter) {
-        return (request, response, apiTrace) -> otherTransformerToApplyAfter
-            .transform(request, response, transform(request, response, apiTrace));
+        return (request, response, okhttpApiCallTrace) -> otherTransformerToApplyAfter
+            .transform(request, response, transform(request, response, okhttpApiCallTrace));
     }
 
     private LogEntryTransformer jsonFieldTransformer(String regex, String replacement) {
         if (regex.isEmpty()) {
-            return (request, response, apiTrace) -> apiTrace;
+            return (request, response, okhttpApiCallTrace) -> okhttpApiCallTrace;
         } else {
             Pattern compiledRegex = Pattern.compile(regex);
 
-            return (request, response, apiTrace) -> {
-                if (!Strings.isNullOrEmpty(apiTrace.getBodyRequest())) {
-                    apiTrace.setBodyRequest(
-                        compiledRegex.matcher(apiTrace.getBodyRequest()).replaceAll(replacement)
+            return (request, response, okhttpApiCallTrace) -> {
+                if (!Strings.isNullOrEmpty(okhttpApiCallTrace.getBodyRequest())) {
+                    okhttpApiCallTrace.setBodyRequest(
+                        compiledRegex.matcher(okhttpApiCallTrace.getBodyRequest()).replaceAll(replacement)
                     );
                 }
-                if (!Strings.isNullOrEmpty(apiTrace.getBodyResponse())) {
-                    apiTrace.setBodyResponse(
-                        compiledRegex.matcher(apiTrace.getBodyResponse()).replaceAll(replacement)
+                if (!Strings.isNullOrEmpty(okhttpApiCallTrace.getBodyResponse())) {
+                    okhttpApiCallTrace.setBodyResponse(
+                        compiledRegex.matcher(okhttpApiCallTrace.getBodyResponse()).replaceAll(replacement)
                     );
                 }
-                return apiTrace;
+                return okhttpApiCallTrace;
             };
         }
     }
 
     default LogEntryTransformer hideJsonFields(String regex, String replacement) {
-        return (request, response, apiTrace) -> this.jsonFieldTransformer(regex, replacement)
-            .transform(request, response, transform(request, response, apiTrace));
+        return (request, response, okhttpApiCallTrace) -> this.jsonFieldTransformer(regex, replacement)
+            .transform(request, response, transform(request, response, okhttpApiCallTrace));
     }
 
     default LogEntryTransformer applyOnlyToRequests(RequestPredicate allowRequestPredicate) {
-        return (request, response, apiTrace) ->
+        return (request, response, okhttpApiCallTrace) ->
             allowRequestPredicate.test(request) ?
-                transform(request, response, apiTrace)
-                : apiTrace;
+                transform(request, response, okhttpApiCallTrace)
+                : okhttpApiCallTrace;
     }
 
     default LogEntryTransformer applyOnlyToResponses(Predicate<Response> allowResponsePredicate) {
-        return (request, response, apiTrace) ->
+        return (request, response, okhttpApiCallTrace) ->
             allowResponsePredicate.test(response) ?
-                transform(request, response, apiTrace)
-                : apiTrace;
+                transform(request, response, okhttpApiCallTrace)
+                : okhttpApiCallTrace;
     }
 
     default LogEntryTransformer applyOnlyToResponsesWithHeader(String headerName, String headerValue) {
@@ -75,23 +75,23 @@ public interface LogEntryTransformer {
     }
 
     static LogEntryTransformer limitBodySizeTransformer(int bodyCharLengthLimit) {
-        return (request, response, apiTrace) -> {
+        return (request, response, okhttpApiCallTrace) -> {
             if (bodyCharLengthLimit < 0) {
-                return apiTrace;
+                return okhttpApiCallTrace;
             }
-            String bodyRequest = apiTrace.getBodyRequest();
+            String bodyRequest = okhttpApiCallTrace.getBodyRequest();
             if (bodyRequest != null && bodyRequest.length() > bodyCharLengthLimit) {
-                apiTrace.setBodyRequest(bodyRequest.substring(0, bodyCharLengthLimit));
+                okhttpApiCallTrace.setBodyRequest(bodyRequest.substring(0, bodyCharLengthLimit));
             }
-            String bodyResponse = apiTrace.getBodyResponse();
+            String bodyResponse = okhttpApiCallTrace.getBodyResponse();
             if (bodyResponse != null && bodyResponse.length() > bodyCharLengthLimit) {
-                apiTrace.setBodyResponse(bodyResponse.substring(0, bodyCharLengthLimit));
+                okhttpApiCallTrace.setBodyResponse(bodyResponse.substring(0, bodyCharLengthLimit));
             }
-            return apiTrace;
+            return okhttpApiCallTrace;
         };
     }
 
     static LogEntryTransformer emptyTransformer() {
-        return (request, response, apiTrace) -> apiTrace;
+        return (request, response, okhttpApiCallTrace) -> okhttpApiCallTrace;
     }
 }
