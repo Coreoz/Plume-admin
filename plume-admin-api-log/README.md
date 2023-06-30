@@ -57,7 +57,7 @@ new OkHttpLoggerInterceptor(
 
 Example to hide certain json objet keys. Here : `contractId` and `password` values will be replace by `****` :
 
-*Only work key/value and not array or objects*
+*Only work for key/value and not array or objects*
 ```java
 new OkHttpLoggerInterceptor(
   "Github",
