@@ -62,11 +62,10 @@ Example to hide certain json objet keys. Here : `contractId` and `password` valu
 new OkHttpLoggerInterceptor(
   "Github",
   logApiService,
-  LogEntryTransformer.emptyTransformer()
-    .hideJsonFields(
-        ["contractId", "password"],
-        "****"
-    )
+  LogEntryTransformer.hideJsonFields(
+    List.of("contractId", "password"),
+    "****"
+  )
 )
 ```
 
