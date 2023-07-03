@@ -1,5 +1,6 @@
 package com.coreoz.plume.admin;
 
+import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -49,8 +50,25 @@ public interface LogEntryTransformer {
         }
     }
 
-    default LogEntryTransformer hideJsonFields(String regex, String replacement) {
-        return (request, response, okhttpApiCallTrace) -> this.jsonFieldTransformer(regex, replacement)
+    private String regexHidingFields(List<String> keysToHide) {
+        String regexKeys = keysToHide.stream()
+            .reduce("", (currentRegex, element) -> {
+                if (!currentRegex.isEmpty()) {
+                    return currentRegex + "|(?<=\"" + element + "\":\")";
+                }
+                return "(?<=\"" + element + "\":\")";
+            });
+
+        if (!regexKeys.isEmpty()) {
+            return "(" + regexKeys + ").*?(?=\")";
+        }
+
+        return "";
+    }
+
+    default LogEntryTransformer hideJsonFields(List<String> jsonFieldKeysToHide, String replacement) {
+        String regexHidingFields = this.regexHidingFields(jsonFieldKeysToHide);
+        return (request, response, okhttpApiCallTrace) -> this.jsonFieldTransformer(regexHidingFields, replacement)
             .transform(request, response, transform(request, response, okhttpApiCallTrace));
     }
 

@@ -64,7 +64,7 @@ new OkHttpLoggerInterceptor(
   logApiService,
   LogEntryTransformer.emptyTransformer()
     .hideJsonFields(
-        "((?<=\"contractId\":\")|(?<=\"password\":\")).*?(?=\")",
+        ["contractId", "password"],
         "****"
     )
 )
