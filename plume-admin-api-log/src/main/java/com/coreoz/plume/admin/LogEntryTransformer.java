@@ -1,9 +1,13 @@
 package com.coreoz.plume.admin;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import com.coreoz.plume.admin.services.logapi.LogInterceptApiBean;
 
+import com.google.common.base.Strings;
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -59,6 +63,28 @@ public interface LogEntryTransformer {
                 apiTrace.setBodyResponse(bodyResponse.substring(0, bodyCharLengthLimit));
             }
             return apiTrace;
+        };
+    }
+
+    static LogEntryTransformer nullifyBodyForUrlRegexList(List<String> urlRegexList) {
+        Objects.requireNonNull(urlRegexList);
+
+        if (urlRegexList.isEmpty()) {
+            return LogEntryTransformer.emptyTransformer();
+        }
+
+        Pattern compiledRegex = Pattern.compile(RegexBuilder.computeUrlRegexList(urlRegexList));
+
+        return (request, response, apiLogEntry) -> {
+            if (compiledRegex.matcher(apiLogEntry.getUrl()).matches()) {
+                if (!Strings.isNullOrEmpty(apiLogEntry.getBodyRequest())) {
+                    apiLogEntry.setBodyRequest(null);
+                }
+                if (!Strings.isNullOrEmpty(apiLogEntry.getBodyResponse())) {
+                    apiLogEntry.setBodyResponse(null);
+                }
+            }
+            return apiLogEntry;
         };
     }
 
