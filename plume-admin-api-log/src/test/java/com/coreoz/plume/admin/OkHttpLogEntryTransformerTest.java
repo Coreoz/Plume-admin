@@ -1,6 +1,7 @@
 package com.coreoz.plume.admin;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -191,6 +192,34 @@ public class OkHttpLogEntryTransformerTest {
         LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
         Assert.assertEquals(dummyText, transformedTrace.getBodyRequest());
         Assert.assertEquals(dummyText, transformedTrace.getBodyResponse());
+    }
+
+    @Test
+    public void transformer_must_return_null_body_for_specific_url() {
+        LogEntryTransformer transformer = LogEntryTransformer.nullifyBodyForUrlRegexList(List.of("https://test.coco.com/hello/world"));
+
+        Request request = generatePostRequest("/hello/world", 30);
+        Response response = generateResponse(request, "header", "value", 30);
+
+        LogInterceptApiBean generatedTrace = generatedTrace(request, response);
+
+        LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
+        Assert.assertNull(transformedTrace.getBodyRequest());
+        Assert.assertNull(transformedTrace.getBodyResponse());
+    }
+
+    @Test
+    public void transformer_must_not_affect_body_if_url_not_specified() {
+        LogEntryTransformer transformer = LogEntryTransformer.nullifyBodyForUrlRegexList(List.of("https://test.coco.com/hello/world-fail"));
+
+        Request request = generatePostRequest("/hello/world", 30);
+        Response response = generateResponse(request, "header", "value", 30);
+
+        LogInterceptApiBean generatedTrace = generatedTrace(request, response);
+
+        LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
+        Assert.assertEquals(transformedTrace.getBodyRequest(), generatedTrace.getBodyRequest());
+        Assert.assertEquals(transformedTrace.getBodyResponse(), generatedTrace.getBodyResponse());
     }
 
     private static Request generatePostRequest(String endpoint, int length) {
