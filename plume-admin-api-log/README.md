@@ -55,6 +55,15 @@ new OkHttpLoggerInterceptor(
 )
 ```
 
+Example to nullify bodys for request urls `/api/orders`:
+```java
+new OkHttpLoggerInterceptor(
+  "Github",
+  logApiService,
+    LogEntryTransformer.nullifyBodyForUrlRegexList(List.of("/api/orders"))
+)
+```
+
 Example to log only the first 1024 chars of the request/response body:
 ```java
 new OkHttpLoggerInterceptor(
