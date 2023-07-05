@@ -55,6 +55,20 @@ new OkHttpLoggerInterceptor(
 )
 ```
 
+Example to hide certain json objet keys. Here : `contractId` and `password` values will be replace by `****` :
+
+*Only work for key/value and not array or objects*
+```java
+new OkHttpLoggerInterceptor(
+  "Github",
+  logApiService,
+  LogEntryTransformer.hideJsonFields(
+    List.of("contractId", "password"),
+    "****"
+  )
+)
+```
+
 Example to log only the first 1024 chars of the request/response body:
 ```java
 new OkHttpLoggerInterceptor(

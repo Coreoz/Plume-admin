@@ -1,6 +1,7 @@
 package com.coreoz.plume.admin;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Assert;
@@ -21,6 +22,73 @@ import okhttp3.ResponseBody;
 import okio.Buffer;
 
 public class OkHttpLogEntryTransformerTest {
+    private static final String JSON_OBJECT = "{\"id\":\"123456\",\"password\":\"TEST\",\"detail\":\"Détail\"}";
+
+    @Test
+    public void transformer_must_return_all_with_hidden_keys() {
+        LogEntryTransformer transformer = LogEntryTransformer.hideJsonFields(List.of("password"), "****");
+        Request request = generatePostRequest("/hello/world", 30);
+        Response response = generateResponse(request, "header", "value", 30);
+
+        LogInterceptApiBean generatedTrace = generatedTrace(request, response);
+        generatedTrace.setBodyRequest(JSON_OBJECT);
+        generatedTrace.setBodyResponse(JSON_OBJECT);
+
+        LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
+        Assert.assertEquals(transformedTrace.getBodyRequest(), "{\"id\":\"123456\",\"password\":\"****\",\"detail\":\"Détail\"}");
+        Assert.assertEquals(transformedTrace.getBodyResponse(), "{\"id\":\"123456\",\"password\":\"****\",\"detail\":\"Détail\"}");
+    }
+
+    @Test
+    public void transformer_must_return_all_with_hidden_keys_list() {
+        LogEntryTransformer transformer = LogEntryTransformer.hideJsonFields(List.of("password", "detail"), "****");
+        Request request = generatePostRequest("/hello/world", 30);
+        Response response = generateResponse(request, "header", "value", 30);
+
+        LogInterceptApiBean generatedTrace = generatedTrace(request, response);
+        generatedTrace.setBodyRequest(JSON_OBJECT);
+        generatedTrace.setBodyResponse(JSON_OBJECT);
+
+        LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
+        Assert.assertEquals(transformedTrace.getBodyRequest(), "{\"id\":\"123456\",\"password\":\"****\",\"detail\":\"****\"}");
+        Assert.assertEquals(transformedTrace.getBodyResponse(), "{\"id\":\"123456\",\"password\":\"****\",\"detail\":\"****\"}");
+    }
+
+    @Test
+    public void transformer_must_return_all_unmodified_when_key_is_absent() {
+        LogEntryTransformer transformer = LogEntryTransformer.hideJsonFields(List.of("test"), "****");
+        Request request = generatePostRequest("/hello/world", 30);
+        Response response = generateResponse(request, "header", "value", 30);
+
+        LogInterceptApiBean generatedTrace = generatedTrace(request, response);
+        generatedTrace.setBodyRequest(JSON_OBJECT);
+        generatedTrace.setBodyResponse(JSON_OBJECT);
+
+        String bodyRequest = generatedTrace.getBodyRequest();
+        String bodyResponse = generatedTrace.getBodyResponse();
+
+        LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
+        Assert.assertEquals(transformedTrace.getBodyRequest(), bodyRequest);
+        Assert.assertEquals(transformedTrace.getBodyResponse(), bodyResponse);
+    }
+
+    @Test
+    public void transformer_must_return_all_unmodified_when_keys_is_empty() {
+        LogEntryTransformer transformer = LogEntryTransformer.hideJsonFields(new ArrayList<>(), "****");
+        Request request = generatePostRequest("/hello/world", 30);
+        Response response = generateResponse(request, "header", "value", 30);
+
+        LogInterceptApiBean generatedTrace = generatedTrace(request, response);
+        generatedTrace.setBodyRequest(JSON_OBJECT);
+        generatedTrace.setBodyResponse(JSON_OBJECT);
+
+        String bodyRequest = generatedTrace.getBodyRequest();
+        String bodyResponse = generatedTrace.getBodyResponse();
+
+        LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
+        Assert.assertEquals(transformedTrace.getBodyRequest(), bodyRequest);
+        Assert.assertEquals(transformedTrace.getBodyResponse(), bodyResponse);
+    }
 
     @Test
     public void transformer_must_return_response_if_no_filters() {
