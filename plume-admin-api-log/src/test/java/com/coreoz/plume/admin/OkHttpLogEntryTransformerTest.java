@@ -22,6 +22,7 @@ import okhttp3.ResponseBody;
 import okio.Buffer;
 
 public class OkHttpLogEntryTransformerTest {
+    private static final String JSON_OBJECT = "{\"id\":\"123456\",\"password\":\"TEST\",\"detail\":\"Détail\"}";
 
     @Test
     public void transformer_must_return_all_with_hidden_keys() {
@@ -30,9 +31,8 @@ public class OkHttpLogEntryTransformerTest {
         Response response = generateResponse(request, "header", "value", 30);
 
         LogInterceptApiBean generatedTrace = generatedTrace(request, response);
-        generatedTrace.setBodyRequest(generateJsonObjectString());
-        generatedTrace.setBodyResponse(generateJsonObjectString()
-        );
+        generatedTrace.setBodyRequest(JSON_OBJECT);
+        generatedTrace.setBodyResponse(JSON_OBJECT);
 
         LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
         Assert.assertEquals(transformedTrace.getBodyRequest(), "{\"id\":\"123456\",\"password\":\"****\",\"detail\":\"Détail\"}");
@@ -46,8 +46,8 @@ public class OkHttpLogEntryTransformerTest {
         Response response = generateResponse(request, "header", "value", 30);
 
         LogInterceptApiBean generatedTrace = generatedTrace(request, response);
-        generatedTrace.setBodyRequest(generateJsonObjectString());
-        generatedTrace.setBodyResponse(generateJsonObjectString());
+        generatedTrace.setBodyRequest(JSON_OBJECT);
+        generatedTrace.setBodyResponse(JSON_OBJECT);
 
         LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
         Assert.assertEquals(transformedTrace.getBodyRequest(), "{\"id\":\"123456\",\"password\":\"****\",\"detail\":\"****\"}");
@@ -61,8 +61,8 @@ public class OkHttpLogEntryTransformerTest {
         Response response = generateResponse(request, "header", "value", 30);
 
         LogInterceptApiBean generatedTrace = generatedTrace(request, response);
-        generatedTrace.setBodyRequest(generateJsonObjectString());
-        generatedTrace.setBodyResponse(generateJsonObjectString());
+        generatedTrace.setBodyRequest(JSON_OBJECT);
+        generatedTrace.setBodyResponse(JSON_OBJECT);
 
         String bodyRequest = generatedTrace.getBodyRequest();
         String bodyResponse = generatedTrace.getBodyResponse();
@@ -79,8 +79,8 @@ public class OkHttpLogEntryTransformerTest {
         Response response = generateResponse(request, "header", "value", 30);
 
         LogInterceptApiBean generatedTrace = generatedTrace(request, response);
-        generatedTrace.setBodyRequest(generateJsonObjectString());
-        generatedTrace.setBodyResponse(generateJsonObjectString());
+        generatedTrace.setBodyRequest(JSON_OBJECT);
+        generatedTrace.setBodyResponse(JSON_OBJECT);
 
         String bodyRequest = generatedTrace.getBodyRequest();
         String bodyResponse = generatedTrace.getBodyResponse();
@@ -88,10 +88,6 @@ public class OkHttpLogEntryTransformerTest {
         LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
         Assert.assertEquals(transformedTrace.getBodyRequest(), bodyRequest);
         Assert.assertEquals(transformedTrace.getBodyResponse(), bodyResponse);
-    }
-
-    private static String generateJsonObjectString() {
-        return "{\"id\":\"123456\",\"password\":\"TEST\",\"detail\":\"Détail\"}";
     }
 
     @Test
