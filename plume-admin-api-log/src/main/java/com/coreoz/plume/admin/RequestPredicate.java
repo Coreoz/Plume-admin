@@ -8,18 +8,13 @@ import java.util.regex.Pattern;
 import okhttp3.Request;
 
 /**
- * Represent a predicate of a {@link Request}
+ * Represents a predicate of a {@link Request}
  *
- * This is a functional interface</a>
+ * <p>This is a <a href="package-summary.html">functional interface</a>
  * whose functional method is {@link #test(Object)}}.
  *
- * The static method {@link #alwaysTrue()} initiate the predicate
+ * <p>The static method {@link #alwaysTrue()} initiates the predicate
  *
- * The default method {@link #filterEndpointStartsWith(String)} filters the request
- * by its endpoint
- *
- * The default method {@link #filterMethod(HttpMethod)} filter the request
- * by its method {@link HttpMethod}
  */
 @FunctionalInterface
 public interface RequestPredicate extends Predicate<Request> {
@@ -29,12 +24,18 @@ public interface RequestPredicate extends Predicate<Request> {
     }
 
     /**
-     * Filter endpoint, for example '/api/orders'
+     * Filters a request by its endpoint when starting with the argument
+     * @param endpointToFilter the endpoint to filter
      */
     default RequestPredicate filterEndpointStartsWith(String endpointToFilter) {
         return request -> test(request)
             && OkHttpMatchers.matchRequestEndpointStartsWith(request.url(), endpointToFilter);
     }
+
+    /**
+     * Filters a request by its URL through a URL regex list
+     * @param urlRegexList : the URL regex list to be filtered
+     */
     default RequestPredicate filterUrlRegex(List<String> urlRegexList) {
         Objects.requireNonNull(urlRegexList);
 
@@ -48,6 +49,10 @@ public interface RequestPredicate extends Predicate<Request> {
             && OkHttpMatchers.matchRequestUrlRegex(request.url(), compiledRegex);
     }
 
+    /**
+     * Filters a request by its {@link HttpMethod} when matching the argument
+     * @param method the {@link HttpMethod} to filter
+     */
     default RequestPredicate filterMethod(HttpMethod method) {
         return request -> test(request)
             && OkHttpMatchers.matchRequestMethod(request.method(), method.name());

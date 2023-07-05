@@ -264,7 +264,7 @@ public class OkHttpLogEntryTransformerTest {
 
     @Test
     public void transformer_must_nullify_body() {
-        LogEntryTransformer transformer = LogEntryTransformer.nullifyBody();
+        LogEntryTransformer transformer = LogEntryTransformer.emptyBody();
 
         Request request = generatePostRequest("/hello/world", 30);
         Response response = generateResponse(request, "header", "value", 30);
@@ -278,7 +278,7 @@ public class OkHttpLogEntryTransformerTest {
 
     @Test
     public void transformer_must_nullify_body_if_filtered() {
-        LogEntryTransformer transformer = LogEntryTransformer.nullifyBody()
+        LogEntryTransformer transformer = LogEntryTransformer.emptyBody()
             .applyOnlyToRequests(
                 RequestPredicate.alwaysTrue().filterUrlRegex(List.of("^https://test.coco.com/([^/]*)/world"))
             );
@@ -296,7 +296,7 @@ public class OkHttpLogEntryTransformerTest {
 
     @Test
     public void transformer_must_nullify_body_if_not_filtered() {
-        LogEntryTransformer transformer = LogEntryTransformer.nullifyBody()
+        LogEntryTransformer transformer = LogEntryTransformer.emptyBody()
             .applyOnlyToRequests(
                 RequestPredicate.alwaysTrue().filterUrlRegex(List.of("https://test.coco.com/hello/world-fail"))
             );
