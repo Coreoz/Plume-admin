@@ -1,6 +1,9 @@
 package com.coreoz.plume.admin;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import okhttp3.Request;
 
@@ -31,6 +34,18 @@ public interface RequestPredicate extends Predicate<Request> {
     default RequestPredicate filterEndpointStartsWith(String endpointToFilter) {
         return request -> test(request)
             && OkHttpMatchers.matchRequestEndpointStartsWith(request.url(), endpointToFilter);
+    }
+    default RequestPredicate filterUrlRegex(List<String> urlRegexList) {
+        Objects.requireNonNull(urlRegexList);
+
+        if (urlRegexList.isEmpty()) {
+            return alwaysTrue();
+        }
+
+        Pattern compiledRegex = Pattern.compile(RegexBuilder.computeUrlRegexList(urlRegexList));
+
+        return request -> test(request)
+            && OkHttpMatchers.matchRequestUrlRegex(request.url(), compiledRegex);
     }
 
     default RequestPredicate filterMethod(HttpMethod method) {

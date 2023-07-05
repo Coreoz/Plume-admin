@@ -91,6 +91,14 @@ public interface LogEntryTransformer {
         };
     }
 
+    static LogEntryTransformer nullifyBody() {
+        return (request, response, apiLogEntry) -> {
+            apiLogEntry.setBodyRequest(null);
+            apiLogEntry.setBodyResponse(null);
+            return apiLogEntry;
+        };
+    }
+
     static LogEntryTransformer emptyTransformer() {
         return (request, response, apiLogEntry) -> apiLogEntry;
     }

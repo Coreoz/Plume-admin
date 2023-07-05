@@ -266,6 +266,55 @@ public class OkHttpLogEntryTransformerTest {
         Assert.assertEquals(dummyText, transformedTrace.getBodyResponse());
     }
 
+    @Test
+    public void transformer_must_nullify_body() {
+        LogEntryTransformer transformer = LogEntryTransformer.nullifyBody();
+
+        Request request = generatePostRequest("/hello/world", 30);
+        Response response = generateResponse(request, "header", "value", 30);
+
+        LogInterceptApiBean generatedTrace = generatedTrace(request, response);
+
+        LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
+        Assert.assertNull(transformedTrace.getBodyRequest());
+        Assert.assertNull(transformedTrace.getBodyResponse());
+    }
+
+    @Test
+    public void transformer_must_nullify_body_if_filtered() {
+        LogEntryTransformer transformer = LogEntryTransformer.nullifyBody()
+            .applyOnlyToRequests(
+                RequestPredicate.alwaysTrue().filterUrlRegex(List.of("^https://test.coco.com/([^/]*)/world"))
+            );
+
+
+        Request request = generatePostRequest("/hello/world", 30);
+        Response response = generateResponse(request, "header", "value", 30);
+
+        LogInterceptApiBean generatedTrace = generatedTrace(request, response);
+
+        LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
+        Assert.assertNull(transformedTrace.getBodyRequest());
+        Assert.assertNull(transformedTrace.getBodyResponse());
+    }
+
+    @Test
+    public void transformer_must_nullify_body_if_not_filtered() {
+        LogEntryTransformer transformer = LogEntryTransformer.nullifyBody()
+            .applyOnlyToRequests(
+                RequestPredicate.alwaysTrue().filterUrlRegex(List.of("https://test.coco.com/hello/world-fail"))
+            );
+
+        Request request = generatePostRequest("/hello/world", 30);
+        Response response = generateResponse(request, "header", "value", 30);
+
+        LogInterceptApiBean generatedTrace = generatedTrace(request, response);
+
+        LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
+        Assert.assertEquals(transformedTrace.getBodyRequest(), generatedTrace.getBodyRequest());
+        Assert.assertEquals(transformedTrace.getBodyResponse(), generatedTrace.getBodyResponse());
+    }
+
     private static Request generatePostRequest(String endpoint, int length) {
         Builder request = new Request.Builder().url("https://test.coco.com" + endpoint);
         if (length == 0) {
