@@ -16,7 +16,8 @@ import okhttp3.Response;
  * <p>This is a <a href="package-summary.html">functional interface</a>
  * whose functional method is {@link #transform(Request, Response, LogInterceptApiBean)}.
  *
- * <p>The static method {@link #emptyTransformer()} initiates the transformer
+ * <p>Starting from the empty transformer: {@code LogEntryTransformer.emptyTransformer()}
+ * <p>Starting using an existing transformer: {@code LogEntryTransformer.limitBodySizeTransformer(1000)} or {@code LogEntryTransformer.hideJsonFields(...)} or {@code LogEntryTransformer.emptyBody()}
  */
 @FunctionalInterface
 public interface LogEntryTransformer {
@@ -48,7 +49,7 @@ public interface LogEntryTransformer {
     }
 
     /**
-     * This static method transforms the body of either the request or the response
+     * Transforms the body of either the request or the response
      * to be truncated to a given limit
      * @param bodyCharLengthLimit : the limit of the body to be applied
      * @return the corresponding {@link LogEntryTransformer}
@@ -71,7 +72,7 @@ public interface LogEntryTransformer {
     }
 
     /**
-     * This static method transforms the body of either the request or the response
+     * Transforms the body of either the request or the response
      * to replace values of given object keys through a regex matcher
      * @param jsonFieldKeysToHide : a list of keys whose value needs to be hidden
      * @param replacement : the replacement for the hidden values
@@ -85,7 +86,7 @@ public interface LogEntryTransformer {
             return LogEntryTransformer.emptyTransformer();
         }
 
-        Pattern compiledRegex = Pattern.compile(RegexBuilder.regexHidingFields(jsonFieldKeysToHide));
+        Pattern compiledRegex = Pattern.compile(RegexBuilder.buildHidingFieldsRegex(jsonFieldKeysToHide));
 
         return (request, response, apiLogEntry) -> {
             if (!Strings.isNullOrEmpty(apiLogEntry.getBodyRequest())) {

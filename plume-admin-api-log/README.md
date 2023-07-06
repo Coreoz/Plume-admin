@@ -55,6 +55,15 @@ new OkHttpLoggerInterceptor(
 )
 ```
 
+Example to omit logging requests that matches URL regex `^https://test.coreoz.com/([^/]*)/world`:
+```java
+new OkHttpLoggerInterceptor(
+  "Github",
+  logApiService,
+  RequestPredicate.alwaysTrue().filterUrlRegex(List.of("^https://test.coreoz.com/([^/]*)/world"))
+)
+```
+
 Example to hide certain json objet keys. Here : `contractId` and `password` values will be replace by `****` :
 
 *Only work for key/value and not array or objects*
@@ -98,21 +107,6 @@ new OkHttpLoggerInterceptor(
      .filterMethod(HttpMethod.POST)
      .filterMethod(HttpMethod.PUT)
      .filterEndpointStartsWith("api/order")
-)
-```
-
-Example to chain transformers to log custom api names, and only the first 1024 chars of the request/response, only for requests with 'Authorization' Header and that is HTTPS
-```java
-new OkHttpLoggerInterceptor(
-  "Github",
-  logApiService,
-  LogEntryTransformer.limitBodySizeTransformer(1024)
-      .andApply((request, response, logInterceptApiBean) -> {
-          String newName = logInterceptApiBean.getApiName() + "-HTTPS-1024chars";
-          logInterceptApiBean.setApiName(newName);
-          return logInterceptApiBean;
-      })
-      .applyOnlyToRequests(request -> request.isHttps() && request.header("Authorization") != null)
 )
 ```
 

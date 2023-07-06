@@ -34,16 +34,16 @@ public interface RequestPredicate extends Predicate<Request> {
 
     /**
      * Filters a request by its URL through a URL regex list
-     * @param urlRegexList : the URL regex list to be filtered
+     * @param urlsRegex : the URL regex list to be filtered
      */
-    default RequestPredicate filterUrlRegex(List<String> urlRegexList) {
-        Objects.requireNonNull(urlRegexList);
+    default RequestPredicate filterUrlRegex(List<String> urlsRegex) {
+        Objects.requireNonNull(urlsRegex);
 
-        if (urlRegexList.isEmpty()) {
+        if (urlsRegex.isEmpty()) {
             return alwaysTrue();
         }
 
-        Pattern compiledRegex = Pattern.compile(RegexBuilder.computeUrlRegexList(urlRegexList));
+        Pattern compiledRegex = Pattern.compile(RegexBuilder.buildFilterUrlsRegex(urlsRegex));
 
         return request -> test(request)
             && OkHttpMatchers.matchRequestUrlRegex(request.url(), compiledRegex);

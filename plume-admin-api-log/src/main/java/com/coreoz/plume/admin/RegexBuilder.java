@@ -2,12 +2,12 @@ package com.coreoz.plume.admin;
 
 import java.util.List;
 
-public class RegexBuilder {
+class RegexBuilder {
     private RegexBuilder() {
         // Empty constructor
     }
 
-    static String regexHidingFields(List<String> keysToHide) {
+    static String buildHidingFieldsRegex(List<String> keysToHide) {
         String regexKeys = keysToHide.stream()
             .reduce("", (currentRegex, element) -> {
                 if (!currentRegex.isEmpty()) {
@@ -23,7 +23,7 @@ public class RegexBuilder {
         return "";
     }
 
-    static String computeUrlRegexList(List<String> urlRegexList) {
+    static String buildFilterUrlsRegex(List<String> urlRegexList) {
         return urlRegexList.stream()
             .reduce("", (currentRegex, element) -> {
                 if (currentRegex.isEmpty()) {
