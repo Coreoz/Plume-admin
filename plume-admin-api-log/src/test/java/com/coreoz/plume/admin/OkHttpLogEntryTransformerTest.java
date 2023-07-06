@@ -280,7 +280,7 @@ public class OkHttpLogEntryTransformerTest {
     public void transformer_must_nullify_body_if_filtered() {
         LogEntryTransformer transformer = LogEntryTransformer.emptyBody()
             .applyOnlyToRequests(
-                RequestPredicate.alwaysTrue().filterUrlRegex(List.of("^https://test.coco.com/([^/]*)/world"))
+                RequestPredicate.alwaysTrue().filterUrlRegex(List.of(".+?/([^/]*)/world$"))
             );
 
 
@@ -298,7 +298,7 @@ public class OkHttpLogEntryTransformerTest {
     public void transformer_must_nullify_body_if_not_filtered() {
         LogEntryTransformer transformer = LogEntryTransformer.emptyBody()
             .applyOnlyToRequests(
-                RequestPredicate.alwaysTrue().filterUrlRegex(List.of("https://test.coco.com/hello/world-fail"))
+                RequestPredicate.alwaysTrue().filterUrlRegex(List.of(".+?/([^/]*)/world-fail$"))
             );
 
         Request request = generatePostRequest("/hello/world", 30);
@@ -312,7 +312,7 @@ public class OkHttpLogEntryTransformerTest {
     }
 
     private static Request generatePostRequest(String endpoint, int length) {
-        Builder request = new Request.Builder().url("https://test.coco.com" + endpoint);
+        Builder request = new Request.Builder().url("https://test.coreoz.com" + endpoint);
         if (length == 0) {
             return request.get().build();
         }

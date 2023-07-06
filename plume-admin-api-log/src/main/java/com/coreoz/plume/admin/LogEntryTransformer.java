@@ -74,6 +74,9 @@ public interface LogEntryTransformer {
     /**
      * Transforms the body of either the request or the response
      * to replace values of given object keys through a regex matcher
+     *
+     * <p>hideJsonFields(List.of("password"), "***") will replace the JSON body {"login": "john", "password": "azerty"} by {"login": "john", "password": "***"}
+     *
      * @param jsonFieldKeysToHide : a list of keys whose value needs to be hidden
      * @param replacement : the replacement for the hidden values
      * @return the corresponding {@link LogEntryTransformer}

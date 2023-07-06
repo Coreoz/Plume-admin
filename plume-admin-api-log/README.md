@@ -55,12 +55,12 @@ new OkHttpLoggerInterceptor(
 )
 ```
 
-Example to omit logging requests that matches URL regex `^https://test.coreoz.com/([^/]*)/world`:
+Example to omit logging requests that matches URL regex `.+?/([^/]*)/world$`:
 ```java
 new OkHttpLoggerInterceptor(
   "Github",
   logApiService,
-  RequestPredicate.alwaysTrue().filterUrlRegex(List.of("^https://test.coreoz.com/([^/]*)/world"))
+  RequestPredicate.alwaysTrue().filterUrlRegex(List.of(".+?/([^/]*)/world$"))
 )
 ```
 

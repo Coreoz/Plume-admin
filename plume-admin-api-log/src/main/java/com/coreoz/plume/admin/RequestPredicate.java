@@ -34,6 +34,9 @@ public interface RequestPredicate extends Predicate<Request> {
 
     /**
      * Filters a request by its URL through a URL regex list
+     *
+     * <p>filterUrlRegex(List.of(".+?/([^/]*)/world$")) will filter URL like `[base-url]/hello/world` but will allow URL `[base-url]/hello/world/allowed`
+     *
      * @param urlsRegex : the URL regex list to be filtered
      */
     default RequestPredicate filterUrlRegex(List<String> urlsRegex) {
