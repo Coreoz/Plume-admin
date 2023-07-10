@@ -5,3 +5,15 @@
 /.README.md.html
 /.factorypath
 /.upgrade.md.html
+
+# Intellij
+.idea/
+*.iml
+*.iws
+
+# Mac
+.DS_Store
+
+# Maven
+log/
+target/

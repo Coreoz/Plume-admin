@@ -55,6 +55,29 @@ new OkHttpLoggerInterceptor(
 )
 ```
 
+Example to omit logging requests that matches URL regex `.+?/([^/]*)/world$`:
+```java
+new OkHttpLoggerInterceptor(
+  "Github",
+  logApiService,
+  RequestPredicate.alwaysTrue().filterUrlRegex(List.of(".+?/([^/]*)/world$"))
+)
+```
+
+Example to hide certain json objet keys. Here : `contractId` and `password` values will be replace by `****` :
+
+*Only work for key/value and not array or objects*
+```java
+new OkHttpLoggerInterceptor(
+  "Github",
+  logApiService,
+  LogEntryTransformer.hideJsonFields(
+    List.of("contractId", "password"),
+    "****"
+  )
+)
+```
+
 Example to log only the first 1024 chars of the request/response body:
 ```java
 new OkHttpLoggerInterceptor(
@@ -72,6 +95,18 @@ new OkHttpLoggerInterceptor(
   LogEntryTransformer
     .limitBodySizeTransformer(1024)
     .applyOnlyToRequests(RequestPredicate.alwaysTrue().filterEndpointStartsWith("/api/orders"))
+)
+```
+
+Example to chain predicates that will not log POST and PUT requests, and endpoints that start with `/api/orders`
+```java
+new OkHttpLoggerInterceptor(
+  "Github",
+  logApiService,
+  RequestPredicate.alwaysTrue()
+     .filterMethod(HttpMethod.POST)
+     .filterMethod(HttpMethod.PUT)
+     .filterEndpointStartsWith("api/order")
 )
 ```
 
