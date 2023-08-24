@@ -2,7 +2,6 @@ package com.coreoz.plume.admin.services.hash;
 
 import javax.inject.Singleton;
 
-import com.google.common.base.Strings;
 import org.mindrot.jbcrypt.BCrypt;
 
 @Singleton
@@ -13,7 +12,7 @@ public class BCryptHashService implements HashService {
 	@Override
 	public String hashPassword(String password) {
         if (password == null) {
-            throw new IllegalArgumentException("Password must not be null or empty");
+            throw new IllegalArgumentException("Password must not be null");
         }
 		return BCrypt.hashpw(password, BCrypt.gensalt(BCRYPT_SALT_ROUND));
 	}
