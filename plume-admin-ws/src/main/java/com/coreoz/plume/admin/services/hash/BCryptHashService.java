@@ -11,6 +11,9 @@ public class BCryptHashService implements HashService {
 
 	@Override
 	public String hashPassword(String password) {
+        if (password == null) {
+            throw new IllegalArgumentException("Password must not be null");
+        }
 		return BCrypt.hashpw(password, BCrypt.gensalt(BCRYPT_SALT_ROUND));
 	}
 
