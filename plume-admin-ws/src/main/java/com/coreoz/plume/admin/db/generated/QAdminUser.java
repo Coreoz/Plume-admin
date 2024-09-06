@@ -38,6 +38,8 @@ public class QAdminUser extends com.querydsl.sql.RelationalPathBase<AdminUser> {
 
     public final StringPath password = createString("password");
 
+    public final StringPath secretKey = createString("secretKey");
+
     public final StringPath userName = createString("userName");
 
     public final com.querydsl.sql.PrimaryKey<AdminUser> constraintB3 = createPrimaryKey(id);
@@ -77,6 +79,7 @@ public class QAdminUser extends com.querydsl.sql.RelationalPathBase<AdminUser> {
         addMetadata(idRole, ColumnMetadata.named("ID_ROLE").withIndex(2).ofType(Types.BIGINT).withSize(19).notNull());
         addMetadata(lastName, ColumnMetadata.named("LAST_NAME").withIndex(5).ofType(Types.VARCHAR).withSize(255).notNull());
         addMetadata(password, ColumnMetadata.named("PASSWORD").withIndex(8).ofType(Types.VARCHAR).withSize(255).notNull());
+        addMetadata(secretKey, ColumnMetadata.named("SECRET_KEY").withIndex(9).ofType(Types.VARCHAR).withSize(255).notNull());
         addMetadata(userName, ColumnMetadata.named("USER_NAME").withIndex(7).ofType(Types.VARCHAR).withSize(255).notNull());
     }
 

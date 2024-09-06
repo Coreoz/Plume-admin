@@ -8,9 +8,12 @@ import javax.inject.Singleton;
 import com.coreoz.plume.admin.security.login.LoginFailAttemptsManager;
 import com.coreoz.plume.admin.services.configuration.AdminConfigurationService;
 import com.coreoz.plume.admin.services.configuration.AdminSecurityConfigurationService;
+import com.coreoz.plume.admin.services.mfa.MfaService;
 import com.coreoz.plume.admin.services.user.AdminUserService;
 import com.coreoz.plume.admin.services.user.AuthenticatedUser;
 import com.coreoz.plume.admin.webservices.data.session.AdminCredentials;
+import com.coreoz.plume.admin.webservices.data.session.AdminMfaCredentials;
+import com.coreoz.plume.admin.webservices.data.session.AdminMfaQrcode;
 import com.coreoz.plume.admin.webservices.data.session.AdminSession;
 import com.coreoz.plume.admin.webservices.validation.AdminWsError;
 import com.coreoz.plume.admin.websession.JwtSessionSigner;
@@ -18,6 +21,7 @@ import com.coreoz.plume.admin.websession.WebSessionAdmin;
 import com.coreoz.plume.admin.websession.WebSessionPermission;
 import com.coreoz.plume.admin.websession.jersey.JerseySessionParser;
 import com.coreoz.plume.jersey.errors.Validators;
+import com.coreoz.plume.jersey.errors.WsError;
 import com.coreoz.plume.jersey.errors.WsException;
 import com.coreoz.plume.jersey.security.permission.PublicApi;
 import com.coreoz.plume.services.time.TimeProvider;
@@ -32,9 +36,14 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -47,10 +56,13 @@ import lombok.Getter;
 @Singleton
 public class SessionWs {
 
+    private static final Logger logger = LoggerFactory.getLogger(SessionWs.class);
+
 	public static final FingerprintWithHash NULL_FINGERPRINT = new FingerprintWithHash(null, null);
 
 	private final AdminUserService adminUserService;
 	private final JwtSessionSigner jwtSessionSigner;
+    private final MfaService mfaService;
 	private final TimeProvider timeProvider;
 	private final LoginFailAttemptsManager failAttemptsManager;
 
@@ -69,9 +81,11 @@ public class SessionWs {
 			JwtSessionSigner jwtSessionSigner,
 			AdminConfigurationService configurationService,
 			AdminSecurityConfigurationService adminSecurityConfigurationService,
+            MfaService mfaService,
 			TimeProvider timeProvider) {
 		this.adminUserService = adminUserService;
 		this.jwtSessionSigner = jwtSessionSigner;
+        this.mfaService = mfaService;
 		this.timeProvider = timeProvider;
 
 		this.failAttemptsManager = new LoginFailAttemptsManager(
@@ -102,6 +116,64 @@ public class SessionWs {
 		.build();
 	}
 
+    @POST
+	@Operation(description = "Generate a qrcode for MFA enrollment")
+    @Path("/qrcode-url")
+	public AdminMfaQrcode qrCodeUrl(AdminCredentials credentials) {
+		// First user needs to be authenticated (an exception will be raised otherwise)
+        AuthenticatedUser authenticatedUser = authenticateUser(credentials);
+
+        // Generate MFA secret key and QR code URL
+        try {
+            String secretKey = adminUserService.createMfaSecretKey(authenticatedUser.getUser().getId());
+            String qrCodeUrl = mfaService.getQRBarcodeURL(authenticatedUser.getUser().getUserName(), secretKey);
+
+            // Return the QR code URL to the client
+            return new AdminMfaQrcode(qrCodeUrl);
+        } catch (Exception e) {
+            logger.debug("erreur lors de la génération du QR code", e);
+            throw new WsException(WsError.INTERNAL_ERROR);
+        }
+	}
+
+    @POST
+	@Operation(description = "Generate a qrcode for MFA enrollment")
+    @Path("/qrcode")
+	public Response qrCode(AdminCredentials credentials) {
+		// First user needs to be authenticated (an exception will be raised otherwise)
+        AuthenticatedUser authenticatedUser = authenticateUser(credentials);
+
+        // Generate MFA secret key and QR code URL
+        try {
+            String secretKey = adminUserService.createMfaSecretKey(authenticatedUser.getUser().getId());
+            byte[] qrCode = mfaService.generateQRCode(secretKey, secretKey);
+
+            // Return the QR code image to the client
+            ResponseBuilder response = Response.ok(qrCode);
+            response.header("Content-Disposition", "attachment; filename=qrcode.png");
+            response.header("Content-Type", "image/png");
+            return response.build();
+        } catch (Exception e) {
+            logger.debug("erreur lors de la génération du QR code", e);
+            throw new WsException(WsError.INTERNAL_ERROR);
+        }
+	}
+
+    @POST
+    @Path("/verify-mfa")
+    @Operation(description = "Verify MFA code")
+    public Response verifyMfa(AdminMfaCredentials credentials) {
+        // first user needs to be authenticated (an exception will be raised otherwise)
+		AuthenticatedUser authenticatedUser = authenticateUserMfa(credentials);
+		// if the client is authenticated, the fingerprint can be generated if needed
+		FingerprintWithHash fingerprintWithHash = sessionUseFingerprintCookie ? generateFingerprint() : NULL_FINGERPRINT;
+		return withFingerprintCookie(
+			Response.ok(toAdminSession(toWebSession(authenticatedUser, fingerprintWithHash.getHash()))),
+			fingerprintWithHash.getFingerprint()
+		)
+		.build();
+    }
+
 	@PUT
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Operation(description = "Renew a valid session token")
@@ -118,6 +190,26 @@ public class SessionWs {
 		}
 
 		return toAdminSession(parsedSession);
+	}
+
+    public AuthenticatedUser authenticateUserMfa(AdminMfaCredentials credentials) {
+		Validators.checkRequired("Json creadentials", credentials);
+		Validators.checkRequired("users.USERNAME", credentials.getUserName());
+		Validators.checkRequired("users.CODE", credentials.getCode());
+
+		if(credentials.getUserName() != null && failAttemptsManager.isBlocked(credentials.getUserName())) {
+			throw new WsException(
+				AdminWsError.TOO_MANY_WRONG_ATTEMPS,
+				ImmutableList.of(String.valueOf(blockedDurationInSeconds))
+			);
+		}
+
+		return adminUserService
+			.authenticateMfa(credentials.getUserName(), credentials.getCode())
+			.orElseThrow(() -> {
+				failAttemptsManager.addAttempt(credentials.getUserName());
+				return new WsException(AdminWsError.WRONG_LOGIN_OR_PASSWORD);
+			});
 	}
 
 	public AuthenticatedUser authenticateUser(AdminCredentials credentials) {

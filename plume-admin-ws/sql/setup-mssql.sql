@@ -14,6 +14,7 @@ CREATE TABLE PLM_USER (
   EMAIL varchar(255) NOT NULL,
   USER_NAME varchar(255) NOT NULL,
   PASSWORD varchar(255) NOT NULL,
+  SECRET_KEY varchar(255) NOT NULL,
   CONSTRAINT plm_user_pk PRIMARY KEY (ID),
   CONSTRAINT uniq_plm_user_email UNIQUE (EMAIL),
   CONSTRAINT uniq_plm_user_username UNIQUE (USER_NAME),

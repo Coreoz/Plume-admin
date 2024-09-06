@@ -8,6 +8,7 @@ import javax.inject.Singleton;
 import com.coreoz.plume.admin.db.daos.AdminUserDao;
 import com.coreoz.plume.admin.db.generated.AdminUser;
 import com.coreoz.plume.admin.services.hash.HashService;
+import com.coreoz.plume.admin.services.mfa.MfaService;
 import com.coreoz.plume.admin.services.role.AdminRoleService;
 import com.coreoz.plume.admin.webservices.data.user.AdminUserParameters;
 import com.coreoz.plume.db.crud.CrudService;
@@ -21,15 +22,17 @@ public class AdminUserService extends CrudService<AdminUser> {
 	private final AdminUserDao adminUserDao;
 	private final AdminRoleService adminRoleService;
 	private final HashService hashService;
+    private final MfaService mfaService;
 	private final TimeProvider timeProvider;
 
 	@Inject
 	public AdminUserService(AdminUserDao adminUserDao, AdminRoleService adminRoleService,
-			HashService hashService, TimeProvider timeProvider) {
+			HashService hashService, TimeProvider timeProvider, MfaService mfaService) {
 		super(adminUserDao);
 
 		this.adminUserDao = adminUserDao;
 		this.adminRoleService = adminRoleService;
+        this.mfaService = mfaService;
 		this.hashService = hashService;
 		this.timeProvider = timeProvider;
 	}
@@ -38,6 +41,16 @@ public class AdminUserService extends CrudService<AdminUser> {
 		return adminUserDao
 				.findByUserName(userName)
 				.filter(user -> hashService.checkPassword(password, user.getPassword()))
+				.map(user -> AuthenticatedUserAdmin.of(
+					user,
+					ImmutableSet.copyOf(adminRoleService.findRolePermissions(user.getIdRole()))
+				));
+	}
+
+    public Optional<AuthenticatedUser> authenticateMfa(String userName, int code) {
+		return adminUserDao
+				.findByUserName(userName)
+				.filter(user -> mfaService.verifyCode(user.getSecretKey(), code))
 				.map(user -> AuthenticatedUserAdmin.of(
 					user,
 					ImmutableSet.copyOf(adminRoleService.findRolePermissions(user.getIdRole()))
@@ -56,6 +69,15 @@ public class AdminUserService extends CrudService<AdminUser> {
 			newPassword == null ? null : hashService.hashPassword(newPassword)
 		);
 	}
+
+    public String createMfaSecretKey(Long idUser) throws Exception {
+        AdminUser user = adminUserDao.findById(idUser);
+        String secretKey = mfaService.generateSecretKey();
+        user.setSecretKey(mfaService.hashSecretKey(secretKey));
+        adminUserDao.save(user);
+
+        return secretKey;
+    }
 
 	public AdminUser create(AdminUserParameters parameters) {
 		AdminUser adminUserToSave = new AdminUser();
