@@ -1,14 +1,18 @@
 package com.coreoz.plume.admin.services.user;
 
+import java.util.List;
 import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import com.coreoz.plume.admin.db.daos.AdminMfaDao;
 import com.coreoz.plume.admin.db.daos.AdminUserDao;
+import com.coreoz.plume.admin.db.generated.AdminMfa;
 import com.coreoz.plume.admin.db.generated.AdminUser;
 import com.coreoz.plume.admin.services.hash.HashService;
 import com.coreoz.plume.admin.services.mfa.MfaService;
+import com.coreoz.plume.admin.services.mfa.MfaTypeEnum;
 import com.coreoz.plume.admin.services.role.AdminRoleService;
 import com.coreoz.plume.admin.webservices.data.user.AdminUserParameters;
 import com.coreoz.plume.db.crud.CrudService;
@@ -20,6 +24,7 @@ import com.google.common.collect.ImmutableSet;
 public class AdminUserService extends CrudService<AdminUser> {
 
 	private final AdminUserDao adminUserDao;
+    private final AdminMfaDao adminMfaDao;
 	private final AdminRoleService adminRoleService;
 	private final HashService hashService;
     private final MfaService mfaService;
@@ -27,10 +32,12 @@ public class AdminUserService extends CrudService<AdminUser> {
 
 	@Inject
 	public AdminUserService(AdminUserDao adminUserDao, AdminRoleService adminRoleService,
-			HashService hashService, TimeProvider timeProvider, MfaService mfaService) {
+			HashService hashService, TimeProvider timeProvider, MfaService mfaService,
+            AdminMfaDao adminMfaDao) {
 		super(adminUserDao);
 
 		this.adminUserDao = adminUserDao;
+        this.adminMfaDao = adminMfaDao;
 		this.adminRoleService = adminRoleService;
         this.mfaService = mfaService;
 		this.hashService = hashService;
@@ -47,10 +54,20 @@ public class AdminUserService extends CrudService<AdminUser> {
 				));
 	}
 
-    public Optional<AuthenticatedUser> authenticateMfa(String userName, int code) {
+    public Optional<AuthenticatedUser> authenticateWithAuthenticator(String userName, int code) {
 		return adminUserDao
 				.findByUserName(userName)
-				.filter(user -> mfaService.verifyCode(user.getSecretKey(), code))
+				.filter(user -> {
+                    List<AdminMfa> registeredAuthenticators = adminMfaDao.findMfaByUserIdAndType(user.getId(), MfaTypeEnum.AUTHENTICATOR);
+                    // If any of the MFA is valid, then the user is valid
+                    return registeredAuthenticators.stream().anyMatch(authenticator -> {
+                        try {
+                            return mfaService.verifyCode(authenticator.getSecretKey(), code);
+                        } catch (Exception e) {
+                            return false;
+                        }
+                    });
+                })
 				.map(user -> AuthenticatedUserAdmin.of(
 					user,
 					ImmutableSet.copyOf(adminRoleService.findRolePermissions(user.getIdRole()))
@@ -70,10 +87,13 @@ public class AdminUserService extends CrudService<AdminUser> {
 		);
 	}
 
-    public String createMfaSecretKey(Long idUser) throws Exception {
+    public String createMfaSecretKey(Long idUser, MfaTypeEnum type) throws Exception {
         AdminUser user = adminUserDao.findById(idUser);
         String secretKey = mfaService.generateSecretKey();
-        user.setSecretKey(mfaService.hashSecretKey(secretKey));
+        AdminMfa mfa = new AdminMfa();
+        mfa.setSecretKey(mfaService.hashSecretKey(secretKey));
+        mfa.setType(type.getType());
+        adminMfaDao.addMfaToUser(user.getId(), mfa);
         adminUserDao.save(user);
 
         return secretKey;

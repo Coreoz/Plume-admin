@@ -33,9 +33,6 @@ public class AdminUser extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuery
     @Column("PASSWORD")
     private String password;
 
-    @Column("SECRET_KEY")
-    private String secretKey;
-
     @Column("USER_NAME")
     private String userName;
 
@@ -93,14 +90,6 @@ public class AdminUser extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuery
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public String getSecretKey() {
-        return secretKey;
-    }
-
-    public void setSecretKey(String secretKey) {
-        this.secretKey = secretKey;
     }
 
     public String getUserName() {
