@@ -10,11 +10,11 @@ import com.querydsl.sql.Column;
 @Generated("com.coreoz.plume.db.querydsl.generation.IdBeanSerializer")
 public class AdminUserMfa {
 
-    @Column("ID_MFA")
+    @Column("id_mfa")
     @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
     private Long idMfa;
 
-    @Column("ID_USER")
+    @Column("id_user")
     @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
     private Long idUser;
 
@@ -32,11 +32,6 @@ public class AdminUserMfa {
 
     public void setIdUser(Long idUser) {
         this.idUser = idUser;
-    }
-
-    @Override
-    public String toString() {
-        return "AdminUserMfa#" + idMfa+ ";" + idUser;
     }
 
     @Override

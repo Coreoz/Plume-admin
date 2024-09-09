@@ -1,7 +1,7 @@
 package com.coreoz.plume.admin.db.generated;
 
-import javax.annotation.Generated;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import javax.annotation.processing.Generated;
 import com.querydsl.sql.Column;
 
 /**
@@ -10,30 +10,33 @@ import com.querydsl.sql.Column;
 @Generated("com.coreoz.plume.db.querydsl.generation.IdBeanSerializer")
 public class AdminUser extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuerydsl {
 
-    @Column("CREATION_DATE")
+    @Column("creation_date")
     private java.time.LocalDateTime creationDate;
 
-    @Column("EMAIL")
+    @Column("email")
     private String email;
 
-    @Column("FIRST_NAME")
+    @Column("first_name")
     private String firstName;
 
-    @Column("ID")
+    @Column("id")
     @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
     private Long id;
 
-    @Column("ID_ROLE")
+    @Column("id_role")
     @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
     private Long idRole;
 
-    @Column("LAST_NAME")
+    @Column("last_name")
     private String lastName;
 
-    @Column("PASSWORD")
+    @Column("mfa_user_handle")
+    private byte[] mfaUserHandle;
+
+    @Column("password")
     private String password;
 
-    @Column("USER_NAME")
+    @Column("user_name")
     private String userName;
 
     public java.time.LocalDateTime getCreationDate() {
@@ -84,6 +87,14 @@ public class AdminUser extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuery
         this.lastName = lastName;
     }
 
+    public byte[] getMfaUserHandle() {
+        return mfaUserHandle;
+    }
+
+    public void setMfaUserHandle(byte[] mfaUserHandle) {
+        this.mfaUserHandle = mfaUserHandle;
+    }
+
     public String getPassword() {
         return password;
     }
@@ -121,11 +132,6 @@ public class AdminUser extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuery
         int result = 1;
         result = prime * result + id.hashCode();
         return result;
-    }
-
-    @Override
-    public String toString() {
-        return "AdminUser#" + id;
     }
 
 }

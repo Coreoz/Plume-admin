@@ -10,15 +10,26 @@ import com.querydsl.sql.Column;
 @Generated("com.coreoz.plume.db.querydsl.generation.IdBeanSerializer")
 public class AdminMfa extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuerydsl {
 
-    @Column("ID")
+    @Column("credential_id")
+    private byte[] credentialId;
+
+    @Column("id")
     @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
     private Long id;
 
-    @Column("SECRET_KEY")
+    @Column("secret_key")
     private String secretKey;
 
-    @Column("TYPE")
+    @Column("type")
     private String type;
+
+    public byte[] getCredentialId() {
+        return credentialId;
+    }
+
+    public void setCredentialId(byte[] credentialId) {
+        this.credentialId = credentialId;
+    }
 
     public Long getId() {
         return id;
@@ -42,11 +53,6 @@ public class AdminMfa extends com.coreoz.plume.db.querydsl.crud.CrudEntityQueryd
 
     public void setType(String type) {
         this.type = type;
-    }
-
-    @Override
-    public String toString() {
-        return "AdminMfa#" + id;
     }
 
     @Override

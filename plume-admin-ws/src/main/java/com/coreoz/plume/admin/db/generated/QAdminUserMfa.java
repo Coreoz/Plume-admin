@@ -20,7 +20,7 @@ import java.sql.Types;
 @Generated("com.querydsl.sql.codegen.MetaDataSerializer")
 public class QAdminUserMfa extends com.querydsl.sql.RelationalPathBase<AdminUserMfa> {
 
-    private static final long serialVersionUID = -1870946042;
+    private static final long serialVersionUID = -291052278;
 
     public static final QAdminUserMfa adminUserMfa = new QAdminUserMfa("PLM_USER_MFA");
 
@@ -30,9 +30,9 @@ public class QAdminUserMfa extends com.querydsl.sql.RelationalPathBase<AdminUser
 
     public final com.querydsl.sql.PrimaryKey<AdminUserMfa> primary = createPrimaryKey(idMfa, idUser);
 
-    public final com.querydsl.sql.ForeignKey<AdminMfa> plmUserMfaMfa = createForeignKey(idMfa, "ID");
+    public final com.querydsl.sql.ForeignKey<AdminMfa> plmUserMfaMfa = createForeignKey(idMfa, "id");
 
-    public final com.querydsl.sql.ForeignKey<AdminUser> plmUserMfaUser = createForeignKey(idUser, "ID");
+    public final com.querydsl.sql.ForeignKey<AdminUser> plmUserMfaUser = createForeignKey(idUser, "id");
 
     public QAdminUserMfa(String variable) {
         super(AdminUserMfa.class, forVariable(variable), "null", "PLM_USER_MFA");
@@ -60,8 +60,8 @@ public class QAdminUserMfa extends com.querydsl.sql.RelationalPathBase<AdminUser
     }
 
     public void addMetadata() {
-        addMetadata(idMfa, ColumnMetadata.named("ID_MFA").withIndex(2).ofType(Types.BIGINT).withSize(19).notNull());
-        addMetadata(idUser, ColumnMetadata.named("ID_USER").withIndex(1).ofType(Types.BIGINT).withSize(19).notNull());
+        addMetadata(idMfa, ColumnMetadata.named("id_mfa").withIndex(2).ofType(Types.BIGINT).withSize(19).notNull());
+        addMetadata(idUser, ColumnMetadata.named("id_user").withIndex(1).ofType(Types.BIGINT).withSize(19).notNull());
     }
 
 }

@@ -29,10 +29,12 @@ import com.coreoz.plume.services.time.TimeProvider;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
 import com.google.common.net.HttpHeaders;
+import com.yubico.webauthn.data.PublicKeyCredentialCreationOptions;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -117,6 +119,8 @@ public class SessionWs {
 		.build();
 	}
 
+    // ------------------------ QR / Code Authenticator ------------------------
+
     @POST
 	@Operation(description = "Generate a qrcode for MFA enrollment")
     @Path("/qrcode-url")
@@ -175,6 +179,20 @@ public class SessionWs {
 		.build();
     }
 
+    // ------------------------ Browser Authenticator ------------------------
+
+    @POST
+    @Operation(description = "Get the list of MFA credentials for the user")
+    @Path("/start-registration")
+    public PublicKeyCredentialCreationOptions getWebAuthentCreationOptions(AdminCredentials credentials) {
+        // First user needs to be authenticated (an exception will be raised otherwise)
+        AuthenticatedUser authenticatedUser = authenticateUser(credentials);
+
+        // Generate the PublicKeyCredentialCreationOptions
+        return mfaService.startRegistration(authenticatedUser.getUser().getUserName());
+    }
+
+    // ------------------------ Sessions ------------------------
 	@PUT
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Operation(description = "Renew a valid session token")

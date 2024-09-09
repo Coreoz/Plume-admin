@@ -20,9 +20,11 @@ import java.sql.Types;
 @Generated("com.querydsl.sql.codegen.MetaDataSerializer")
 public class QAdminMfa extends com.querydsl.sql.RelationalPathBase<AdminMfa> {
 
-    private static final long serialVersionUID = 320633169;
+    private static final long serialVersionUID = 2054315861;
 
     public static final QAdminMfa adminMfa = new QAdminMfa("PLM_MFA");
+
+    public final SimplePath<byte[]> credentialId = createSimple("credentialId", byte[].class);
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
@@ -32,7 +34,7 @@ public class QAdminMfa extends com.querydsl.sql.RelationalPathBase<AdminMfa> {
 
     public final com.querydsl.sql.PrimaryKey<AdminMfa> primary = createPrimaryKey(id);
 
-    public final com.querydsl.sql.ForeignKey<AdminUserMfa> _plmUserMfaMfa = createInvForeignKey(id, "ID_MFA");
+    public final com.querydsl.sql.ForeignKey<AdminUserMfa> _plmUserMfaMfa = createInvForeignKey(id, "id_mfa");
 
     public QAdminMfa(String variable) {
         super(AdminMfa.class, forVariable(variable), "null", "PLM_MFA");
@@ -60,9 +62,10 @@ public class QAdminMfa extends com.querydsl.sql.RelationalPathBase<AdminMfa> {
     }
 
     public void addMetadata() {
-        addMetadata(id, ColumnMetadata.named("ID").withIndex(1).ofType(Types.BIGINT).withSize(19).notNull());
-        addMetadata(secretKey, ColumnMetadata.named("SECRET_KEY").withIndex(3).ofType(Types.VARCHAR).withSize(255));
-        addMetadata(type, ColumnMetadata.named("TYPE").withIndex(2).ofType(Types.VARCHAR).withSize(13).notNull());
+        addMetadata(credentialId, ColumnMetadata.named("credential_id").withIndex(4).ofType(Types.LONGVARBINARY).withSize(65535));
+        addMetadata(id, ColumnMetadata.named("id").withIndex(1).ofType(Types.BIGINT).withSize(19).notNull());
+        addMetadata(secretKey, ColumnMetadata.named("secret_key").withIndex(3).ofType(Types.VARCHAR).withSize(255));
+        addMetadata(type, ColumnMetadata.named("type").withIndex(2).ofType(Types.VARCHAR).withSize(13).notNull());
     }
 
 }
