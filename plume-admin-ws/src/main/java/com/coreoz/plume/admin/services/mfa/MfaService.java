@@ -21,12 +21,17 @@ import com.coreoz.plume.admin.services.configuration.AdminConfigurationService;
 import com.coreoz.plume.admin.websession.MfaSecretKeyEncryptionProvider;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
+import com.yubico.webauthn.FinishRegistrationOptions;
 import com.yubico.webauthn.RelyingParty;
 import com.yubico.webauthn.StartRegistrationOptions;
+import com.yubico.webauthn.data.AuthenticatorAttestationResponse;
 import com.yubico.webauthn.data.ByteArray;
+import com.yubico.webauthn.data.ClientRegistrationExtensionOutputs;
+import com.yubico.webauthn.data.PublicKeyCredential;
 import com.yubico.webauthn.data.PublicKeyCredentialCreationOptions;
 import com.yubico.webauthn.data.RelyingPartyIdentity;
 import com.yubico.webauthn.data.UserIdentity;
+import com.yubico.webauthn.exception.RegistrationFailedException;
 
 @Singleton
 public class MfaService {
@@ -117,6 +122,27 @@ public class MfaService {
                 .build())
             .build();
         return relyingParty.startRegistration(options);
+    }
+
+    public boolean finishRegistration(String responseJson, PublicKeyCredentialCreationOptions request) {
+        try {
+            PublicKeyCredential<AuthenticatorAttestationResponse, ClientRegistrationExtensionOutputs> response =
+                PublicKeyCredential.parseRegistrationResponseJson(responseJson);
+
+            relyingParty.finishRegistration(
+                FinishRegistrationOptions.builder()
+                    .request(request)
+                    .response(response)
+                    .build()
+            );
+            return true;
+        } catch (IOException e) {
+            logger.error("Error parsing registration response", e);
+            return false;
+        } catch (RegistrationFailedException e) {
+            logger.error("Error finishing registration", e);
+            return false;
+        }
     }
 
     private Optional<UserIdentity> findExistingUser(String username) {

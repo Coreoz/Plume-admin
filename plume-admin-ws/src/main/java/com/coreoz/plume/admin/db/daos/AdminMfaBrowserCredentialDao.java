@@ -14,7 +14,6 @@ import com.coreoz.plume.admin.db.generated.QAdminUserMfa;
 import com.coreoz.plume.db.querydsl.transaction.TransactionManagerQuerydsl;
 import com.yubico.webauthn.CredentialRepository;
 import com.yubico.webauthn.RegisteredCredential;
-import com.yubico.webauthn.data.AuthenticatorTransport;
 import com.yubico.webauthn.data.ByteArray;
 import com.yubico.webauthn.data.PublicKeyCredentialDescriptor;
 import com.yubico.webauthn.data.PublicKeyCredentialType;
