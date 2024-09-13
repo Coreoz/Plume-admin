@@ -24,13 +24,21 @@ public class QAdminUserMfa extends com.querydsl.sql.RelationalPathBase<AdminUser
 
     public static final QAdminUserMfa adminUserMfa = new QAdminUserMfa("PLM_USER_MFA");
 
-    public final NumberPath<Long> idMfa = createNumber("idMfa", Long.class);
+    public final NumberPath<Long> id = createNumber("id", Long.class);
+
+    public final NumberPath<Long> idMfaAuthenticator = createNumber("idMfaAuthenticator", Long.class);
+
+    public final NumberPath<Long> idMfaBrowser = createNumber("idMfaBrowser", Long.class);
 
     public final NumberPath<Long> idUser = createNumber("idUser", Long.class);
 
-    public final com.querydsl.sql.PrimaryKey<AdminUserMfa> primary = createPrimaryKey(idMfa, idUser);
+    public final StringPath type = createString("type");
 
-    public final com.querydsl.sql.ForeignKey<AdminMfa> plmUserMfaMfa = createForeignKey(idMfa, "id");
+    public final com.querydsl.sql.PrimaryKey<AdminUserMfa> primary = createPrimaryKey(id);
+
+    public final com.querydsl.sql.ForeignKey<AdminMfaAuthenticator> plmUserMfaMfaAuthenticator = createForeignKey(idMfaAuthenticator, "id");
+
+    public final com.querydsl.sql.ForeignKey<AdminMfaBrowser> plmUserMfaMfaBrowser = createForeignKey(idMfaBrowser, "id");
 
     public final com.querydsl.sql.ForeignKey<AdminUser> plmUserMfaUser = createForeignKey(idUser, "id");
 
@@ -60,8 +68,11 @@ public class QAdminUserMfa extends com.querydsl.sql.RelationalPathBase<AdminUser
     }
 
     public void addMetadata() {
-        addMetadata(idMfa, ColumnMetadata.named("id_mfa").withIndex(2).ofType(Types.BIGINT).withSize(19).notNull());
-        addMetadata(idUser, ColumnMetadata.named("id_user").withIndex(1).ofType(Types.BIGINT).withSize(19).notNull());
+        addMetadata(id, ColumnMetadata.named("id").withIndex(1).ofType(Types.BIGINT).withSize(19).notNull());
+        addMetadata(idMfaAuthenticator, ColumnMetadata.named("id_mfa_authenticator").withIndex(4).ofType(Types.BIGINT).withSize(19));
+        addMetadata(idMfaBrowser, ColumnMetadata.named("id_mfa_browser").withIndex(5).ofType(Types.BIGINT).withSize(19));
+        addMetadata(idUser, ColumnMetadata.named("id_user").withIndex(3).ofType(Types.BIGINT).withSize(19).notNull());
+        addMetadata(type, ColumnMetadata.named("type").withIndex(2).ofType(Types.VARCHAR).withSize(13).notNull());
     }
 
 }

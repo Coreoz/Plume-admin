@@ -3,54 +3,76 @@ package com.coreoz.plume.admin.db.daos;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
-import com.coreoz.plume.admin.db.generated.AdminMfa;
-import com.coreoz.plume.admin.db.generated.QAdminMfa;
+import com.coreoz.plume.admin.db.generated.AdminMfaAuthenticator;
+import com.coreoz.plume.admin.db.generated.AdminMfaBrowser;
+import com.coreoz.plume.admin.db.generated.AdminUserMfa;
+import com.coreoz.plume.admin.db.generated.QAdminMfaAuthenticator;
+import com.coreoz.plume.admin.db.generated.QAdminMfaBrowser;
 import com.coreoz.plume.admin.db.generated.QAdminUserMfa;
 import com.coreoz.plume.admin.services.mfa.MfaTypeEnum;
-import com.coreoz.plume.db.querydsl.crud.CrudDaoQuerydsl;
 import com.coreoz.plume.db.querydsl.transaction.TransactionManagerQuerydsl;
 
-public class AdminMfaDao extends CrudDaoQuerydsl<AdminMfa> {
+@Singleton
+public class AdminMfaDao  {
+
+    private final TransactionManagerQuerydsl transactionManager;
+    private final AdminMfaAuthenticatorDao adminMfaAuthenticatorDao;
+    private final AdminUserMfaDao adminUserMfaDao;
+    private final AdminMfaBrowserCredentialDao adminMfaBrowserCredentialDao;
+
     @Inject
-	public AdminMfaDao(TransactionManagerQuerydsl transactionManager) {
-		super(transactionManager, QAdminMfa.adminMfa);
+	private AdminMfaDao(
+        TransactionManagerQuerydsl transactionManager,
+        AdminMfaAuthenticatorDao adminMfaAuthenticatorDao,
+        AdminUserMfaDao adminUserMfaDao,
+        AdminMfaBrowserCredentialDao adminMfaBrowserCredentialDao
+    ) {
+		this.transactionManager = transactionManager;
+        this.adminMfaAuthenticatorDao = adminMfaAuthenticatorDao;
+        this.adminUserMfaDao = adminUserMfaDao;
+        this.adminMfaBrowserCredentialDao = adminMfaBrowserCredentialDao;
 	}
 
-    public List<AdminMfa> findByUserId(long userId) {
-		return selectFrom()
+    public List<AdminMfaAuthenticator> findAuthenticatorByUserId(long userId) {
+		return transactionManager.selectQuery()
+            .select(QAdminMfaAuthenticator.adminMfaAuthenticator)
+            .from(QAdminMfaAuthenticator.adminMfaAuthenticator)
             .join(QAdminUserMfa.adminUserMfa)
-            .on(QAdminUserMfa.adminUserMfa.idMfa.eq(QAdminMfa.adminMfa.id))
-            .where(QAdminUserMfa.adminUserMfa.idUser.eq(userId))
-            .fetch();
-	}
-
-    public List<AdminMfa> findMfaByUserIdAndType(long userId, MfaTypeEnum type) {
-		return selectFrom()
-            .join(QAdminUserMfa.adminUserMfa)
-            .on(QAdminUserMfa.adminUserMfa.idMfa.eq(QAdminMfa.adminMfa.id))
+            .on(QAdminUserMfa.adminUserMfa.idMfaAuthenticator.eq(QAdminMfaAuthenticator.adminMfaAuthenticator.id))
             .where(QAdminUserMfa.adminUserMfa.idUser.eq(userId)
-                .and(QAdminMfa.adminMfa.type.eq(type.getType())))
+                .and(QAdminUserMfa.adminUserMfa.type.eq(MfaTypeEnum.AUTHENTICATOR.getType())))
             .fetch();
 	}
 
-    public void addMfaToUser(long userId, AdminMfa mfa) {
-        long mfaId = save(mfa).getId();
-        transactionManager.insert(QAdminUserMfa.adminUserMfa)
-            .set(QAdminUserMfa.adminUserMfa.idMfa, mfaId)
-            .set(QAdminUserMfa.adminUserMfa.idUser, userId)
-            .execute();
+    public List<AdminMfaBrowser> findMfaBrowserByUserId(long userId) {
+		return transactionManager.selectQuery()
+            .select(QAdminMfaBrowser.adminMfaBrowser)
+            .from(QAdminMfaBrowser.adminMfaBrowser)
+            .join(QAdminUserMfa.adminUserMfa)
+            .on(QAdminUserMfa.adminUserMfa.idMfaBrowser.eq(QAdminMfaBrowser.adminMfaBrowser.id))
+            .where(QAdminUserMfa.adminUserMfa.idUser.eq(userId)
+                .and(QAdminUserMfa.adminUserMfa.type.eq(MfaTypeEnum.BROWSER.getType())))
+            .fetch();
+	}
+
+    public void addMfaAuthenticatorToUser(long userId, AdminMfaAuthenticator mfa) {
+        long mfaId = adminMfaAuthenticatorDao.save(mfa).getId();
+        AdminUserMfa userMfa = new AdminUserMfa();
+        userMfa.setIdUser(userId);
+        userMfa.setIdMfaAuthenticator(mfaId);
+        userMfa.setType(MfaTypeEnum.AUTHENTICATOR.getType());
+        adminUserMfaDao.save(userMfa);
     }
 
-    public void removeMfaFromUser(long userId, long mfaId) {
-        AdminMfa mfa = findById(mfaId);
+    public void removeMfaAuthenticatorFromUser(long userId, long mfaId) {
+        AdminMfaAuthenticator mfa = adminMfaAuthenticatorDao.findById(mfaId);
         if (mfa == null) {
             return;
         }
-        transactionManager.delete(QAdminUserMfa.adminUserMfa)
-            .where(QAdminUserMfa.adminUserMfa.idMfa.eq(mfaId)
-                .and(QAdminUserMfa.adminUserMfa.idUser.eq(userId)))
-            .execute();
-        delete(mfaId);
+        AdminUserMfa userMfa = adminUserMfaDao.findByUserIdAndMfaId(userId, mfaId);
+        adminUserMfaDao.delete(userMfa.getId());
+        adminMfaAuthenticatorDao.delete(mfa.getId());
     }
 }

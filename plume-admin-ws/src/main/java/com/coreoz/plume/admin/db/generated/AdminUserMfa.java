@@ -8,22 +8,49 @@ import com.querydsl.sql.Column;
  * AdminUserMfa is a Querydsl bean type
  */
 @Generated("com.coreoz.plume.db.querydsl.generation.IdBeanSerializer")
-public class AdminUserMfa {
+public class AdminUserMfa extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuerydsl {
 
-    @Column("id_mfa")
+    @Column("id")
     @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
-    private Long idMfa;
+    private Long id;
+
+    @Column("id_mfa_authenticator")
+    @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
+    private Long idMfaAuthenticator;
+
+    @Column("id_mfa_browser")
+    @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
+    private Long idMfaBrowser;
 
     @Column("id_user")
     @JsonSerialize(using=com.fasterxml.jackson.databind.ser.std.ToStringSerializer.class)
     private Long idUser;
 
-    public Long getIdMfa() {
-        return idMfa;
+    @Column("type")
+    private String type;
+
+    public Long getId() {
+        return id;
     }
 
-    public void setIdMfa(Long idMfa) {
-        this.idMfa = idMfa;
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getIdMfaAuthenticator() {
+        return idMfaAuthenticator;
+    }
+
+    public void setIdMfaAuthenticator(Long idMfaAuthenticator) {
+        this.idMfaAuthenticator = idMfaAuthenticator;
+    }
+
+    public Long getIdMfaBrowser() {
+        return idMfaBrowser;
+    }
+
+    public void setIdMfaBrowser(Long idMfaBrowser) {
+        this.idMfaBrowser = idMfaBrowser;
     }
 
     public Long getIdUser() {
@@ -34,27 +61,34 @@ public class AdminUserMfa {
         this.idUser = idUser;
     }
 
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
     @Override
     public boolean equals(Object o) {
-        if (idMfa == null || idUser == null) {
+        if (id == null) {
             return super.equals(o);
         }
         if (!(o instanceof AdminUserMfa)) {
             return false;
         }
         AdminUserMfa obj = (AdminUserMfa) o;
-        return idMfa.equals(obj.idMfa) && idUser.equals(obj.idUser);
+        return id.equals(obj.id);
     }
 
     @Override
     public int hashCode() {
-        if (idMfa == null || idUser == null) {
+        if (id == null) {
             return super.hashCode();
         }
         final int prime = 31;
         int result = 1;
-        result = prime * result + idMfa.hashCode();
-        result = prime * result + idUser.hashCode();
+        result = prime * result + id.hashCode();
         return result;
     }
 

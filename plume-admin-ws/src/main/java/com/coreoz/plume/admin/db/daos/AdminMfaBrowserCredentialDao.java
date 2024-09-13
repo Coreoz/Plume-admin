@@ -7,34 +7,68 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import com.coreoz.plume.admin.db.generated.AdminMfa;
-import com.coreoz.plume.admin.db.generated.QAdminMfa;
+import com.coreoz.plume.admin.db.generated.AdminMfaBrowser;
+import com.coreoz.plume.admin.db.generated.AdminUser;
+import com.coreoz.plume.admin.db.generated.AdminUserMfa;
+import com.coreoz.plume.admin.db.generated.QAdminMfaBrowser;
 import com.coreoz.plume.admin.db.generated.QAdminUser;
 import com.coreoz.plume.admin.db.generated.QAdminUserMfa;
+import com.coreoz.plume.db.querydsl.crud.CrudDaoQuerydsl;
 import com.coreoz.plume.db.querydsl.transaction.TransactionManagerQuerydsl;
+import com.google.inject.Singleton;
 import com.yubico.webauthn.CredentialRepository;
 import com.yubico.webauthn.RegisteredCredential;
+import com.yubico.webauthn.RegistrationResult;
+import com.yubico.webauthn.data.AuthenticatorAttestationResponse;
 import com.yubico.webauthn.data.ByteArray;
+import com.yubico.webauthn.data.ClientRegistrationExtensionOutputs;
+import com.yubico.webauthn.data.PublicKeyCredential;
 import com.yubico.webauthn.data.PublicKeyCredentialDescriptor;
 import com.yubico.webauthn.data.PublicKeyCredentialType;
 import com.yubico.webauthn.data.PublicKeyCredentialDescriptor.PublicKeyCredentialDescriptorBuilder;
 
+@Singleton
 public class AdminMfaBrowserCredentialDao implements CredentialRepository {
 
     private final TransactionManagerQuerydsl transactionManager;
+    private final CrudDaoQuerydsl<AdminMfaBrowser> adminMfaBrowserDao;
+    private final CrudDaoQuerydsl<AdminUserMfa> adminUserMfaDao;
 
     @Inject
-	public AdminMfaBrowserCredentialDao(TransactionManagerQuerydsl transactionManager) {
+	private AdminMfaBrowserCredentialDao(TransactionManagerQuerydsl transactionManager) {
 		this.transactionManager = transactionManager;
+        this.adminMfaBrowserDao = new CrudDaoQuerydsl<>(transactionManager, QAdminMfaBrowser.adminMfaBrowser);
+        this.adminUserMfaDao = new CrudDaoQuerydsl<>(transactionManager, QAdminUserMfa.adminUserMfa);
 	}
+
+    public void registerCredential(
+        AdminUser user,
+        RegistrationResult result,
+        PublicKeyCredential<AuthenticatorAttestationResponse, ClientRegistrationExtensionOutputs> pkc
+    ) {
+        AdminMfaBrowser mfa = new AdminMfaBrowser();
+        mfa.setKeyId(result.getKeyId().getId().getBytes());
+        mfa.setPublicKeyCose(result.getPublicKeyCose().getBytes());
+        mfa.setSignatureCount((int)result.getSignatureCount());
+        mfa.setIsDiscoverable(result.isDiscoverable().orElse(null));
+        mfa.setAttestation(pkc.getResponse().getAttestationObject().getBytes());
+        mfa.setClientDataJson(pkc.getResponse().getClientDataJSON().getBytes());
+        adminMfaBrowserDao.save(mfa);
+
+        AdminUserMfa userMfa = new AdminUserMfa();
+        userMfa.setIdUser(user.getId());
+        userMfa.setIdMfaBrowser(mfa.getId());
+        userMfa.setType("Browser");
+        adminUserMfaDao.save(userMfa);
+    }
 
     @Override
     public Set<PublicKeyCredentialDescriptor> getCredentialIdsForUsername(String username) {
         List<byte[]> results = transactionManager.selectQuery()
-            .select(QAdminMfa.adminMfa.credentialId)
-            .from(QAdminMfa.adminMfa)
+            .select(QAdminMfaBrowser.adminMfaBrowser.publicKeyCose)
+            .from(QAdminMfaBrowser.adminMfaBrowser)
             .join(QAdminUserMfa.adminUserMfa)
-            .on(QAdminUserMfa.adminUserMfa.idMfa.eq(QAdminMfa.adminMfa.id))
+            .on(QAdminUserMfa.adminUserMfa.idMfaBrowser.eq(QAdminMfaBrowser.adminMfaBrowser.id))
             .join(QAdminUser.adminUser)
             .on(QAdminUser.adminUser.id.eq(QAdminUserMfa.adminUserMfa.idUser))
             .where(QAdminUser.adminUser.userName.eq(username))
@@ -76,16 +110,6 @@ public class AdminMfaBrowserCredentialDao implements CredentialRepository {
         if (username == null) {
             return Optional.empty();
         }
-        AdminMfa mfa = transactionManager.selectQuery()
-            .select(QAdminMfa.adminMfa)
-            .from(QAdminMfa.adminMfa)
-            .join(QAdminUserMfa.adminUserMfa)
-            .on(QAdminUserMfa.adminUserMfa.idMfa.eq(QAdminMfa.adminMfa.id))
-            .join(QAdminUser.adminUser)
-            .on(QAdminUser.adminUser.id.eq(QAdminUserMfa.adminUserMfa.idUser))
-            .where(QAdminMfa.adminMfa.credentialId.eq(credentialId.getBytes())
-                .and(QAdminUser.adminUser.userName.eq(username)))
-            .fetchOne();
         throw new UnsupportedOperationException("Unimplemented method 'lookup'");
     }
 

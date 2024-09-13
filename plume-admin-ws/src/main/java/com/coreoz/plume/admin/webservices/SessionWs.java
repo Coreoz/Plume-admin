@@ -1,5 +1,6 @@
 package com.coreoz.plume.admin.webservices;
 
+import java.io.IOException;
 import java.security.SecureRandom;
 
 import javax.inject.Inject;
@@ -15,6 +16,7 @@ import com.coreoz.plume.admin.services.user.AuthenticatedUser;
 import com.coreoz.plume.admin.webservices.data.session.AdminAuthenticatorCredentials;
 import com.coreoz.plume.admin.webservices.data.session.AdminCredentials;
 import com.coreoz.plume.admin.webservices.data.session.AdminMfaQrcode;
+import com.coreoz.plume.admin.webservices.data.session.AdminPublicKeyCredentials;
 import com.coreoz.plume.admin.webservices.data.session.AdminSession;
 import com.coreoz.plume.admin.webservices.validation.AdminWsError;
 import com.coreoz.plume.admin.websession.JwtSessionSigner;
@@ -26,9 +28,14 @@ import com.coreoz.plume.jersey.errors.WsError;
 import com.coreoz.plume.jersey.errors.WsException;
 import com.coreoz.plume.jersey.security.permission.PublicApi;
 import com.coreoz.plume.services.time.TimeProvider;
+import com.fasterxml.jackson.core.Base64Variants;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
 import com.google.common.net.HttpHeaders;
+import com.yubico.webauthn.data.AuthenticatorAttestationResponse;
+import com.yubico.webauthn.data.ClientRegistrationExtensionOutputs;
+import com.yubico.webauthn.data.PublicKeyCredential;
 import com.yubico.webauthn.data.PublicKeyCredentialCreationOptions;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -130,7 +137,7 @@ public class SessionWs {
 
         // Generate MFA secret key and QR code URL
         try {
-            String secretKey = adminUserService.createMfaSecretKey(authenticatedUser.getUser().getId(), MfaTypeEnum.AUTHENTICATOR);
+            String secretKey = adminUserService.createMfaAuthenticatorSecretKey(authenticatedUser.getUser().getId());
             String qrCodeUrl = mfaService.getQRBarcodeURL(authenticatedUser.getUser().getUserName(), secretKey);
 
             // Return the QR code URL to the client
@@ -150,7 +157,7 @@ public class SessionWs {
 
         // Generate MFA secret key and QR code URL
         try {
-            String secretKey = adminUserService.createMfaSecretKey(authenticatedUser.getUser().getId(), MfaTypeEnum.AUTHENTICATOR);
+            String secretKey = adminUserService.createMfaAuthenticatorSecretKey(authenticatedUser.getUser().getId());
             byte[] qrCode = mfaService.generateQRCode(secretKey, secretKey);
 
             // Return the QR code image to the client
@@ -184,12 +191,41 @@ public class SessionWs {
     @POST
     @Operation(description = "Get the list of MFA credentials for the user")
     @Path("/start-registration")
-    public PublicKeyCredentialCreationOptions getWebAuthentCreationOptions(AdminCredentials credentials) {
+    public String getWebAuthentCreationOptions(AdminCredentials credentials) {
         // First user needs to be authenticated (an exception will be raised otherwise)
         AuthenticatedUser authenticatedUser = authenticateUser(credentials);
 
         // Generate the PublicKeyCredentialCreationOptions
-        return mfaService.startRegistration(authenticatedUser.getUser().getUserName());
+        PublicKeyCredentialCreationOptions options = mfaService.startRegistration(authenticatedUser.getUser());
+        try {
+            return options.toCredentialsCreateJson();
+        } catch (JsonProcessingException e) {
+            logger.debug("erreur lors de la génération du PublicKeyCredentialCreationOptions", e);
+            throw new WsException(WsError.INTERNAL_ERROR);
+        }
+    }
+
+    @POST
+    @Operation(description = "Register public key of a new MFA credential")
+    @Path("/register-credential")
+    public Response registerCredential(AdminPublicKeyCredentials credentials) {
+        // First user needs to be authenticated (an exception will be raised otherwise)
+        AuthenticatedUser authenticatedUser = authenticateUser(credentials.getCredentials());
+
+        // Finish the registration of the new MFA credential
+        String publicKeyCredentialJson = credentials.getPublicKeyCredentialJson();
+        try {
+            PublicKeyCredential<AuthenticatorAttestationResponse, ClientRegistrationExtensionOutputs> pkc =
+            PublicKeyCredential.parseRegistrationResponseJson(publicKeyCredentialJson);
+            boolean success = mfaService.finishRegistration(authenticatedUser.getUser(), pkc);
+            if (!success) {
+                throw new WsException(WsError.INTERNAL_ERROR);
+            }
+            return Response.ok().build();
+        } catch (IOException e) {
+            logger.error("publicKeyCredentialJson parsing error", e);
+            return Response.serverError().build();
+        }
     }
 
     // ------------------------ Sessions ------------------------

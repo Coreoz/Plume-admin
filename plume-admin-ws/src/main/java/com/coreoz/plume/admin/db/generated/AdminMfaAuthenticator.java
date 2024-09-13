@@ -5,10 +5,10 @@ import javax.annotation.processing.Generated;
 import com.querydsl.sql.Column;
 
 /**
- * AdminMfa is a Querydsl bean type
+ * AdminMfaAuthenticator is a Querydsl bean type
  */
 @Generated("com.coreoz.plume.db.querydsl.generation.IdBeanSerializer")
-public class AdminMfa extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuerydsl {
+public class AdminMfaAuthenticator extends com.coreoz.plume.db.querydsl.crud.CrudEntityQuerydsl {
 
     @Column("credential_id")
     private byte[] credentialId;
@@ -19,9 +19,6 @@ public class AdminMfa extends com.coreoz.plume.db.querydsl.crud.CrudEntityQueryd
 
     @Column("secret_key")
     private String secretKey;
-
-    @Column("type")
-    private String type;
 
     public byte[] getCredentialId() {
         return credentialId;
@@ -47,23 +44,15 @@ public class AdminMfa extends com.coreoz.plume.db.querydsl.crud.CrudEntityQueryd
         this.secretKey = secretKey;
     }
 
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (id == null) {
             return super.equals(o);
         }
-        if (!(o instanceof AdminMfa)) {
+        if (!(o instanceof AdminMfaAuthenticator)) {
             return false;
         }
-        AdminMfa obj = (AdminMfa) o;
+        AdminMfaAuthenticator obj = (AdminMfaAuthenticator) o;
         return id.equals(obj.id);
     }
 

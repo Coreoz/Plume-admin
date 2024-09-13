@@ -35,22 +35,37 @@ CREATE TABLE  `PLM_ROLE_PERMISSION` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
-DROP TABLE IF EXISTS `PLM_MFA`;
-CREATE TABLE  `PLM_MFA` (
+DROP TABLE IF EXISTS `PLM_MFA_AUTHENTICATOR`;
+CREATE TABLE  `PLM_MFA_AUTHENTICATOR` (
   `id` bigint(20) NOT NULL,
-  `type` ENUM('authenticator', 'browser') NOT NULL,
   `secret_key` varchar(255) DEFAULT NULL,
   `credential_id` BLOB DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+DROP TABLE IF EXISTS `PLM_MFA_BROWSER`;
+CREATE TABLE  `PLM_MFA_BROWSER` (
+  `id` bigint(20) NOT NULL,
+  `key_id` BLOB NOT NULL,
+  `public_key_cose` BLOB NOT NULL,
+  `attestation` BLOB NOT NULL,
+  `client_data_json` BLOB NOT NULL,
+  `is_discoverable` tinyint(1) DEFAULT NULL,
+  `signature_count` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 
 CREATE TABLE `PLM_USER_MFA` (
+    `id` bigint(20) NOT NULL,
+    `type` ENUM('authenticator', 'browser') NOT NULL,
     `id_user` bigint(20) NOT NULL,
-    `id_mfa` bigint(20) NOT NULL,
-    PRIMARY KEY (`id_user`, `id_mfa`),
+    `id_mfa_authenticator` bigint(20) DEFAULT NULL,
+    `id_mfa_browser` bigint(20) DEFAULT NULL,
+    PRIMARY KEY (`id`),
     CONSTRAINT `plm_user_mfa_user` FOREIGN KEY (`id_user`) REFERENCES `PLM_USER` (`id`),
-    CONSTRAINT `plm_user_mfa_mfa` FOREIGN KEY (`id_mfa`) REFERENCES `PLM_MFA` (`id`)
+    CONSTRAINT `plm_user_mfa_mfa_authenticator` FOREIGN KEY (`id_mfa_authenticator`) REFERENCES `PLM_MFA_AUTHENTICATOR` (`id`),
+    CONSTRAINT `plm_user_mfa_mfa_browser` FOREIGN KEY (`id_mfa_browser`) REFERENCES `PLM_MFA_BROWSER` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 INSERT INTO PLM_ROLE VALUES(1, 'Administrator');
