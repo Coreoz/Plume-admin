@@ -16,6 +16,7 @@ import com.coreoz.plume.admin.db.generated.QAdminUserMfa;
 import com.coreoz.plume.db.querydsl.crud.CrudDaoQuerydsl;
 import com.coreoz.plume.db.querydsl.transaction.TransactionManagerQuerydsl;
 import com.google.inject.Singleton;
+import com.yubico.webauthn.AssertionResult;
 import com.yubico.webauthn.CredentialRepository;
 import com.yubico.webauthn.RegisteredCredential;
 import com.yubico.webauthn.RegistrationResult;
@@ -62,6 +63,24 @@ public class AdminMfaBrowserCredentialDao implements CredentialRepository {
         adminUserMfaDao.save(userMfa);
     }
 
+    public void updateCredential(
+        AdminUser user,
+        AssertionResult result
+    ) {
+        AdminMfaBrowser mfa = transactionManager.selectQuery()
+            .select(QAdminMfaBrowser.adminMfaBrowser)
+            .from(QAdminMfaBrowser.adminMfaBrowser)
+            .join(QAdminUserMfa.adminUserMfa)
+            .on(QAdminUserMfa.adminUserMfa.idMfaBrowser.eq(QAdminMfaBrowser.adminMfaBrowser.id))
+            .join(QAdminUser.adminUser)
+            .on(QAdminUser.adminUser.id.eq(QAdminUserMfa.adminUserMfa.idUser))
+            .where(QAdminUser.adminUser.id.eq(user.getId())
+                .and(QAdminMfaBrowser.adminMfaBrowser.keyId.eq(result.getCredentialId().getBytes())))
+            .fetchOne();
+        mfa.setSignatureCount((int)result.getSignatureCount());
+        adminMfaBrowserDao.save(mfa);
+    }
+
     @Override
     public Set<PublicKeyCredentialDescriptor> getCredentialIdsForUsername(String username) {
         List<byte[]> results = transactionManager.selectQuery()
@@ -106,17 +125,44 @@ public class AdminMfaBrowserCredentialDao implements CredentialRepository {
 
     @Override
     public Optional<RegisteredCredential> lookup(ByteArray credentialId, ByteArray userHandle) {
-        String username = getUsernameForUserHandle(userHandle).orElse(null);
-        if (username == null) {
+        AdminMfaBrowser mfa = transactionManager.selectQuery()
+            .select(QAdminMfaBrowser.adminMfaBrowser)
+            .from(QAdminMfaBrowser.adminMfaBrowser)
+            .join(QAdminUserMfa.adminUserMfa)
+            .on(QAdminUserMfa.adminUserMfa.idMfaBrowser.eq(QAdminMfaBrowser.adminMfaBrowser.id))
+            .join(QAdminUser.adminUser)
+            .on(QAdminUser.adminUser.id.eq(QAdminUserMfa.adminUserMfa.idUser))
+            .where(QAdminUser.adminUser.mfaUserHandle.eq(userHandle.getBytes())
+                .and(QAdminMfaBrowser.adminMfaBrowser.keyId.eq(credentialId.getBytes())))
+            .fetchOne();
+        if (mfa == null) {
             return Optional.empty();
         }
-        throw new UnsupportedOperationException("Unimplemented method 'lookup'");
+        return Optional.of(
+            RegisteredCredential.builder()
+                .credentialId(new ByteArray(mfa.getKeyId()))
+                .userHandle(new ByteArray(userHandle.getBytes()))
+                .publicKeyCose(new ByteArray(mfa.getPublicKeyCose()))
+                .signatureCount(mfa.getSignatureCount())
+            .build());
     }
 
     @Override
     public Set<RegisteredCredential> lookupAll(ByteArray credentialId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'lookupAll'");
+        List<AdminMfaBrowser> enrollements = transactionManager.selectQuery()
+            .select(QAdminMfaBrowser.adminMfaBrowser)
+            .from(QAdminMfaBrowser.adminMfaBrowser)
+            .where(QAdminMfaBrowser.adminMfaBrowser.keyId.eq(credentialId.getBytes()))
+            .fetch();
+        // Convert to set
+        return enrollements.stream()
+            .map(mfa -> RegisteredCredential.builder()
+                .credentialId(new ByteArray(mfa.getKeyId()))
+                .userHandle(new ByteArray(mfa.getKeyId()))
+                .publicKeyCose(new ByteArray(mfa.getPublicKeyCose()))
+                .signatureCount(mfa.getSignatureCount())
+                .build())
+            .collect(Collectors.toSet());
     }
 
 }

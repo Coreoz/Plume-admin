@@ -6,6 +6,8 @@ import java.security.SecureRandom;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import com.coreoz.plume.admin.db.generated.AdminUser;
+import com.coreoz.plume.admin.db.generated.AdminUserMfa;
 import com.coreoz.plume.admin.security.login.LoginFailAttemptsManager;
 import com.coreoz.plume.admin.services.configuration.AdminConfigurationService;
 import com.coreoz.plume.admin.services.configuration.AdminSecurityConfigurationService;
@@ -13,6 +15,7 @@ import com.coreoz.plume.admin.services.mfa.MfaService;
 import com.coreoz.plume.admin.services.mfa.MfaTypeEnum;
 import com.coreoz.plume.admin.services.user.AdminUserService;
 import com.coreoz.plume.admin.services.user.AuthenticatedUser;
+import com.coreoz.plume.admin.services.user.AuthenticatedUserAdmin;
 import com.coreoz.plume.admin.webservices.data.session.AdminAuthenticatorCredentials;
 import com.coreoz.plume.admin.webservices.data.session.AdminCredentials;
 import com.coreoz.plume.admin.webservices.data.session.AdminMfaQrcode;
@@ -31,9 +34,15 @@ import com.coreoz.plume.services.time.TimeProvider;
 import com.fasterxml.jackson.core.Base64Variants;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.BaseEncoding;
 import com.google.common.net.HttpHeaders;
+import com.yubico.webauthn.AssertionRequest;
+import com.yubico.webauthn.AssertionResult;
+import com.yubico.webauthn.FinishAssertionOptions;
+import com.yubico.webauthn.data.AuthenticatorAssertionResponse;
 import com.yubico.webauthn.data.AuthenticatorAttestationResponse;
+import com.yubico.webauthn.data.ClientAssertionExtensionOutputs;
 import com.yubico.webauthn.data.ClientRegistrationExtensionOutputs;
 import com.yubico.webauthn.data.PublicKeyCredential;
 import com.yubico.webauthn.data.PublicKeyCredentialCreationOptions;
@@ -45,6 +54,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
@@ -130,7 +140,7 @@ public class SessionWs {
 
     @POST
 	@Operation(description = "Generate a qrcode for MFA enrollment")
-    @Path("/qrcode-url")
+    @Path("/auhenticator/qrcode-url")
 	public AdminMfaQrcode qrCodeUrl(AdminCredentials credentials) {
 		// First user needs to be authenticated (an exception will be raised otherwise)
         AuthenticatedUser authenticatedUser = authenticateUser(credentials);
@@ -150,7 +160,7 @@ public class SessionWs {
 
     @POST
 	@Operation(description = "Generate a qrcode for MFA enrollment")
-    @Path("/qrcode")
+    @Path("/auhenticator/qrcode")
 	public Response qrCode(AdminCredentials credentials) {
 		// First user needs to be authenticated (an exception will be raised otherwise)
         AuthenticatedUser authenticatedUser = authenticateUser(credentials);
@@ -172,8 +182,8 @@ public class SessionWs {
 	}
 
     @POST
-    @Path("/verify-mfa")
-    @Operation(description = "Verify MFA code")
+    @Path("/auhenticator/verify")
+    @Operation(description = "Verify MFA code for authentication")
     public Response verifyMfa(AdminAuthenticatorCredentials credentials) {
         // first user needs to be authenticated (an exception will be raised otherwise)
 		AuthenticatedUser authenticatedUser = authenticateUserWithAuthenticator(credentials);
@@ -189,8 +199,8 @@ public class SessionWs {
     // ------------------------ Browser Authenticator ------------------------
 
     @POST
-    @Operation(description = "Get the list of MFA credentials for the user")
-    @Path("/start-registration")
+    @Operation(description = "Start the registration of a new MFA credential with WebAuthn")
+    @Path("/webauth/start-registration")
     public String getWebAuthentCreationOptions(AdminCredentials credentials) {
         // First user needs to be authenticated (an exception will be raised otherwise)
         AuthenticatedUser authenticatedUser = authenticateUser(credentials);
@@ -207,7 +217,7 @@ public class SessionWs {
 
     @POST
     @Operation(description = "Register public key of a new MFA credential")
-    @Path("/register-credential")
+    @Path("/webauth/register-credential")
     public Response registerCredential(AdminPublicKeyCredentials credentials) {
         // First user needs to be authenticated (an exception will be raised otherwise)
         AuthenticatedUser authenticatedUser = authenticateUser(credentials.getCredentials());
@@ -225,6 +235,42 @@ public class SessionWs {
         } catch (IOException e) {
             logger.error("publicKeyCredentialJson parsing error", e);
             return Response.serverError().build();
+        }
+    }
+
+    @GET
+    @Operation(description = "Get an assertion for the user")
+    @Path("/webauth/assertion/{username}")
+    public String getAssertion(@PathParam("username") String userName) {
+        // Generate the PublicKeyCredentialRequestOptions
+        AssertionRequest options = mfaService.getAssertionRequest(userName);
+        try {
+            return options.toCredentialsGetJson();
+        } catch (JsonProcessingException e) {
+            logger.debug("erreur lors de la génération du credentialGetOptions", e);
+            throw new WsException(WsError.INTERNAL_ERROR);
+        }
+    }
+
+    @POST
+    @Operation(description = "Start the authentication with WebAuthn")
+    @Path("/webauth/verify")
+    public Response verifyCredential(String publicKeyCredentialJson) {
+        try {
+            PublicKeyCredential<AuthenticatorAssertionResponse, ClientAssertionExtensionOutputs> pkc =
+                PublicKeyCredential.parseAssertionResponseJson(publicKeyCredentialJson);
+
+            // Verify the assertion
+            AdminUser user = mfaService.verifyWebauth(pkc);
+            FingerprintWithHash fingerprintWithHash = sessionUseFingerprintCookie ? generateFingerprint() : NULL_FINGERPRINT;
+            return withFingerprintCookie(
+                Response.ok(toAdminSession(toWebSession(adminUserService.authenticateWithMfa(user), fingerprintWithHash.getHash()))),
+                fingerprintWithHash.getFingerprint()
+            )
+            .build();
+
+        } catch (IOException e) {
+            throw new WsException(AdminWsError.WRONG_LOGIN_OR_PASSWORD);
         }
     }
 
