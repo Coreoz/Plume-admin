@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
-	
+
 	<parent>
 		<groupId>com.coreoz</groupId>
 		<artifactId>plume-admin-parent</artifactId>
@@ -29,7 +29,7 @@
 			<groupId>com.coreoz</groupId>
 			<artifactId>plume-admin-security</artifactId>
 		</dependency>
-	
+
 		<dependency>
 			<groupId>com.coreoz</groupId>
 			<artifactId>plume-services</artifactId>
@@ -100,6 +100,24 @@
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
 			<scope>test</scope>
+		</dependency>
+
+        <!-- Web authenticator
+        https://developers.yubico.com/java-webauthn-server/ -->
+		<dependency>
+			<groupId>com.yubico</groupId>
+  			<artifactId>webauthn-server-core</artifactId>
+  			<version>2.5.3</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jdk8</artifactId>
+			<version>2.14.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.dataformat</groupId>
+			<artifactId>jackson-dataformat-cbor</artifactId>
+			<version>2.14.1</version>
 		</dependency>
 	</dependencies>
 

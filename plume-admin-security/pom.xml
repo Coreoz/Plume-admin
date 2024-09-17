@@ -83,6 +83,23 @@
 			<artifactId>assertj-core</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+        <!-- Authenticator -->
+		<dependency>
+			<groupId>com.warrenstrange</groupId>
+			<artifactId>googleauth</artifactId>
+			<version>1.5.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.zxing</groupId>
+			<artifactId>core</artifactId>
+			<version>3.4.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.zxing</groupId>
+			<artifactId>javase</artifactId>
+			<version>3.4.1</version>
+		</dependency>
 	</dependencies>
 
 	<dependencyManagement>

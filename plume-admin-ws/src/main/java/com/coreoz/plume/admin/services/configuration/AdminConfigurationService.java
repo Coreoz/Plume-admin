@@ -27,6 +27,11 @@ public class AdminConfigurationService {
 		return config.getString("admin.jwt-secret");
 	}
 
+    // Can be used as an issue name to create QR Code for MFA
+    public String appName() {
+        return config.getString("admin.app-name");
+    }
+
 	public long sessionExpireDurationInMillis() {
 		return config.getDuration("admin.session.expire-duration", TimeUnit.MILLISECONDS);
 	}
