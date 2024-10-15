@@ -3,8 +3,8 @@ package com.coreoz.plume.admin.services.role;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import com.coreoz.plume.admin.db.daos.AdminRoleDao;
 import com.coreoz.plume.admin.db.daos.AdminRoleDao.RolePermissionDetails;

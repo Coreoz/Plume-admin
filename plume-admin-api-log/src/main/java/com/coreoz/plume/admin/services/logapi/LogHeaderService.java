@@ -2,8 +2,8 @@ package com.coreoz.plume.admin.services.logapi;
 
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import com.coreoz.plume.admin.db.daos.LogHeaderDao;
 import com.coreoz.plume.admin.db.generated.LogHeader;

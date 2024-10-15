@@ -2,8 +2,8 @@ package com.coreoz.plume.admin.websession.jersey;
 
 import java.nio.charset.StandardCharsets;
 
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.core.Cookie;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.core.Cookie;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,7 +119,7 @@ public class JerseySessionParser {
 		}
 		return authorization.substring(BEARER_PREFIX.length());
 	}
-	
+
 	@FunctionalInterface
 	private static interface VerifyFingerprintFunction {
 		boolean verifyFingerprint(

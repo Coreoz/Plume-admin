@@ -1,7 +1,7 @@
 package com.coreoz.plume.admin.services.scheduler;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import com.coreoz.plume.admin.services.configuration.LogApiConfigurationService;
 import com.coreoz.plume.admin.services.logapi.LogApiService;

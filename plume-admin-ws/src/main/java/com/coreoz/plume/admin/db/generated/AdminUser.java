@@ -1,6 +1,6 @@
 package com.coreoz.plume.admin.db.generated;
 
-import javax.annotation.Generated;
+import jakarta.annotation.Generated;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.querydsl.sql.Column;
 

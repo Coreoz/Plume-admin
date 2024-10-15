@@ -1,9 +1,8 @@
 package com.coreoz.plume.admin.db.generated;
 
-import javax.annotation.Generated;
-
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.querydsl.sql.Column;
+import jakarta.annotation.Generated;
 
 /**
  * LogHeader is a Querydsl bean type

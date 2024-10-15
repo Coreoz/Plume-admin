@@ -1,7 +1,7 @@
 package com.coreoz.plume.admin.websession.jersey;
 
-import javax.inject.Inject;
-import javax.ws.rs.container.ContainerRequestContext;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.container.ContainerRequestContext;
 
 import org.glassfish.hk2.api.Factory;
 

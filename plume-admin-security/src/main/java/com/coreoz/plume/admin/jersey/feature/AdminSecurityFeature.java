@@ -1,10 +1,10 @@
 package com.coreoz.plume.admin.jersey.feature;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.ws.rs.container.DynamicFeature;
-import javax.ws.rs.container.ResourceInfo;
-import javax.ws.rs.core.FeatureContext;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import jakarta.ws.rs.container.DynamicFeature;
+import jakarta.ws.rs.container.ResourceInfo;
+import jakarta.ws.rs.core.FeatureContext;
 
 import com.coreoz.plume.admin.services.configuration.AdminSecurityConfigurationService;
 import com.coreoz.plume.admin.websession.WebSessionAdmin;

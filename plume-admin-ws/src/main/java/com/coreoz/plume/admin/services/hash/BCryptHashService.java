@@ -1,6 +1,6 @@
 package com.coreoz.plume.admin.services.hash;
 
-import javax.inject.Singleton;
+import jakarta.inject.Singleton;
 
 import org.mindrot.jbcrypt.BCrypt;
 

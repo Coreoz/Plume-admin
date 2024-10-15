@@ -1,8 +1,8 @@
 package com.coreoz.plume.admin.websession;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
 
 import com.coreoz.plume.admin.services.configuration.AdminSecurityConfigurationService;
 import com.coreoz.plume.services.time.TimeProvider;
