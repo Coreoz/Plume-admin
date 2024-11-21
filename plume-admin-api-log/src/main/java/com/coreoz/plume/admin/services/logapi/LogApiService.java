@@ -6,13 +6,13 @@ import com.coreoz.plume.admin.db.generated.LogApi;
 import com.coreoz.plume.admin.db.generated.QLogApi;
 import com.coreoz.plume.admin.services.configuration.LogApiConfigurationService;
 import com.coreoz.plume.db.crud.CrudService;
-import com.coreoz.plume.services.time.TimeProvider;
 import com.querydsl.core.Tuple;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -27,7 +27,7 @@ public class LogApiService extends CrudService<LogApi> {
 
     private final LogApiDao logApiDao;
     private final LogHeaderService logHeaderService;
-    private final TimeProvider timeProvider;
+    private final Clock clock;
     private final int bodyMaxCharsDisplayed;
     private final Duration cleaningMaxDuration;
     private final int cleaningMaxLogsPerApi;
@@ -37,11 +37,11 @@ public class LogApiService extends CrudService<LogApi> {
 
     @Inject
     public LogApiService(LogApiDao logApiDao, LogHeaderService logHeaderService,
-                         LogApiConfigurationService configurationService, TimeProvider timeProvider) {
+                         LogApiConfigurationService configurationService, Clock clock) {
         super(logApiDao);
         this.logApiDao = logApiDao;
         this.logHeaderService = logHeaderService;
-        this.timeProvider = timeProvider;
+        this.clock = clock;
 
         this.bodyMaxCharsDisplayed = configurationService.bodyMaxCharsDisplayed().intValue();
         this.cleaningMaxDuration = configurationService.cleaningMaxDuration();
@@ -155,7 +155,7 @@ public class LogApiService extends CrudService<LogApi> {
     }
 
     private void deleteOldLogs() {
-    	long nbLogsDeleted = logApiDao.deleteOldLogs(timeProvider.currentInstant().minus(cleaningMaxDuration));
+    	long nbLogsDeleted = logApiDao.deleteOldLogs(clock.instant().minus(cleaningMaxDuration));
     	logger.debug("{} older logs than {}ms have been deleted", nbLogsDeleted, cleaningMaxDuration.toMillis());
     }
 

@@ -1,10 +1,5 @@
 package com.coreoz.plume.admin.webservices;
 
-import java.security.SecureRandom;
-
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
-
 import com.coreoz.plume.admin.security.login.LoginFailAttemptsManager;
 import com.coreoz.plume.admin.services.configuration.AdminConfigurationService;
 import com.coreoz.plume.admin.services.configuration.AdminSecurityConfigurationService;
@@ -20,13 +15,13 @@ import com.coreoz.plume.admin.websession.jersey.JerseySessionParser;
 import com.coreoz.plume.jersey.errors.Validators;
 import com.coreoz.plume.jersey.errors.WsException;
 import com.coreoz.plume.jersey.security.permission.PublicApi;
-import com.coreoz.plume.services.time.TimeProvider;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
 import com.google.common.net.HttpHeaders;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
@@ -37,6 +32,9 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.ResponseBuilder;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+
+import java.security.SecureRandom;
+import java.time.Clock;
 
 @Path("/admin/session")
 @Tag(name = "admin-session", description = "Manage the administration session")
@@ -51,7 +49,7 @@ public class SessionWs {
 
 	private final AdminUserService adminUserService;
 	private final JwtSessionSigner jwtSessionSigner;
-	private final TimeProvider timeProvider;
+	private final Clock clock;
 	private final LoginFailAttemptsManager failAttemptsManager;
 
 	private final long blockedDurationInSeconds;
@@ -69,10 +67,10 @@ public class SessionWs {
 			JwtSessionSigner jwtSessionSigner,
 			AdminConfigurationService configurationService,
 			AdminSecurityConfigurationService adminSecurityConfigurationService,
-			TimeProvider timeProvider) {
+			Clock clock) {
 		this.adminUserService = adminUserService;
 		this.jwtSessionSigner = jwtSessionSigner;
-		this.timeProvider = timeProvider;
+		this.clock = clock;
 
 		this.failAttemptsManager = new LoginFailAttemptsManager(
 			configurationService.loginMaxAttempts(),
@@ -153,7 +151,7 @@ public class SessionWs {
 		return new AdminSession(
 			jwtSessionSigner.serializeSession(
 				webSession,
-				timeProvider.currentTime() + maxTimeSessionDurationInMilliseconds
+                clock.millis() + maxTimeSessionDurationInMilliseconds
 			),
 			sessionRefreshDurationInMillis,
 			sessionInactiveDurationInMillis

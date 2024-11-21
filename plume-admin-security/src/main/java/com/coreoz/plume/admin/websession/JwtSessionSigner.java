@@ -1,6 +1,5 @@
 package com.coreoz.plume.admin.websession;
 
-import com.coreoz.plume.services.time.TimeProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -12,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.crypto.SecretKey;
+import java.time.Clock;
 import java.util.Date;
 import java.util.Map;
 
@@ -29,13 +29,13 @@ public class JwtSessionSigner implements WebSessionSigner {
 	private final JwtParser jwtParser;
 
 	public JwtSessionSigner(String jwtSecret,
-			ObjectMapper objectMapper, TimeProvider timeProvider) {
+			ObjectMapper objectMapper, Clock clock) {
         this.signingKey = Keys.hmacShaKeyFor(jwtSecret.getBytes());
 		this.objectMapper = objectMapper;
 		this.jwtParser = Jwts
 			.parser()
 			.verifyWith(signingKey)
-			.clock(() -> new Date(timeProvider.currentTime()))
+			.clock(() -> new Date(clock.millis()))
 			.build();
 	}
 

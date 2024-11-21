@@ -1,12 +1,12 @@
 package com.coreoz.plume.admin.websession;
 
+import com.coreoz.plume.admin.services.configuration.AdminSecurityConfigurationService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 
-import com.coreoz.plume.admin.services.configuration.AdminSecurityConfigurationService;
-import com.coreoz.plume.services.time.TimeProvider;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Clock;
 
 @Singleton
 public class JwtSessionSignerProvider implements Provider<JwtSessionSigner> {
@@ -15,8 +15,8 @@ public class JwtSessionSignerProvider implements Provider<JwtSessionSigner> {
 
 	@Inject
 	public JwtSessionSignerProvider(AdminSecurityConfigurationService conf,
-			ObjectMapper objectMapper, TimeProvider timeProvider) {
-		this.jwtSessionSigner = new JwtSessionSigner(conf.jwtSecret(), objectMapper, timeProvider);
+			ObjectMapper objectMapper, Clock clock) {
+		this.jwtSessionSigner = new JwtSessionSigner(conf.jwtSecret(), objectMapper, clock);
 	}
 
 	@Override
