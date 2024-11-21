@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import com.coreoz.plume.admin.services.logapi.LogInterceptApiBean;
 import com.google.common.collect.ImmutableList;
@@ -35,8 +35,8 @@ public class OkHttpLogEntryTransformerTest {
         generatedTrace.setBodyResponse(JSON_OBJECT);
 
         LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
-        Assert.assertEquals(transformedTrace.getBodyRequest(), "{\"id\":\"123456\",\"password\":\"****\",\"detail\":\"Détail\"}");
-        Assert.assertEquals(transformedTrace.getBodyResponse(), "{\"id\":\"123456\",\"password\":\"****\",\"detail\":\"Détail\"}");
+        Assertions.assertEquals(transformedTrace.getBodyRequest(), "{\"id\":\"123456\",\"password\":\"****\",\"detail\":\"Détail\"}");
+        Assertions.assertEquals(transformedTrace.getBodyResponse(), "{\"id\":\"123456\",\"password\":\"****\",\"detail\":\"Détail\"}");
     }
 
     @Test
@@ -50,8 +50,8 @@ public class OkHttpLogEntryTransformerTest {
         generatedTrace.setBodyResponse(JSON_OBJECT);
 
         LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
-        Assert.assertEquals(transformedTrace.getBodyRequest(), "{\"id\":\"123456\",\"password\":\"****\",\"detail\":\"****\"}");
-        Assert.assertEquals(transformedTrace.getBodyResponse(), "{\"id\":\"123456\",\"password\":\"****\",\"detail\":\"****\"}");
+        Assertions.assertEquals(transformedTrace.getBodyRequest(), "{\"id\":\"123456\",\"password\":\"****\",\"detail\":\"****\"}");
+        Assertions.assertEquals(transformedTrace.getBodyResponse(), "{\"id\":\"123456\",\"password\":\"****\",\"detail\":\"****\"}");
     }
 
     @Test
@@ -68,8 +68,8 @@ public class OkHttpLogEntryTransformerTest {
         String bodyResponse = generatedTrace.getBodyResponse();
 
         LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
-        Assert.assertEquals(transformedTrace.getBodyRequest(), bodyRequest);
-        Assert.assertEquals(transformedTrace.getBodyResponse(), bodyResponse);
+        Assertions.assertEquals(transformedTrace.getBodyRequest(), bodyRequest);
+        Assertions.assertEquals(transformedTrace.getBodyResponse(), bodyResponse);
     }
 
     @Test
@@ -86,8 +86,8 @@ public class OkHttpLogEntryTransformerTest {
         String bodyResponse = generatedTrace.getBodyResponse();
 
         LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
-        Assert.assertEquals(transformedTrace.getBodyRequest(), bodyRequest);
-        Assert.assertEquals(transformedTrace.getBodyResponse(), bodyResponse);
+        Assertions.assertEquals(transformedTrace.getBodyRequest(), bodyRequest);
+        Assertions.assertEquals(transformedTrace.getBodyResponse(), bodyResponse);
     }
 
     @Test
@@ -101,8 +101,8 @@ public class OkHttpLogEntryTransformerTest {
         String bodyResponse = generatedTrace.getBodyResponse();
 
         LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
-        Assert.assertEquals(bodyRequest, transformedTrace.getBodyRequest());
-        Assert.assertEquals(bodyResponse, transformedTrace.getBodyResponse());
+        Assertions.assertEquals(bodyRequest, transformedTrace.getBodyRequest());
+        Assertions.assertEquals(bodyResponse, transformedTrace.getBodyResponse());
     }
 
     @Test
@@ -117,8 +117,8 @@ public class OkHttpLogEntryTransformerTest {
         String bodyResponse = generatedTrace.getBodyResponse();
 
         LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
-        Assert.assertEquals(bodyRequest.substring(0, limit), transformedTrace.getBodyRequest());
-        Assert.assertEquals(bodyResponse.substring(0, limit), transformedTrace.getBodyResponse());
+        Assertions.assertEquals(bodyRequest.substring(0, limit), transformedTrace.getBodyRequest());
+        Assertions.assertEquals(bodyResponse.substring(0, limit), transformedTrace.getBodyResponse());
     }
 
     @Test
@@ -136,8 +136,8 @@ public class OkHttpLogEntryTransformerTest {
         String bodyResponse = generatedTrace.getBodyResponse();
 
         LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
-        Assert.assertEquals(bodyRequest, transformedTrace.getBodyRequest());
-        Assert.assertEquals(bodyResponse, transformedTrace.getBodyResponse());
+        Assertions.assertEquals(bodyRequest, transformedTrace.getBodyRequest());
+        Assertions.assertEquals(bodyResponse, transformedTrace.getBodyResponse());
     }
 
     @Test
@@ -155,8 +155,8 @@ public class OkHttpLogEntryTransformerTest {
         String bodyResponse = generatedTrace.getBodyResponse();
 
         LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
-        Assert.assertEquals(bodyRequest.substring(0, limit), transformedTrace.getBodyRequest());
-        Assert.assertEquals(bodyResponse.substring(0, limit), transformedTrace.getBodyResponse());
+        Assertions.assertEquals(bodyRequest.substring(0, limit), transformedTrace.getBodyRequest());
+        Assertions.assertEquals(bodyResponse.substring(0, limit), transformedTrace.getBodyResponse());
     }
 
     @Test
@@ -172,8 +172,8 @@ public class OkHttpLogEntryTransformerTest {
         String bodyResponse = generatedTrace.getBodyResponse();
 
         LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
-        Assert.assertEquals(bodyRequest.substring(0, limit), transformedTrace.getBodyRequest());
-        Assert.assertEquals(bodyResponse.substring(0, limit), transformedTrace.getBodyResponse());
+        Assertions.assertEquals(bodyRequest.substring(0, limit), transformedTrace.getBodyRequest());
+        Assertions.assertEquals(bodyResponse.substring(0, limit), transformedTrace.getBodyResponse());
     }
 
     @Test
@@ -190,8 +190,8 @@ public class OkHttpLogEntryTransformerTest {
         String bodyResponse = generatedTrace.getBodyResponse();
 
         LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
-        Assert.assertEquals(bodyRequest.substring(0, limit), transformedTrace.getBodyRequest());
-        Assert.assertEquals(bodyResponse.substring(0, limit), transformedTrace.getBodyResponse());
+        Assertions.assertEquals(bodyRequest.substring(0, limit), transformedTrace.getBodyRequest());
+        Assertions.assertEquals(bodyResponse.substring(0, limit), transformedTrace.getBodyResponse());
     }
 
     @Test
@@ -206,8 +206,8 @@ public class OkHttpLogEntryTransformerTest {
         String bodyResponse = generatedTrace.getBodyResponse();
 
         LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
-        Assert.assertEquals(bodyRequest.substring(0, limit), transformedTrace.getBodyRequest());
-        Assert.assertEquals(bodyResponse.substring(0, limit), transformedTrace.getBodyResponse());
+        Assertions.assertEquals(bodyRequest.substring(0, limit), transformedTrace.getBodyRequest());
+        Assertions.assertEquals(bodyResponse.substring(0, limit), transformedTrace.getBodyResponse());
     }
 
     @Test
@@ -222,8 +222,8 @@ public class OkHttpLogEntryTransformerTest {
         String bodyResponse = generatedTrace.getBodyResponse();
 
         LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
-        Assert.assertEquals(bodyRequest, transformedTrace.getBodyRequest());
-        Assert.assertEquals(bodyResponse, transformedTrace.getBodyResponse());
+        Assertions.assertEquals(bodyRequest, transformedTrace.getBodyRequest());
+        Assertions.assertEquals(bodyResponse, transformedTrace.getBodyResponse());
     }
 
     @Test
@@ -238,8 +238,8 @@ public class OkHttpLogEntryTransformerTest {
         String bodyResponse = generatedTrace.getBodyResponse();
 
         LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
-        Assert.assertEquals(bodyRequest, transformedTrace.getBodyRequest());
-        Assert.assertEquals(bodyResponse, transformedTrace.getBodyResponse());
+        Assertions.assertEquals(bodyRequest, transformedTrace.getBodyRequest());
+        Assertions.assertEquals(bodyResponse, transformedTrace.getBodyResponse());
     }
 
     @Test
@@ -258,8 +258,8 @@ public class OkHttpLogEntryTransformerTest {
         LogInterceptApiBean generatedTrace = generatedTrace(request, response);
 
         LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
-        Assert.assertEquals(dummyText, transformedTrace.getBodyRequest());
-        Assert.assertEquals(dummyText, transformedTrace.getBodyResponse());
+        Assertions.assertEquals(dummyText, transformedTrace.getBodyRequest());
+        Assertions.assertEquals(dummyText, transformedTrace.getBodyResponse());
     }
 
     @Test
@@ -272,8 +272,8 @@ public class OkHttpLogEntryTransformerTest {
         LogInterceptApiBean generatedTrace = generatedTrace(request, response);
 
         LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
-        Assert.assertNull(transformedTrace.getBodyRequest());
-        Assert.assertNull(transformedTrace.getBodyResponse());
+        Assertions.assertNull(transformedTrace.getBodyRequest());
+        Assertions.assertNull(transformedTrace.getBodyResponse());
     }
 
     @Test
@@ -290,8 +290,8 @@ public class OkHttpLogEntryTransformerTest {
         LogInterceptApiBean generatedTrace = generatedTrace(request, response);
 
         LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
-        Assert.assertNull(transformedTrace.getBodyRequest());
-        Assert.assertNull(transformedTrace.getBodyResponse());
+        Assertions.assertNull(transformedTrace.getBodyRequest());
+        Assertions.assertNull(transformedTrace.getBodyResponse());
     }
 
     @Test
@@ -307,8 +307,8 @@ public class OkHttpLogEntryTransformerTest {
         LogInterceptApiBean generatedTrace = generatedTrace(request, response);
 
         LogInterceptApiBean transformedTrace = transformer.transform(request, response, generatedTrace);
-        Assert.assertEquals(transformedTrace.getBodyRequest(), generatedTrace.getBodyRequest());
-        Assert.assertEquals(transformedTrace.getBodyResponse(), generatedTrace.getBodyResponse());
+        Assertions.assertEquals(transformedTrace.getBodyRequest(), generatedTrace.getBodyRequest());
+        Assertions.assertEquals(transformedTrace.getBodyResponse(), generatedTrace.getBodyResponse());
     }
 
     private static Request generatePostRequest(String endpoint, int length) {
