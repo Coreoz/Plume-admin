@@ -7,7 +7,7 @@ Plume Admin
 Plume Admin is based on [Plume Framework](https://github.com/Coreoz/Plume),
 it provides Jersey web services to build an administration area.
 
-If you are looking for a JavaScript frontened that uses these web-services,
+If you are looking for a JavaScript frontend that uses these web-services,
 check out the [Plume Admin UI for React](https://github.com/Coreoz/create-plume-react-project).
 
 Looking for a demo? Check out the [Plume Demo project](https://github.com/Coreoz/Plume-showcase).
@@ -24,9 +24,9 @@ Installation
 2. Guice module: `install(new GuiceAdminWsWithDefaultsModule())`
 3. Jersey web-services: `packages("com.coreoz.plume.admin.webservices")`
 4. Jersey admin security: `register(AdminSecurityFeature.class)`
-5. Jersey security: If the access control mechanism is setup, you need to add the `RestrictToAdmin.class` access control annotation: `config.register(RequireExplicitAccessControlFeature.accessControlAnnotations(PublicApi.class, RestrictToAdmin.class));`
+5. Jersey security: If the access control mechanism is set up, you need to add the `RestrictToAdmin.class` access control annotation: `config.register(RequireExplicitAccessControlFeature.accessControlAnnotations(PublicApi.class, RestrictToAdmin.class));`
 6. [Generate a JWT secret key](#configuration) and register it in your configuration: `admin.jwt-secret = "long_generated_password_to_secure_jwt_tokens"`
-7. For non-https environments (ie localhost for dev), set the configuration value: `admin.session.fingerprint-cookie-https-only = false` (this configuration value should be set to true in HTTPS environments like production)
+7. For non-https environments (i.e. `localhost` for dev), set the configuration value: `admin.session.fingerprint-cookie-https-only = false` (this configuration value should be set to true in HTTPS environments like production)
 8. SQL, see [setup files](plume-admin-ws/sql)
 9. Install a JS frontend like [Plume Admin UI for React](https://github.com/Coreoz/create-plume-react-project)
 
@@ -46,7 +46,7 @@ register(new AbstractBinder() {
 
 Admin security
 --------------
-To use this module without Admin Web-services, you may want to provide implementations of `AdminPermissionService`, `WebSessionSigner`, and `JwtSessionSigner`.
+To use this module without Admin Web services, you may want to provide implementations of `AdminPermissionService`, `WebSessionSigner`, and `JwtSessionSigner`.
 As an example, here is what is defined in the Admin Web-services Guice configuration:
 ```java
 bind(AdminPermissionService.class).to(AdminPermissionServiceBasic.class);
@@ -54,7 +54,7 @@ bind(WebSessionSigner.class).toProvider(JwtSessionSignerProvider.class);
 bind(JwtSessionSigner.class).toProvider(JwtSessionSignerProvider.class);
 ```
 
-More documentation about JWT and how to secure project API are available in the [Plume Admin Security module](plume-admin-security).
+More documentation about JWT and how to secure project API is available in the [Plume Admin Security module](plume-admin-security).
 
 Configuration
 -------------
