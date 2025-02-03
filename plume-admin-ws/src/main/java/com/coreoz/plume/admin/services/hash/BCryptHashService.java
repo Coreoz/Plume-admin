@@ -1,25 +1,26 @@
 package com.coreoz.plume.admin.services.hash;
 
+import at.favre.lib.crypto.bcrypt.BCrypt;
 import jakarta.inject.Singleton;
-
-import org.mindrot.jbcrypt.BCrypt;
 
 @Singleton
 public class BCryptHashService implements HashService {
+    private static final int BCRYPT_SALT_ROUND = 12;
 
-	private static final int BCRYPT_SALT_ROUND = 11;
+	private static final BCrypt.Hasher hasher = BCrypt.withDefaults();
+	private static final BCrypt.Verifyer verifyer = BCrypt.verifyer();
 
 	@Override
 	public String hashPassword(String password) {
         if (password == null) {
             throw new IllegalArgumentException("Password must not be null");
         }
-		return BCrypt.hashpw(password, BCrypt.gensalt(BCRYPT_SALT_ROUND));
+        return hasher.hashToString(BCRYPT_SALT_ROUND, password.toCharArray());
 	}
 
 	@Override
 	public boolean checkPassword(String candidate, String hashed) {
-		return BCrypt.checkpw(candidate, hashed);
+		return verifyer.verify(candidate.toCharArray(), hashed).verified;
 	}
 
 }

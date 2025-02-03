@@ -15,7 +15,7 @@
 
 	<properties>
 		<jjwt.version>0.12.6</jjwt.version>
-		<jbcrypt.version>0.4.3</jbcrypt.version>
+		<bcrypt.version>0.10.2</bcrypt.version>
 		<okhttp.version>4.12.0</okhttp.version>
 
 		<plume-framework.version>5.0.0-beta1</plume-framework.version>
@@ -67,11 +67,11 @@
 				<artifactId>jjwt-jackson</artifactId>
 				<version>${jjwt.version}</version>
 			</dependency>
-			<dependency>
-				<groupId>de.svenkubiak</groupId>
-				<artifactId>jBCrypt</artifactId>
-				<version>${jbcrypt.version}</version>
-			</dependency>
+            <dependency>
+                <groupId>at.favre.lib</groupId>
+                <artifactId>bcrypt</artifactId>
+                <version>${bcrypt.version}</version>
+            </dependency>
 
 			<dependency>
 				<groupId>com.squareup.okhttp3</groupId>

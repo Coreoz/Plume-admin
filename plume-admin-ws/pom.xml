@@ -86,10 +86,10 @@
 			<optional>true</optional>
 		</dependency>
 
-		<dependency>
-			<groupId>de.svenkubiak</groupId>
-			<artifactId>jBCrypt</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>at.favre.lib</groupId>
+            <artifactId>bcrypt</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.coreoz</groupId>
