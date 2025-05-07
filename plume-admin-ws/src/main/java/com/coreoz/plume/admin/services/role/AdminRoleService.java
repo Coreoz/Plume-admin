@@ -3,6 +3,7 @@ package com.coreoz.plume.admin.services.role;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
+import com.coreoz.plume.admin.db.generated.AdminRolePermission;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
@@ -39,7 +40,7 @@ public class AdminRoleService extends CrudService<AdminRole> {
 		return adminRolePermissionDao
 				.findRolePermissions(idRole)
 				.stream()
-				.map(rolePermission -> rolePermission.getPermission())
+				.map(AdminRolePermission::getPermission)
 				.collect(Collectors.toList());
 	}
 

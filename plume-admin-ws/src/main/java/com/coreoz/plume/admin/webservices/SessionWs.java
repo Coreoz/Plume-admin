@@ -35,6 +35,7 @@ import lombok.Getter;
 
 import java.security.SecureRandom;
 import java.time.Clock;
+import java.util.Optional;
 
 @Path("/admin/session")
 @Tag(name = "admin-session", description = "Manage the administration session")
@@ -111,11 +112,17 @@ public class SessionWs {
 			WebSessionAdmin.class
 		);
 
-		if(parsedSession == null) {
+		if (parsedSession == null) {
 			throw new WsException(AdminWsError.ALREADY_EXPIRED_SESSION_TOKEN);
 		}
 
-		return toAdminSession(parsedSession);
+		Optional<AuthenticatedUser> authenticatedUser = adminUserService.findAuthenticatedUserById(parsedSession.getIdUser());
+
+		if (authenticatedUser.isEmpty()) {
+			throw new WsException(AdminWsError.REQUEST_INVALID);
+		}
+
+		return toAdminSession(toWebSession(authenticatedUser.get(), parsedSession.getHashedFingerprint()));
 	}
 
 	public AuthenticatedUser authenticateUser(AdminCredentials credentials) {
