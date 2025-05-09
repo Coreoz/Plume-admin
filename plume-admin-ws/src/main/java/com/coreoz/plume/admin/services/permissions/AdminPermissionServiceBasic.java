@@ -2,11 +2,9 @@ package com.coreoz.plume.admin.services.permissions;
 
 import java.util.Set;
 
-import com.google.common.collect.ImmutableSet;
-
 public class AdminPermissionServiceBasic implements AdminPermissionService {
 
-	private final Set<String> permissionsAvailable = ImmutableSet.of(
+	private final Set<String> permissionsAvailable = Set.of(
 			AdminPermissions.MANAGE_USERS,
 			AdminPermissions.MANAGE_ROLES
 		);

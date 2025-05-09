@@ -14,6 +14,7 @@ import jakarta.inject.Singleton;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.Set;
 
 @Singleton
 public class AdminUserService extends CrudService<AdminUser> {
@@ -40,9 +41,17 @@ public class AdminUserService extends CrudService<AdminUser> {
 				.filter(user -> hashService.checkPassword(password, user.getPassword()))
 				.map(user -> AuthenticatedUserAdmin.of(
 					user,
-					ImmutableSet.copyOf(adminRoleService.findRolePermissions(user.getIdRole()))
+					Set.copyOf(adminRoleService.findRolePermissions(user.getIdRole()))
 				));
 	}
+
+    public Optional<AuthenticatedUser> findAuthenticatedUserById(long id) {
+        return Optional.ofNullable(adminUserDao.findById(id))
+            .map(user -> AuthenticatedUserAdmin.of(
+                user,
+                Set.copyOf(adminRoleService.findRolePermissions(user.getIdRole()))
+            ));
+    }
 
 	public void update(AdminUserParameters parameters) {
 		String newPassword = Strings.emptyToNull(parameters.getPassword());
