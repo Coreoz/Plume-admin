@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.coreoz.plume.admin.db.generated.LogHeader;
 import com.google.common.collect.ImmutableList;

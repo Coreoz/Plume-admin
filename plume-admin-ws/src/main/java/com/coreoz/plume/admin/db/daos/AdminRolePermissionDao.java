@@ -4,8 +4,8 @@ import java.sql.Connection;
 import java.util.List;
 import java.util.Set;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import com.coreoz.plume.admin.db.generated.AdminRolePermission;
 import com.coreoz.plume.admin.db.generated.QAdminRolePermission;

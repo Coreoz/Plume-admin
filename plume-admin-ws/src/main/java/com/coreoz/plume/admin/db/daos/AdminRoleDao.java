@@ -3,8 +3,8 @@ package com.coreoz.plume.admin.db.daos;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import com.coreoz.plume.admin.db.generated.AdminRole;
 import com.coreoz.plume.admin.db.generated.QAdminRole;

@@ -5,8 +5,8 @@ import com.coreoz.plume.admin.services.logapi.LogApiService;
 import okhttp3.OkHttpClient;
 
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 /**
  * Mutualise les méthodes de création des clients Okhttp et la gestion des retours de Retrofit

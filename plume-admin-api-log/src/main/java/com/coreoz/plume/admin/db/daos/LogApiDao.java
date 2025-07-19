@@ -15,8 +15,8 @@ import com.querydsl.core.types.dsl.SimpleExpression;
 import com.querydsl.sql.SQLExpressions;
 import com.querydsl.sql.SQLQuery;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import java.sql.Connection;
 import java.time.Instant;
 import java.util.List;

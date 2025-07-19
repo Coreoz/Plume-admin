@@ -1,7 +1,7 @@
 package com.coreoz.plume.admin.webservices.validation;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import com.coreoz.plume.admin.services.configuration.AdminConfigurationService;
 import com.coreoz.plume.jersey.errors.WsException;

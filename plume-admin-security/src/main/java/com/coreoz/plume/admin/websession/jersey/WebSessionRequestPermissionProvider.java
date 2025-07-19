@@ -2,7 +2,7 @@ package com.coreoz.plume.admin.websession.jersey;
 
 import java.util.Collection;
 
-import javax.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.container.ContainerRequestContext;
 
 import com.coreoz.plume.admin.websession.WebSessionFingerprint;
 import com.coreoz.plume.admin.websession.WebSessionPermission;

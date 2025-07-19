@@ -1,7 +1,6 @@
 package com.coreoz.plume.admin.services.user;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -12,9 +11,14 @@ import com.coreoz.plume.admin.services.hash.HashService;
 import com.coreoz.plume.admin.services.role.AdminRoleService;
 import com.coreoz.plume.admin.webservices.data.user.AdminUserParameters;
 import com.coreoz.plume.db.crud.CrudService;
-import com.coreoz.plume.services.time.TimeProvider;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Singleton
 public class AdminUserService extends CrudService<AdminUser> {
@@ -22,20 +26,18 @@ public class AdminUserService extends CrudService<AdminUser> {
 	private final AdminUserDao adminUserDao;
 	private final AdminRoleService adminRoleService;
 	private final HashService hashService;
-	private final TimeProvider timeProvider;
-	private final TimedAuthenticationSecurer timedAuthenticationSecurer;
+    private final TimedAuthenticationSecurer timedAuthenticationSecurer;
 
 	@Inject
 	public AdminUserService(AdminUserDao adminUserDao, AdminRoleService adminRoleService,
-			HashService hashService, TimeProvider timeProvider,
-			TimedAuthenticationSecurer timedAuthenticationSecurer) {
+			HashService hashService, Clock clock, TimedAuthenticationSecurer timedAuthenticationSecurer) {
 		super(adminUserDao);
 
 		this.adminUserDao = adminUserDao;
 		this.adminRoleService = adminRoleService;
 		this.hashService = hashService;
-		this.timeProvider = timeProvider;
-		this.timedAuthenticationSecurer = timedAuthenticationSecurer;
+        this.clock = clock;
+        this.timedAuthenticationSecurer = timedAuthenticationSecurer;
 	}
 
 	public CompletableFuture<Optional<AuthenticatedUser>> authenticate(String userName, String password) {
@@ -66,7 +68,7 @@ public class AdminUserService extends CrudService<AdminUser> {
 	public AdminUser create(AdminUserParameters parameters) {
 		AdminUser adminUserToSave = new AdminUser();
 		adminUserToSave.setIdRole(parameters.getIdRole());
-		adminUserToSave.setCreationDate(timeProvider.currentDateTime());
+		adminUserToSave.setCreationDate(LocalDateTime.now(clock));
 		adminUserToSave.setUserName(parameters.getUserName());
 		adminUserToSave.setEmail(parameters.getEmail());
 		adminUserToSave.setFirstName(parameters.getFirstName());

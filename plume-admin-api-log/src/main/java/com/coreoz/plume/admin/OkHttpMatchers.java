@@ -4,6 +4,7 @@ import okhttp3.Headers;
 import okhttp3.HttpUrl;
 
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 public class OkHttpMatchers {
 
@@ -21,6 +22,13 @@ public class OkHttpMatchers {
         Objects.requireNonNull(filteredEndPoint);
 
         return ("/" + String.join("/", url.pathSegments())).startsWith(filteredEndPoint);
+    }
+
+    public static boolean matchRequestUrlRegex(HttpUrl url, Pattern compiledRegex) {
+        Objects.requireNonNull(url);
+        Objects.requireNonNull(compiledRegex);
+
+        return compiledRegex.matcher(url.url().toString()).matches();
     }
 
     public static boolean matchRequestMethod(String method, String filteredMethod) {

@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>com.coreoz</groupId>
 		<artifactId>plume-admin-parent</artifactId>
-		<version>4.1.1-SNAPSHOT</version>
+		<version>5.0.0-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>plume-admin-security</artifactId>
@@ -74,13 +74,8 @@
 		</dependency>
 
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.assertj</groupId>
-			<artifactId>assertj-core</artifactId>
+            <groupId>com.coreoz</groupId>
+            <artifactId>plume-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

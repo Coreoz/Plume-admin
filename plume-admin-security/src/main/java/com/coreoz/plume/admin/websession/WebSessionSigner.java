@@ -5,7 +5,7 @@ package com.coreoz.plume.admin.websession;
  */
 public interface WebSessionSigner {
 
-	<T> T parseSession(String webSesionSerialized, Class<T> sessionClass);
+	<T> T parseSession(String webSessionSerialized, Class<T> sessionClass);
 	String serializeSession(Object sessionInformation, Long expirationTime);
 
 }

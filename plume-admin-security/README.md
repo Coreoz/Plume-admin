@@ -35,7 +35,7 @@ and specify that you web session won't extend WebSessionPermission and/or WebSes
 
 ### 2. Create the bean that will be return by your login webservice
 
-This object will contains at least your jwt token:
+This object will contain at least your JWT token:
 
 ```java
 public class LoginBean {
@@ -51,34 +51,30 @@ public class LoginBean {
 
 ### 3. Generate your return bean using your token
 
-For this step, you should have bind the JWT Signer and have a JWT secret like detailed in the [main documentation](https://github.com/Coreoz/Plume-admin).
-You may want to add a time provider to specify a token duration.
-
-```java
-bind(TimeProvider.class).to(SystemTimeProvider.class);
-```
+For this step, you should have bound the JWT Signer and have a JWT secret like detailed in the [main documentation](https://github.com/Coreoz/Plume-admin).
+You may also want to specify a token duration.
 
 Converting your data to the token object:
 
 ```java
-private MyWebSession convertToJWTSession(User user) {
+private MyWebSession convertToJwtSession(User user) {
     return new MyWebSession().setUserId(user.getId()).setUserName(user.getEmail()).setPermissions(user.getPermissions());
 }
 ```
 
-And your token object to your jwt token string
+And your token object to your JWT token string
 
 ```java
 String jwtToken = webSessionSigner.serializeSession(
-                convertToJWTSession(user),
-                timeProvider.currentTime() + TOKEN_EXPIRY_DURATION.toMillis()
-            );
+    convertToJwtSession(user),
+    clock.millis() + TOKEN_EXPIRY_DURATION.toMillis()
+);
 ```
 
 
 ### 4. Add security to my webservices by adding a filter on jwt permission in Jersey
 
-By default you might be using [AdminSecurityFeature](src/main/java/com/coreoz/plume/admin/guice/jersey/feature/AdminSecurityFeature.java), but this is tied to both [WebSessionAdmin](src/main/java/com/coreoz/plume/admin/websession/WebSessionAdmin.java) and [RestrictToAdmin](src/main/java/com/coreoz/plume/admin/guice/jersey/feature/RestrictToAdmin.java)
+By default, you might be using [AdminSecurityFeature](src/main/java/com/coreoz/plume/admin/guice/jersey/feature/AdminSecurityFeature.java), but this is tied to both [WebSessionAdmin](src/main/java/com/coreoz/plume/admin/websession/WebSessionAdmin.java) and [RestrictToAdmin](src/main/java/com/coreoz/plume/admin/guice/jersey/feature/RestrictToAdmin.java)
 
 You'll need to add a class that implements `DynamicFeature`. You need to indicate what is the expected object when the token is parsed and to what annotation is security will be linked to.
 

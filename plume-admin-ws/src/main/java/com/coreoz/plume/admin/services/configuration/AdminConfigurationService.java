@@ -3,8 +3,8 @@ package com.coreoz.plume.admin.services.configuration;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;

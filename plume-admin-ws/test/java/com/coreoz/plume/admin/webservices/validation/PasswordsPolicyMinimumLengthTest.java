@@ -1,7 +1,7 @@
 package com.coreoz.plume.admin.webservices.validation;
 
 import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.coreoz.plume.admin.services.configuration.AdminConfigurationService;
 import com.coreoz.plume.jersey.errors.WsException;
