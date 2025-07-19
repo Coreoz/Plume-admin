@@ -1,10 +1,5 @@
 package com.coreoz.plume.admin.services.user;
 
-import java.util.Optional;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
 import com.coreoz.plume.admin.db.daos.AdminUserDao;
 import com.coreoz.plume.admin.db.generated.AdminUser;
 import com.coreoz.plume.admin.services.hash.HashService;
@@ -13,12 +8,13 @@ import com.coreoz.plume.admin.webservices.data.user.AdminUserParameters;
 import com.coreoz.plume.db.crud.CrudService;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Singleton
 public class AdminUserService extends CrudService<AdminUser> {
@@ -27,6 +23,7 @@ public class AdminUserService extends CrudService<AdminUser> {
 	private final AdminRoleService adminRoleService;
 	private final HashService hashService;
     private final TimedAuthenticationSecurer timedAuthenticationSecurer;
+    private final Clock clock;
 
 	@Inject
 	public AdminUserService(AdminUserDao adminUserDao, AdminRoleService adminRoleService,
@@ -85,5 +82,4 @@ public class AdminUserService extends CrudService<AdminUser> {
 	public boolean existsWithEmail(Long idUser, String newUserEmail) {
 		return adminUserDao.existsWithEmail(idUser, newUserEmail);
 	}
-
 }
