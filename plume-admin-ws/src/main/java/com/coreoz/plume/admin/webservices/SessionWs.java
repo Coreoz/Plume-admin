@@ -106,6 +106,9 @@ public class SessionWs {
 				);
 			})
 			.exceptionally(error -> {
+                // Exceptions caught here are likely CompletionException
+                // In any case, we forward this exception to the asyncResponse
+                // => It will then be caught and handled by Jersey ExceptionMapper, see WsResultExceptionMapper for details
 				asyncResponse.resume(error);
 				return null;
 			});

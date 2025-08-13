@@ -17,6 +17,7 @@
 		<jjwt.version>0.12.6</jjwt.version>
 		<jbcrypt.version>0.4.3</jbcrypt.version>
 		<okhttp.version>4.12.0</okhttp.version>
+		<login-time-attack-protector.version>1.0.0</login-time-attack-protector.version>
 
 		<plume-framework.version>5.0.0-beta1</plume-framework.version>
 	</properties>
@@ -43,6 +44,12 @@
 				<artifactId>plume-admin-api-log</artifactId>
 				<version>${project.version}</version>
 			</dependency>
+
+            <dependency>
+                <groupId>com.coreoz</groupId>
+                <artifactId>login-time-attack-protector</artifactId>
+                <version>${login-time-attack-protector.version}</version>
+            </dependency>
 
 			<dependency>
 				<groupId>com.coreoz</groupId>
