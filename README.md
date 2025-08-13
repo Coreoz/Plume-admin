@@ -28,8 +28,7 @@ Installation
 6. [Generate a JWT secret key](#configuration) and register it in your configuration: `admin.jwt-secret = "long_generated_password_to_secure_jwt_tokens"`
 7. For non-https environments (i.e. `localhost` for dev), set the configuration value: `admin.session.fingerprint-cookie-https-only = false` (this configuration value should be set to true in HTTPS environments like production)
 8. SQL, see [setup files](plume-admin-ws/sql)
-9. To initialize the protection against timing attack, add `injector.getInstance(TimedAuthenticationSecurer.class).initialize();` in the entry point of the application `WebApplication`
-10. Install a JS frontend like [Plume Admin UI for React](https://github.com/Coreoz/create-plume-react-project)
+9. Install a JS frontend like [Plume Admin UI for React](https://github.com/Coreoz/create-plume-react-project)
 
 Current user access
 -------------------
@@ -75,6 +74,11 @@ admin.login.max-attempts = 5
 admin.login.blocked-duration = 30 seconds
 admin.passwords.min-length = 0
 
+# Login timing protector max measurments that are kept to generate random delays when username is not found during login
+admin.login.timing-protector.max-samples = 10
+# Login timing protector measurements rate that are kept after `max-samples` measurments are reached
+admin.login.timing-protector.sampling-rate = 0.22
+
 # if a secure cookie is emitted alongside the JWT token to prevent XSS attacks
 # see https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_Cheat_Sheet_for_Java.html for details
 admin.session.use-fingerprint-cookie = true
@@ -115,13 +119,9 @@ if (hashService.checkPassword(loginBean.getPassword(), userDB.getPassword())) {
 }
 ```
 
-Protection against time based attack
-------------------------------------
-By default Plume Admin authentication provides protection against time based attack.
-
-For custom authentication, `TimedAuthenticationSecurer.verifyPasswordAuthentication` should be used to protect it against time based attack.
-
-A usage can be found in `SessionWs`.
+Protection against user enumeration through login timing attacks
+----------------------------------------------------------------
+Plume Admin authentication relies on the library [Login Time Attack Protector](https://github.com/Coreoz/Login-time-attack-protector) to protect against user enumeration through login timing attacks.
 
 HTTP API Log module
 -------------------
