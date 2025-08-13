@@ -37,6 +37,7 @@ import lombok.Getter;
 import java.security.SecureRandom;
 import java.time.Clock;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Path("/admin/session")
@@ -92,7 +93,7 @@ public class SessionWs {
 	@POST
 	@Operation(description = "Authenticate a user and create a session token")
 	public void authenticate(@Suspended final AsyncResponse asyncResponse, AdminCredentials credentials) {
-		// first user needs to be authenticated (an exception will be raised otherwise)
+		// First, the user needs to be authenticated (an exception will be raised otherwise)
 		authenticateUser(credentials)
 			.thenAccept(authenticatedUser -> {
 				// if the client is authenticated, the fingerprint can be generated if needed
@@ -125,11 +126,18 @@ public class SessionWs {
 			WebSessionAdmin.class
 		);
 
-		if(parsedSession == null) {
+		if (parsedSession == null) {
 			throw new WsException(AdminWsError.ALREADY_EXPIRED_SESSION_TOKEN);
 		}
 
-		return toAdminSession(parsedSession);
+        // For each token renewal request, user information is verified again
+		Optional<AuthenticatedUser> authenticatedUser = adminUserService.findAuthenticatedUserById(parsedSession.getIdUser());
+
+		if (authenticatedUser.isEmpty()) {
+			throw new WsException(AdminWsError.REQUEST_INVALID);
+		}
+
+		return toAdminSession(toWebSession(authenticatedUser.get(), parsedSession.getHashedFingerprint()));
 	}
 
 	public CompletableFuture<AuthenticatedUser> authenticateUser(AdminCredentials credentials) {

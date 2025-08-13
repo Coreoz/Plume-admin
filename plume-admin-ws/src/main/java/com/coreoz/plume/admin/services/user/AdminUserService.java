@@ -71,6 +71,14 @@ public class AdminUserService extends CrudService<AdminUser> {
         ));
 	}
 
+    public Optional<AuthenticatedUser> findAuthenticatedUserById(long id) {
+        return Optional.ofNullable(adminUserDao.findById(id))
+            .map(user -> AuthenticatedUserAdmin.of(
+                user,
+                Set.copyOf(adminRoleService.findRolePermissions(user.getIdRole()))
+            ));
+    }
+
 	public void update(AdminUserParameters parameters) {
 		String newPassword = Strings.emptyToNull(parameters.getPassword());
 		adminUserDao.update(
