@@ -12,12 +12,17 @@ import com.coreoz.plume.admin.websession.JwtSessionSigner;
 import com.coreoz.plume.admin.websession.WebSessionAdmin;
 import com.coreoz.plume.admin.websession.WebSessionPermission;
 import com.coreoz.plume.admin.websession.jersey.JerseySessionParser;
+import com.coreoz.plume.jersey.errors.ErrorResponse;
 import com.coreoz.plume.jersey.errors.Validators;
 import com.coreoz.plume.jersey.errors.WsException;
 import com.coreoz.plume.jersey.security.permission.PublicApi;
 import com.google.common.io.BaseEncoding;
 import com.google.common.net.HttpHeaders;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -92,6 +97,26 @@ public class SessionWs {
 
 	@POST
 	@Operation(description = "Authenticate a user and create a session token")
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Authentication Successful",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = AdminSession.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Validation error",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ErrorResponse.class)
+            )
+        )
+    })
+    // Async API (marked by using the Suspended annotation and the AsyncResponse argument) returns void,
+    // the response will be written directly in the AsyncResponse argument
 	public void authenticate(@Suspended final AsyncResponse asyncResponse, AdminCredentials credentials) {
 		// First, the user needs to be authenticated (an exception will be raised otherwise)
 		authenticateUser(credentials)
