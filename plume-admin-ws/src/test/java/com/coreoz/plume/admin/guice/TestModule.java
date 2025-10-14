@@ -41,6 +41,8 @@ public class TestModule extends AbstractModule {
                 Mockito.when(AdminConfigurationService.sessionRefreshDurationInMillis()).thenReturn(5000L);
                 Mockito.when(AdminConfigurationService.sessionExpireDurationInMillis()).thenReturn(15000L);
                 Mockito.when(AdminConfigurationService.sessionInactiveDurationInMillis()).thenReturn(120000L);
+                Mockito.when(AdminConfigurationService.loginTimeingProtectorMaxSamples()).thenReturn(10);
+                Mockito.when(AdminConfigurationService.loginTimeingProtectorSamplingRate()).thenReturn(0.22);
                 bind(AdminConfigurationService.class).toInstance(AdminConfigurationService);
 
                 // Services & DAOs
