@@ -74,6 +74,11 @@ admin.login.max-attempts = 5
 admin.login.blocked-duration = 30 seconds
 admin.passwords.min-length = 0
 
+# Login timing protector max measurments that are kept to generate random delays when username is not found during login
+admin.login.timing-protector.max-samples = 10
+# Login timing protector measurements rate that are kept after `max-samples` measurments are reached
+admin.login.timing-protector.sampling-rate = 0.22
+
 # if a secure cookie is emitted alongside the JWT token to prevent XSS attacks
 # see https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_Cheat_Sheet_for_Java.html for details
 admin.session.use-fingerprint-cookie = true
@@ -113,6 +118,10 @@ if (hashService.checkPassword(loginBean.getPassword(), userDB.getPassword())) {
   // Password is correct
 }
 ```
+
+Protection against user enumeration through login timing attacks
+----------------------------------------------------------------
+Plume Admin authentication relies on the library [Login Time Attack Protector](https://github.com/Coreoz/Login-time-attack-protector) to protect against user enumeration through login timing attacks.
 
 HTTP API Log module
 -------------------

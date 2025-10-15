@@ -42,15 +42,27 @@
 			<groupId>com.coreoz</groupId>
 			<artifactId>plume-db-querydsl</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>com.coreoz</groupId>
-			<artifactId>plume-db-querydsl-codegen</artifactId>
-			<scope>provided</scope>
-		</dependency>
+        <!-- Querydsl code generation, using the provided scope to avoid compilation error in the IDE -->
+        <dependency>
+            <groupId>com.coreoz</groupId>
+            <artifactId>plume-db-querydsl-codegen</artifactId>
+            <scope>provided</scope>
+            <exclusions>
+                <!-- Querydsl codegen still relies on javax.inject for now -->
+                <exclusion>
+                    <artifactId>javax.inject</artifactId>
+                    <groupId>javax.inject</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
 		<dependency>
 			<groupId>com.coreoz</groupId>
 			<artifactId>plume-web-jersey</artifactId>
 		</dependency>
+        <dependency>
+            <groupId>com.coreoz</groupId>
+            <artifactId>login-time-attack-protector</artifactId>
+        </dependency>
 
 		<dependency>
 			<groupId>io.swagger.core.v3</groupId>
@@ -83,7 +95,13 @@
 		<dependency>
 			<groupId>com.google.dagger</groupId>
 			<artifactId>dagger</artifactId>
-			<optional>true</optional>
+            <exclusions>
+                <exclusion>
+                    <artifactId>javax.inject</artifactId>
+                    <groupId>javax.inject</groupId>
+                </exclusion>
+            </exclusions>
+            <optional>true</optional>
 		</dependency>
 
 		<dependency>
@@ -98,6 +116,19 @@
         </dependency>
 	</dependencies>
 
+    <profiles>
+        <!-- Profile for querydsl code generation -->
+        <profile>
+            <id>querydsl-code-generation</id>
+            <dependencies>
+                <dependency>
+                    <groupId>com.coreoz</groupId>
+                    <artifactId>plume-db-querydsl-codegen</artifactId>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -109,5 +140,4 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
-
 </project>

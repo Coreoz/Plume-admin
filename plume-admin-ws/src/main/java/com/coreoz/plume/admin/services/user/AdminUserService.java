@@ -2,12 +2,14 @@ package com.coreoz.plume.admin.services.user;
 
 import com.coreoz.plume.admin.db.daos.AdminUserDao;
 import com.coreoz.plume.admin.db.generated.AdminUser;
+import com.coreoz.plume.admin.services.configuration.AdminConfigurationService;
 import com.coreoz.plume.admin.services.hash.HashService;
 import com.coreoz.plume.admin.services.role.AdminRoleService;
 import com.coreoz.plume.admin.webservices.data.user.AdminUserParameters;
 import com.coreoz.plume.db.crud.CrudService;
+import com.coreoz.securelogin.DelayedCompleter;
+import com.coreoz.securelogin.TimingAttackProtector;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableSet;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
@@ -15,6 +17,7 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 @Singleton
 public class AdminUserService extends CrudService<AdminUser> {
@@ -22,27 +25,50 @@ public class AdminUserService extends CrudService<AdminUser> {
 	private final AdminUserDao adminUserDao;
 	private final AdminRoleService adminRoleService;
 	private final HashService hashService;
-	private final Clock clock;
+    private final TimingAttackProtector timingAttackProtector;
+    private final DelayedCompleter delayedCompleter;
+    private final Clock clock;
 
 	@Inject
 	public AdminUserService(AdminUserDao adminUserDao, AdminRoleService adminRoleService,
-			HashService hashService, Clock clock) {
+                            HashService hashService, Clock clock, AdminConfigurationService configurationService) {
 		super(adminUserDao);
 
 		this.adminUserDao = adminUserDao;
 		this.adminRoleService = adminRoleService;
 		this.hashService = hashService;
-		this.clock = clock;
-	}
+        this.clock = clock;
+        this.delayedCompleter = new DelayedCompleter();
+        this.timingAttackProtector = new TimingAttackProtector(new TimingAttackProtector.Config(
+            configurationService.loginTimeingProtectorMaxSamples(),
+            configurationService.loginTimeingProtectorSamplingRate()
+        ));
+        // Initialize timing protector
+        String dummyPassword = hashService.hashPassword("dummy password");
+        this.timingAttackProtector.measureAndExecute(() -> hashService.checkPassword("wrong-dummy-password", dummyPassword));
+    }
 
-	public Optional<AuthenticatedUser> authenticate(String userName, String password) {
-		return adminUserDao
-				.findByUserName(userName)
-				.filter(user -> hashService.checkPassword(password, user.getPassword()))
-				.map(user -> AuthenticatedUserAdmin.of(
-					user,
-					Set.copyOf(adminRoleService.findRolePermissions(user.getIdRole()))
-				));
+	public CompletableFuture<Optional<AuthenticatedUser>> authenticate(String userName, String password) {
+        AdminUser foundUser = adminUserDao.findByUserName(userName).orElse(null);
+        if (foundUser == null) {
+            // The user is not found => wait for a random duration to simulate password verification
+            return delayedCompleter.waitDuration(timingAttackProtector.generateDelay())
+                // No user is returned
+                .thenApply(unused -> Optional.empty());
+        }
+
+        // The user is found => verify the password and measure the time to do so
+        Boolean authenticationSuccess = timingAttackProtector.measureAndExecute(() -> hashService.checkPassword(password, foundUser.getPassword()));
+        if (!authenticationSuccess) {
+            return CompletableFuture.completedFuture(Optional.empty());
+        }
+
+        return CompletableFuture.completedFuture(Optional.of(
+            AuthenticatedUserAdmin.of(
+                foundUser,
+                Set.copyOf(adminRoleService.findRolePermissions(foundUser.getIdRole()))
+            )
+        ));
 	}
 
     public Optional<AuthenticatedUser> findAuthenticatedUserById(long id) {
@@ -86,5 +112,4 @@ public class AdminUserService extends CrudService<AdminUser> {
 	public boolean existsWithEmail(Long idUser, String newUserEmail) {
 		return adminUserDao.existsWithEmail(idUser, newUserEmail);
 	}
-
 }

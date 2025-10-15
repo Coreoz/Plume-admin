@@ -67,4 +67,12 @@ public class AdminConfigurationService {
 		return config.getInt("admin.passwords.min-length");
 	}
 
+    public int loginTimeingProtectorMaxSamples() {
+        return config.getInt("admin.login.timing-protector.max-samples");
+    }
+
+    public double loginTimeingProtectorSamplingRate() {
+        return config.getDouble("admin.login.timing-protector.sampling-rate");
+    }
+
 }

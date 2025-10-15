@@ -12,13 +12,17 @@ import com.coreoz.plume.admin.websession.JwtSessionSigner;
 import com.coreoz.plume.admin.websession.WebSessionAdmin;
 import com.coreoz.plume.admin.websession.WebSessionPermission;
 import com.coreoz.plume.admin.websession.jersey.JerseySessionParser;
+import com.coreoz.plume.jersey.errors.ErrorResponse;
 import com.coreoz.plume.jersey.errors.Validators;
 import com.coreoz.plume.jersey.errors.WsException;
 import com.coreoz.plume.jersey.security.permission.PublicApi;
-import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
 import com.google.common.net.HttpHeaders;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -27,6 +31,8 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.container.AsyncResponse;
+import jakarta.ws.rs.container.Suspended;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.ResponseBuilder;
@@ -35,7 +41,9 @@ import lombok.Getter;
 
 import java.security.SecureRandom;
 import java.time.Clock;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Path("/admin/session")
 @Tag(name = "admin-session", description = "Manage the administration session")
@@ -89,16 +97,47 @@ public class SessionWs {
 
 	@POST
 	@Operation(description = "Authenticate a user and create a session token")
-	public Response authenticate(AdminCredentials credentials) {
-		// first user needs to be authenticated (an exception will be raised otherwise)
-		AuthenticatedUser authenticatedUser = authenticateUser(credentials);
-		// if the client is authenticated, the fingerprint can be generated if needed
-		FingerprintWithHash fingerprintWithHash = sessionUseFingerprintCookie ? generateFingerprint() : NULL_FINGERPRINT;
-		return withFingerprintCookie(
-			Response.ok(toAdminSession(toWebSession(authenticatedUser, fingerprintWithHash.getHash()))),
-			fingerprintWithHash.getFingerprint()
-		)
-		.build();
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Authentication Successful",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = AdminSession.class)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Validation error",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ErrorResponse.class)
+            )
+        )
+    })
+    // Async API (marked by using the Suspended annotation and the AsyncResponse argument) returns void,
+    // the response will be written directly in the AsyncResponse argument
+	public void authenticate(@Suspended final AsyncResponse asyncResponse, AdminCredentials credentials) {
+		// First, the user needs to be authenticated (an exception will be raised otherwise)
+		authenticateUser(credentials)
+			.thenAccept(authenticatedUser -> {
+				// if the client is authenticated, the fingerprint can be generated if needed
+				FingerprintWithHash fingerprintWithHash = sessionUseFingerprintCookie ? generateFingerprint() : NULL_FINGERPRINT;
+				asyncResponse.resume(
+					withFingerprintCookie(
+						Response.ok(toAdminSession(toWebSession(authenticatedUser, fingerprintWithHash.getHash()))),
+						fingerprintWithHash.getFingerprint()
+					)
+					.build()
+				);
+			})
+			.exceptionally(error -> {
+                // Exceptions caught here are likely CompletionException
+                // In any case, we forward this exception to the asyncResponse
+                // => It will then be caught and handled by Jersey ExceptionMapper, see WsResultExceptionMapper for details
+				asyncResponse.resume(error);
+				return null;
+			});
 	}
 
 	@PUT
@@ -116,6 +155,7 @@ public class SessionWs {
 			throw new WsException(AdminWsError.ALREADY_EXPIRED_SESSION_TOKEN);
 		}
 
+        // For each token renewal request, user information is verified again
 		Optional<AuthenticatedUser> authenticatedUser = adminUserService.findAuthenticatedUserById(parsedSession.getIdUser());
 
 		if (authenticatedUser.isEmpty()) {
@@ -125,7 +165,7 @@ public class SessionWs {
 		return toAdminSession(toWebSession(authenticatedUser.get(), parsedSession.getHashedFingerprint()));
 	}
 
-	public AuthenticatedUser authenticateUser(AdminCredentials credentials) {
+	public CompletableFuture<AuthenticatedUser> authenticateUser(AdminCredentials credentials) {
 		Validators.checkRequired("Json creadentials", credentials);
 		Validators.checkRequired("users.USERNAME", credentials.getUserName());
 		Validators.checkRequired("users.PASSWORD", credentials.getPassword());
@@ -133,16 +173,16 @@ public class SessionWs {
 		if(credentials.getUserName() != null && failAttemptsManager.isBlocked(credentials.getUserName())) {
 			throw new WsException(
 				AdminWsError.TOO_MANY_WRONG_ATTEMPS,
-				ImmutableList.of(String.valueOf(blockedDurationInSeconds))
+				List.of(String.valueOf(blockedDurationInSeconds))
 			);
 		}
 
 		return adminUserService
 			.authenticate(credentials.getUserName(), credentials.getPassword())
-			.orElseThrow(() -> {
+			.thenApply(authenticatedUser -> authenticatedUser.orElseThrow(() -> {
 				failAttemptsManager.addAttempt(credentials.getUserName());
 				return new WsException(AdminWsError.WRONG_LOGIN_OR_PASSWORD);
-			});
+			}));
 	}
 
 	public WebSessionPermission toWebSession(AuthenticatedUser user, String hashedFingerprint) {
@@ -189,5 +229,4 @@ public class SessionWs {
 		private final String fingerprint;
 		private final String hash;
 	}
-
 }
