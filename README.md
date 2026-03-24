@@ -72,7 +72,6 @@ admin.session.refresh-duration = 20 seconds
 admin.session.inactive-duration = 15 minutes
 admin.login.max-attempts = 5
 admin.login.blocked-duration = 30 seconds
-admin.passwords.min-length = 0
 
 # Login timing protector max measurments that are kept to generate random delays when username is not found during login
 admin.login.timing-protector.max-samples = 10
