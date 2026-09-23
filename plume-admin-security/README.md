@@ -8,12 +8,20 @@ For general use, please check the [main Plume Admin documentation](https://githu
 ## Creating my own permission workflow using Plume
 
 For general use [WebSessionAdmin](src/main/java/com/coreoz/plume/admin/websession/WebSessionAdmin.java) is provided, but you might want to add other fields in your JWT token.
-This guide describe how to handle your own JWT token based session and how to secure your API: this way API endpoints you configure will require a valid JWT session in order to be accessed.
+This guide describes how to handle your own JWT token based session and how to secure your API: this way API endpoints you configure will require a valid JWT session in order to be accessed.
+
+Since 5.2, you describe your session with a
+[WebSessionSecurityConfig](src/main/java/com/coreoz/plume/admin/websession/WebSessionSecurityConfig.java)
+and register it manually in Jersey (it is a JAX-RS `Feature`). You no longer need to write your own
+`DynamicFeature` or Jersey `Factory`: the security filter and the request scoped session binding are
+provided by the config.
 
 
 ### 1. Create your own JWT object
 
-You'll need an object that implement both [WebSessionPermission](src/main/java/com/coreoz/plume/admin/websession/WebSessionPermission.java) and [WebSessionFingerprint](src/main/java/com/coreoz/plume/admin/websession/WebSessionFingerprint.java).
+You'll need an object that implements [WebSessionPermission](src/main/java/com/coreoz/plume/admin/websession/WebSessionPermission.java).
+If you want to use the fingerprint cookie protection, it must also implement
+[WebSessionFingerprint](src/main/java/com/coreoz/plume/admin/websession/WebSessionFingerprint.java).
 For example:
 
 ```java
@@ -29,92 +37,62 @@ public class MyWebSession implements WebSessionPermission, WebSessionFingerprint
 }
 ```
 
-If you don't need session permissions and/or fingerprints, you'll need to implement your own [RequestPermissionProvider](src/main/java/com/coreoz/plume/admin/websession/jersey/WebSessionRequestPermissionProvider.java),
-and specify that you web session won't extend WebSessionPermission and/or WebSessionFingerprint.
+If you don't want to use the fingerprint cookie protection, you can simply omit `WebSessionFingerprint`
+and configure your session without a fingerprint extractor (see below).
 
 
-### 2. Create the bean that will be return by your login webservice
+### 2. Declare the security configs in Jersey
 
-This object will contain at least your JWT token:
-
-```java
-public class LoginBean {
-  @JsonSerialize(using = ToStringSerializer.class)
-  private String token;
-
-  public LoginBean(String token) {
-    this.token = token;
-  } 
-}
-```
-
-
-### 3. Generate your return bean using your token
-
-For this step, you should have bound the JWT Signer and have a JWT secret like detailed in the [main documentation](https://github.com/Coreoz/Plume-admin).
-You may also want to specify a token duration.
-
-Converting your data to the token object:
+Declare your session types with `WebSessionSecurityFeatures.of(...)`, directly in your Jersey configuration:
 
 ```java
-private MyWebSession convertToJwtSession(User user) {
-    return new MyWebSession().setUserId(user.getId()).setUserName(user.getEmail()).setPermissions(user.getPermissions());
-}
-```
-
-And your token object to your JWT token string
-
-```java
-String jwtToken = webSessionSigner.serializeSession(
-    convertToJwtSession(user),
-    clock.millis() + TOKEN_EXPIRY_DURATION.toMillis()
-);
-```
-
-
-### 4. Add security to my webservices by adding a filter on jwt permission in Jersey
-
-By default, you might be using [AdminSecurityFeature](src/main/java/com/coreoz/plume/admin/guice/jersey/feature/AdminSecurityFeature.java), but this is tied to both [WebSessionAdmin](src/main/java/com/coreoz/plume/admin/websession/WebSessionAdmin.java) and [RestrictToAdmin](src/main/java/com/coreoz/plume/admin/guice/jersey/feature/RestrictToAdmin.java)
-
-You'll need to add a class that implements `DynamicFeature`. You need to indicate what is the expected object when the token is parsed and to what annotation is security will be linked to.
-
-In our example we will use `RestrictTo` as the annotation, then we would have:
-
-```java 
 @Singleton
-public class SecurityFeature implements DynamicFeature {
+public class JerseyConfigProvider implements Provider<ResourceConfig> {
 
-    private final PermissionFeature<RestrictTo> permissionFeature;
+    private final ResourceConfig config;
 
     @Inject
-    public SecurityFeature(WebSessionSigner webSessionSigner, AdminSecurityConfigurationService configurationService) {
-        this.permissionFeature = new PermissionFeature<>(
-            new WebSessionRequestPermissionProvider<>(
-                webSessionSigner,
+    public JerseyConfigProvider(ObjectMapper objectMapper) {
+        config = new ResourceConfig();
+        config.packages("com.myapp.webservices");
+
+        // require explicit access control, including your custom annotation
+        config.register(RequireExplicitAccessControlFeature.accessControlAnnotations(PublicApi.class, RestrictTo.class));
+
+        // declare the security configs
+        config.register(WebSessionSecurityFeatures.of(
+            WebSessionSecurityConfig.of(
                 MyWebSession.class,
-                configurationService.sessionUseFingerprintCookie()
-            ),
-            RestrictTo.class,
-            RestrictTo::value
-        );
+                RestrictTo.class,
+                RestrictTo::value,
+                MyWebSession::getHashedFingerprint // omit this argument to disable fingerprint verification
+            )
+        ));
     }
 
     @Override
-    public void configure(ResourceInfo resourceInfo, FeatureContext context) {
-        permissionFeature.configure(resourceInfo, context);
+    public ResourceConfig get() {
+        return config;
     }
 }
 ```
 
-In your Jersey config file make sure the annotation is registered and add your new `SecurityFeature`
-You'll need to add any custom Annotation.
+This single registration:
+- secures every resource annotated with the access control annotation,
+- binds the session object so it can be injected with `@Context MyWebSession`.
 
-```java
-config.register(RequireExplicitAccessControlFeature.accessControlAnnotations(RestrictTo.class, PublicApi.class));
-config.register(SecurityFeature.class);
-```
+> **Why `WebSessionSecurityFeatures.of(...)` and not `config.register(WebSessionSecurityConfig.of(...))`?**
+> Jersey only processes a given `Feature` class once. Registering several `WebSessionSecurityConfig`
+> instances directly would silently ignore all but the first one. `WebSessionSecurityFeatures` is the
+> aggregator that handles all of them through a single Jersey `DynamicFeature` and a single `Binder`.
 
-You can now secure your webservices using the `RestrictTo` annotation and the permission string that will be verified to be in your token:
+`WebSessionSecurityFeatures` resolves the `WebSessionSigner` and the security configuration lazily from
+the Jersey `InjectionManager` at request time. It can therefore be registered **before** the Guice bridge
+(`JerseyGuiceFeature`), with no ordering constraint and no dependency injection needed in
+`JerseyConfigProvider`.
+
+You can now secure your webservices using the annotation and the permission string that will be verified
+to be in your token:
 
 ```java
 @RestrictTo(JwtPermission.BASIC_RIGHT)
@@ -123,67 +101,104 @@ public class UtilisateurWs {
 }
 ```
 
-Final step is to provide a `Factory` that will be used to create back your `MyWebSession` object from the received request. Below is the corresponding example:
+If you prefer to keep using the default administration feature, `config.register(AdminSecurityFeature.class)`
+still works exactly as before.
+
+
+### 3. Getting back the information from the token
+
+With the config-driven feature, the session binding is created for you, so you simply need to add the
+object in your webservice method:
 
 ```java
-public class MyWebSessionFactory implements Factory<MyWebSession> {
-
-    private final ContainerRequestContext context;
-    private final WebSessionSigner webSessionSigner;
-    private final boolean verifyCookieFingerprint;
-  
-    @Inject
-    public MyWebSessionFactory(ContainerRequestContext context, WebSessionSigner sessionSigner,
-        AdminSecurityConfigurationService configurationService) {
-      this.context = context;
-      this.webSessionSigner = sessionSigner;
-      this.verifyCookieFingerprint = configurationService.sessionUseFingerprintCookie();
-    }
-  
-    @Override
-    public MyWebSession provide() {
-      return JerseySessionParser.currentSessionInformation(context, webSessionSigner, MyWebSession.class, verifyCookieFingerprint);
-    }
-  
-    @Override
-    public void dispose(JwtPermission permission) {
-      // unused
-    }
-  
+@GET
+@Path("/me")
+public UserBean findMe(@Context MyWebSession securityContext) {
+    return userService.findUserDetailByEmail(securityContext.getUserName());
 }
 ```
 
-and register it in Jersey:
+
+### 4. Custom login web-service (optional)
+
+If you are using the `plume-admin-ws` module, `SessionWs` handles the default `WebSessionAdmin` login and
+renew workflow. To reuse this exact workflow with a custom session type, extend
+[AbstractSessionWs](https://github.com/Coreoz/Plume-admin/blob/master/plume-admin-ws/src/main/java/com/coreoz/plume/admin/webservices/AbstractSessionWs.java)
+and provide a `WebSessionProvider`:
 
 ```java
-config.register(new AbstractBinder() {
-      @Override
-      protected void configure() {
-        bindFactory(MyWebSessionFactory.class).to(WebSessionPermission.class).in(RequestScoped.class);
-        bindFactory(MyWebSessionFactory.class).to(MyWebSession.class).in(RequestScoped.class);
+@Path("/client/session")
+@Singleton
+public class ClientSessionWs extends AbstractSessionWs<ClientWebSession> {
+
+  @Inject
+  public ClientSessionWs(AdminUserService adminUserService,
+      JwtSessionSigner jwtSessionSigner,
+      AdminConfigurationService configurationService,
+      AdminSecurityConfigurationService adminSecurityConfigurationService,
+      Clock clock) {
+    super(
+      adminUserService,
+      jwtSessionSigner,
+      configurationService,
+      adminSecurityConfigurationService,
+      clock,
+      new WebSessionProvider<ClientWebSession>() {
+        @Override
+        public Class<ClientWebSession> sessionClass() {
+          return ClientWebSession.class;
+        }
+
+        @Override
+        public ClientWebSession createSession(AuthenticatedUser user, String hashedFingerprint) {
+          return new ClientWebSession()
+            .setUserId(user.getUser().getId())
+            .setUserName(user.getUser().getUserName())
+            .setPermissions(user.getPermissions())
+            .setHashedFingerprint(hashedFingerprint);
+        }
       }
-    });
+    );
+  }
+
+  @Override
+  protected long authenticatedUserId(ClientWebSession parsedSession) {
+    return parsedSession.getUserId();
+  }
+
+  @Override
+  protected String hashedFingerprint(ClientWebSession parsedSession) {
+    return parsedSession.getHashedFingerprint();
+  }
+}
 ```
 
 
-You might want to disable fingerprint on your development environnement in case it's not secured (HTTP and not HTTPS)
+### 5. Multiple session types in the same application
 
-```java 
+Because each session type is described by its own `WebSessionSecurityConfig`, you can secure different
+parts of your application with different sessions. Declare all the configs in a single
+`WebSessionSecurityFeatures`:
+
+```java
+config.register(WebSessionSecurityFeatures.of(
+    WebSessionSecurityConfig.of(
+        MyWebSession.class, RestrictTo.class, RestrictTo::value, MyWebSession::getHashedFingerprint),
+    WebSessionSecurityConfig.of(
+        ClientWebSession.class, RestrictToClient.class, RestrictToClient::value)));
+```
+
+Each session type can then be injected independently with `@Context MyWebSession` / `@Context ClientWebSession`.
+Remember to list every access control annotation in the `RequireExplicitAccessControlFeature`.
+
+
+### Fingerprint on a non-secured environment
+
+You might want to disable fingerprint on your development environment in case it's not secured (HTTP and not HTTPS):
+
+```java
 admin.session.fingerprint-cookie-https-only = false
 admin.session.use-fingerprint-cookie = false
 ```
 
-
-### 5. Getting back the information from the token
-
-You simply need to add the object in your webservice method:
-
-```java
-@GET
-    @Path("/me")
-    public UserBean findMe(@Context MyWebSession securityContext) {
-        return userService.findUserDetailByEmail(securityContext.getUserName());
-    }
-```
-
-
+Or simply do not provide a fingerprint extractor when creating your `WebSessionSecurityConfig`.
