@@ -5,9 +5,9 @@ import com.google.inject.AbstractModule;
 
 public class GuiceAdminSecurityModule extends AbstractModule {
 
-	@Override
-	protected void configure() {
-		install(new GuiceServicesModule());
-	}
+    @Override
+    protected void configure() {
+        install(new GuiceServicesModule());
+    }
 
 }

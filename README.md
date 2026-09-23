@@ -25,6 +25,7 @@ Installation
 3. Jersey web-services: `packages("com.coreoz.plume.admin.webservices")`
 4. Jersey admin security: `register(AdminSecurityFeature.class)`
 5. Jersey security: If the access control mechanism is set up, you need to add the `RestrictToAdmin.class` access control annotation: `config.register(RequireExplicitAccessControlFeature.accessControlAnnotations(PublicApi.class, RestrictToAdmin.class));`
+   - For custom session types or multiple sessions, declare the security configs in your Jersey configuration: `config.register(WebSessionSecurityFeatures.of(WebSessionSecurityConfig.of(...)))` (see [custom session documentation](plume-admin-security#creating-my-own-permission-workflow-using-plume))
 6. [Generate a JWT secret key](#configuration) and register it in your configuration: `admin.jwt-secret = "long_generated_password_to_secure_jwt_tokens"`
 7. For non-https environments (i.e. `localhost` for dev), set the configuration value: `admin.session.fingerprint-cookie-https-only = false` (this configuration value should be set to true in HTTPS environments like production)
 8. SQL, see [setup files](plume-admin-ws/sql)
@@ -32,8 +33,21 @@ Installation
 
 Current user access
 -------------------
-To fetch the current user in an administration web-service,
-this Jersey binder must be installed in the Jersey configuration class:
+To fetch the current user in an administration web-service, inject the session object with `@Context`:
+```java
+@GET
+public UserBean findMe(@Context WebSessionAdmin webSessionAdmin) { ... }
+```
+
+Since **5.2**, the session binding is registered automatically when you declare a `WebSessionSecurityConfig`
+(see [custom session documentation](plume-admin-security#creating-my-own-permission-workflow-using-plume)):
+```java
+config.register(WebSessionSecurityFeatures.of(WebSessionSecurityConfig.admin()));
+```
+
+The manual Jersey binder below is only needed when you do **not** use `WebSessionSecurityFeatures`
+(for example when you only register `AdminSecurityFeature`). Do not mix both, otherwise the
+`WebSessionAdmin` binding would be registered twice:
 ```java
 register(new AbstractBinder() {
 	@Override
@@ -52,6 +66,15 @@ As an example, here is what is defined in the Admin Web-services Guice configura
 bind(AdminPermissionService.class).to(AdminPermissionServiceBasic.class);
 bind(WebSessionSigner.class).toProvider(JwtSessionSignerProvider.class);
 bind(JwtSessionSigner.class).toProvider(JwtSessionSignerProvider.class);
+```
+
+Since **5.2**, security is declared in Jersey instead of writing a custom `SecurityFeature`:
+each session type is described by a `WebSessionSecurityConfig`, and the configs are registered through
+`WebSessionSecurityFeatures` which secures the APIs annotated with the access control annotation and
+binds the session object for `@Context` injection:
+```java
+config.register(RequireExplicitAccessControlFeature.accessControlAnnotations(PublicApi.class, RestrictToAdmin.class));
+config.register(WebSessionSecurityFeatures.of(WebSessionSecurityConfig.admin()));
 ```
 
 More documentation about JWT and how to secure project API is available in the [Plume Admin Security module](plume-admin-security).

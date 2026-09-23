@@ -13,30 +13,32 @@ import com.coreoz.plume.admin.websession.jersey.WebSessionRequestPermissionProvi
 import com.coreoz.plume.jersey.security.permission.PermissionFeature;
 
 /**
- * The Jersey feature that will secure a resource (JAX-RS Java class) annotated with {@link RestrictToAdmin}
+ * The default Jersey feature that will secure a resource (JAX-RS Java class) annotated with
+ * {@link RestrictToAdmin}, using {@link com.coreoz.plume.admin.websession.WebSessionAdmin} sessions.
+ * <p>
+ * To use a custom session type and/or access control annotation, declare a
  */
 @Singleton
 public class AdminSecurityFeature implements DynamicFeature {
 
-	private final PermissionFeature<RestrictToAdmin> permissionFeature;
+    private final PermissionFeature<RestrictToAdmin> permissionFeature;
 
-	@Inject
-	public AdminSecurityFeature(WebSessionSigner webSessionSigner, AdminSecurityConfigurationService configurationService) {
-		this.permissionFeature = new PermissionFeature<>(
-			new WebSessionRequestPermissionProvider<>(
-				webSessionSigner,
-				WebSessionAdmin.class,
-				configurationService.sessionUseFingerprintCookie()
-			),
-			RestrictToAdmin.class,
-			RestrictToAdmin::value
-		);
-	}
+    @Inject
+    public AdminSecurityFeature(WebSessionSigner webSessionSigner, AdminSecurityConfigurationService configurationService) {
+        this.permissionFeature = new PermissionFeature<>(
+            new WebSessionRequestPermissionProvider<>(
+                webSessionSigner,
+                WebSessionAdmin.class,
+                configurationService.sessionUseFingerprintCookie()
+            ),
+            RestrictToAdmin.class,
+            RestrictToAdmin::value
+        );
+    }
 
-	@Override
-	public void configure(ResourceInfo resourceInfo, FeatureContext context) {
-		permissionFeature.configure(resourceInfo, context);
-	}
+    @Override
+    public void configure(ResourceInfo resourceInfo, FeatureContext context) {
+        permissionFeature.configure(resourceInfo, context);
+    }
 
 }
-
