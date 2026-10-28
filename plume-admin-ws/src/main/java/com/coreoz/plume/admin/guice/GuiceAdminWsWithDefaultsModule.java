@@ -2,6 +2,8 @@ package com.coreoz.plume.admin.guice;
 
 import com.coreoz.plume.admin.services.permissions.AdminPermissionService;
 import com.coreoz.plume.admin.services.permissions.AdminPermissionServiceBasic;
+import com.coreoz.plume.admin.services.session.AuthSessionTokenHandler;
+import com.coreoz.plume.admin.services.session.JwtAuthSessionTokenHandler;
 import com.coreoz.plume.admin.websession.JwtSessionSigner;
 import com.coreoz.plume.admin.websession.JwtSessionSignerProvider;
 import com.coreoz.plume.admin.websession.WebSessionSigner;
@@ -16,6 +18,7 @@ public class GuiceAdminWsWithDefaultsModule extends AbstractModule {
 		bind(AdminPermissionService.class).to(AdminPermissionServiceBasic.class);
 		bind(WebSessionSigner.class).toProvider(JwtSessionSignerProvider.class);
 		bind(JwtSessionSigner.class).toProvider(JwtSessionSignerProvider.class);
+		bind(AuthSessionTokenHandler.class).to(JwtAuthSessionTokenHandler.class);
 	}
 
 }

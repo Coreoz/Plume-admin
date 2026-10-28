@@ -3,7 +3,7 @@ package com.coreoz.plume.admin.guice;
 import com.coreoz.plume.admin.services.hash.BCryptHashService;
 import com.coreoz.plume.admin.services.hash.HashService;
 import com.coreoz.plume.admin.webservices.RoleWs;
-import com.coreoz.plume.admin.webservices.SessionWs;
+import com.coreoz.plume.admin.webservices.session.SessionWs;
 import com.coreoz.plume.admin.webservices.UsersWs;
 import com.coreoz.plume.admin.webservices.validation.PasswordsPolicy;
 import com.coreoz.plume.admin.webservices.validation.PasswordsPolicyMinimumLength;

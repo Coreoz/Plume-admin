@@ -1,4 +1,4 @@
-package com.coreoz.plume.admin.webservices.data.session;
+package com.coreoz.plume.admin.webservices.session.data;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -6,7 +6,7 @@ import lombok.Setter;
 @Setter
 @Getter
 public class AdminCredentials {
-	
+
 	private String userName;
 	private String password;
 

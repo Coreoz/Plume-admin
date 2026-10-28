@@ -1,13 +1,14 @@
-package com.coreoz.plume.admin.webservices;
+package com.coreoz.plume.admin.webservices.session;
 
 import com.coreoz.plume.admin.db.daos.AdminUserDao;
 import com.coreoz.plume.admin.db.generated.AdminUser;
 import com.coreoz.plume.admin.guice.TestModule;
 import com.coreoz.plume.admin.services.hash.HashService;
 import com.coreoz.plume.admin.services.role.AdminRoleService;
-import com.coreoz.plume.admin.webservices.data.session.AdminCredentials;
-import com.coreoz.plume.admin.webservices.data.session.AdminSession;
-import com.coreoz.plume.admin.websession.JwtSessionSigner;
+import com.coreoz.plume.admin.services.session.AdminWebSessionConfig;
+import com.coreoz.plume.admin.services.session.AuthSessionTokenHandler;
+import com.coreoz.plume.admin.webservices.session.data.AdminCredentials;
+import com.coreoz.plume.admin.webservices.session.data.AdminSession;
 import com.coreoz.plume.admin.websession.WebSessionAdmin;
 import com.coreoz.test.GuiceTest;
 import com.google.inject.Inject;
@@ -16,13 +17,14 @@ import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @GuiceTest(TestModule.class)
@@ -36,7 +38,7 @@ class SessionWsTest {
     @Inject
     private HashService hashService;
     @Inject
-    private JwtSessionSigner jwtSessionSigner;
+    private AuthSessionTokenHandler authSessionTokenHandler;
 
     @BeforeEach
     void setUp() {
@@ -54,7 +56,7 @@ class SessionWsTest {
         credentials.setPassword(password);
 
         // Mocking the async response and preparing to capture its result
-        AsyncResponse asyncResponse = Mockito.mock(AsyncResponse.class);
+        AsyncResponse asyncResponse = mock(AsyncResponse.class);
         ArgumentCaptor<Response> responseCaptor = ArgumentCaptor.forClass(Response.class);
 
         // When
@@ -64,14 +66,43 @@ class SessionWsTest {
 
         // Then
         // Verify that the resume method was called and capture the response
-        Mockito.verify(asyncResponse).resume(responseCaptor.capture());
+        verify(asyncResponse).resume(responseCaptor.capture());
         Response capturedResponse = responseCaptor.getValue();
         AdminSession session = (AdminSession) capturedResponse.getEntity();
 
-        WebSessionAdmin webSessionAdmin = jwtSessionSigner.parseSession(session.getWebSessionToken(), WebSessionAdmin.class);
+        WebSessionAdmin webSessionAdmin = authSessionTokenHandler
+            .readUserSession(session.getWebSessionToken(), new AdminWebSessionConfig())
+            .orElseThrow();
         assertThat(webSessionAdmin.getPermissions()).containsAll(permissions);
+        assertThat(webSessionAdmin.getHashedFingerprint()).isNotBlank();
         assertThat(session.getRefreshDurationInMillis()).isEqualTo(5000L);
         assertThat(session.getInactiveDurationInMillis()).isEqualTo(120000L);
+    }
+
+    @Test
+    void authenticate_should_set_a_secure_fingerprint_cookie_according_to_configuration() {
+        // Given
+        String password = "password";
+        AdminUser adminUser = mockAdminUser(password);
+        AdminCredentials credentials = new AdminCredentials();
+        credentials.setUserName(adminUser.getUserName());
+        credentials.setPassword(password);
+        AsyncResponse asyncResponse = mock(AsyncResponse.class);
+        ArgumentCaptor<Response> responseCaptor = ArgumentCaptor.forClass(Response.class);
+
+        // When
+        when(adminUserDao.findByUserName(adminUser.getUserName())).thenReturn(Optional.of(adminUser));
+        when(adminRoleService.findRolePermissions(1L)).thenReturn(List.of("PERMISSION"));
+        sessionWs.authenticate(asyncResponse, credentials);
+
+        // Then
+        verify(asyncResponse).resume(responseCaptor.capture());
+        String cookie = responseCaptor.getValue().getHeaderString("Set-Cookie");
+        assertThat(cookie).startsWith("session-fgp=")
+            .contains("path=/")
+            .contains("SameSite=Strict")
+            .contains("HttpOnly")
+            .doesNotContain("Secure");
     }
 
     @Test
@@ -86,7 +117,7 @@ class SessionWsTest {
         credentials.setPassword(password);
 
         // Mocking the async response and preparing to capture its result for the initial authentication
-        AsyncResponse asyncResponse = Mockito.mock(AsyncResponse.class);
+        AsyncResponse asyncResponse = mock(AsyncResponse.class);
         ArgumentCaptor<Response> responseCaptor = ArgumentCaptor.forClass(Response.class);
 
         // When (Phase 1: Authenticate to get a session token)
@@ -95,25 +126,37 @@ class SessionWsTest {
         sessionWs.authenticate(asyncResponse, credentials);
 
         // Verify that the resume method was called and capture the response
-        Mockito.verify(asyncResponse).resume(responseCaptor.capture());
+        verify(asyncResponse).resume(responseCaptor.capture());
         Response capturedResponse = responseCaptor.getValue();
         AdminSession defaultSession = (AdminSession) capturedResponse.getEntity();
 
         // When (Phase 2: Renew the token with updated permissions)
         when(adminUserDao.findById(adminUser.getId())).thenReturn(adminUser);
         when(adminRoleService.findRolePermissions(1L)).thenReturn(updatedPermissions);
-        AdminSession session  = sessionWs.renew(defaultSession.getWebSessionToken());
+        Response renewedResponse = sessionWs.renew(defaultSession.getWebSessionToken());
+        AdminSession session = (AdminSession) renewedResponse.getEntity();
 
         // Then
-        WebSessionAdmin defaultSessionAdmin = jwtSessionSigner.parseSession(defaultSession.getWebSessionToken(), WebSessionAdmin.class);
-        WebSessionAdmin webSessionAdmin = jwtSessionSigner.parseSession(session.getWebSessionToken(), WebSessionAdmin.class);
-        assertThat(webSessionAdmin.getHashedFingerprint()).isEqualTo(defaultSessionAdmin.getHashedFingerprint());
+        assertThat(renewedResponse.getHeaderString("Set-Cookie")).isNotNull();
+        WebSessionAdmin defaultSessionAdmin = authSessionTokenHandler
+            .readUserSession(defaultSession.getWebSessionToken(), new AdminWebSessionConfig())
+            .orElseThrow();
+        WebSessionAdmin webSessionAdmin = authSessionTokenHandler
+            .readUserSession(session.getWebSessionToken(), new AdminWebSessionConfig())
+            .orElseThrow();
+        assertThat(webSessionAdmin.getHashedFingerprint()).isNotEqualTo(defaultSessionAdmin.getHashedFingerprint());
         assertThat(webSessionAdmin.getPermissions()).containsAll(updatedPermissions);
         for (String defaultPermission : defaultPermissions) {
             assertThat(webSessionAdmin.getPermissions()).doesNotContain(defaultPermission);
         }
         assertThat(session.getRefreshDurationInMillis()).isEqualTo(5000L);
         assertThat(session.getInactiveDurationInMillis()).isEqualTo(120000L);
+    }
+
+    @Test
+    void renew_should_reject_an_expired_or_invalid_token() {
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> sessionWs.renew("not-a-valid-token"))
+            .isInstanceOf(com.coreoz.plume.jersey.errors.WsException.class);
     }
 
     private AdminUser mockAdminUser(String password) {
