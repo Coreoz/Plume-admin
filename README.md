@@ -60,13 +60,51 @@ register(new AbstractBinder() {
 
 Admin security
 --------------
-To use this module without Admin Web services, you may want to provide implementations of `AdminPermissionService`, `WebSessionSigner`, and `JwtSessionSigner`.
-As an example, here is what is defined in the Admin Web-services Guice configuration:
+### Replaceable session components
+
+| Component | Default | Responsibility | How to override |
+|---|---|---|---|
+| `WebSessionSecurityConfig` | `WebSessionSecurityConfig.admin()` | Describes a session type for Jersey: session class, access control annotation, fingerprint extractor | Declare your own with `WebSessionSecurityConfig.of(...)` |
+| `WebSessionSigner` | `JwtSessionSigner` | Serializes/reads the token (signature, expiration) | `bind(WebSessionSigner.class).to(MySigner.class)` |
+| `AuthSessionTokenHandler` | `JwtAuthSessionTokenHandler` | Issues the complete login/renew response (token + fingerprint cookie) and reads it back | `bind(AuthSessionTokenHandler.class).to(MyHandler.class)` |
+| `WebSessionConfig<T>` | `AdminWebSessionConfig` | Creates a session object for a given user and extracts its user id | Pass your own config to your web-service (not a Guice binding) |
+| `AdminPermissionService` | `AdminPermissionServiceBasic` | Checks the permissions of the current session | `bind(AdminPermissionService.class).to(...)` |
+
+The Guice bindings applied by `GuiceAdminWsWithDefaultsModule`:
 ```java
 bind(AdminPermissionService.class).to(AdminPermissionServiceBasic.class);
 bind(WebSessionSigner.class).toProvider(JwtSessionSignerProvider.class);
 bind(JwtSessionSigner.class).toProvider(JwtSessionSignerProvider.class);
+bind(AuthSessionTokenHandler.class).to(JwtAuthSessionTokenHandler.class);
 ```
+
+`AuthSessionTokenHandler` groups all the token logic: JWT serialization and signature, expiration, and
+the optional fingerprint cookie. It is not generic (the session type is passed as a `WebSessionConfig`
+argument), so it is bound and injected directly, without any `TypeLiteral`. A single instance serves
+every session type.
+
+### Web-services
+
+The session workflow is built from three layers, all in the `webservices.session` package:
+
+| Class | Role | Endpoints |
+|---|---|---|
+| `SessionWsSupport<T>` | Session base: issues a token from an authenticated user, renews a token. Contains **no authentication logic**. | none |
+| `PasswordSessionWs<T>` | Adds password authentication: credentials validation and brute-force protection | `@POST authenticate` |
+| `SessionWs` | The default administration web-service, for the `WebSessionAdmin` session type | `@POST authenticate` (inherited), `@PUT renew` |
+
+Only password authentication is implemented today. Because `SessionWsSupport` carries no
+authentication logic, another mode can be added by extending it directly: call `issueSession(...)` once
+the user is authenticated, and expose `renewSession(...)` on your own endpoint. Extend
+`PasswordSessionWs` to keep password authentication with a custom session type.
+
+The renew endpoint is never inherited: each web-service declares its own endpoint from
+`renewSession(...)`, so it can choose its path and HTTP verb.
+
+See the [Plume Admin Security module](plume-admin-security#4-custom-login-web-service-optional) for a
+complete example.
+
+### Securing APIs
 
 Since **5.2**, security is declared in Jersey instead of writing a custom `SecurityFeature`:
 each session type is described by a `WebSessionSecurityConfig`, and the configs are registered through
@@ -77,7 +115,8 @@ config.register(RequireExplicitAccessControlFeature.accessControlAnnotations(Pub
 config.register(WebSessionSecurityFeatures.of(WebSessionSecurityConfig.admin()));
 ```
 
-More documentation about JWT and how to secure project API is available in the [Plume Admin Security module](plume-admin-security).
+More documentation about JWT, custom sessions and custom login web-services is available in the
+[Plume Admin Security module](plume-admin-security).
 
 Configuration
 -------------

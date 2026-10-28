@@ -1,4 +1,4 @@
-package com.coreoz.plume.admin.webservices.data.session;
+package com.coreoz.plume.admin.webservices.session.data;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

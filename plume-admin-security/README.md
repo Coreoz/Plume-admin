@@ -121,57 +121,96 @@ public UserBean findMe(@Context MyWebSession securityContext) {
 
 ### 4. Custom login web-service (optional)
 
-If you are using the `plume-admin-ws` module, `SessionWs` handles the default `WebSessionAdmin` login and
-renew workflow. To reuse this exact workflow with a custom session type, extend
-[AbstractSessionWs](https://github.com/Coreoz/Plume-admin/blob/master/plume-admin-ws/src/main/java/com/coreoz/plume/admin/webservices/AbstractSessionWs.java)
-and provide a `WebSessionProvider`:
+If you are using the `plume-admin-ws` module, `SessionWs` handles the default `WebSessionAdmin` password
+login and renew workflow.
+
+To reuse it with a custom session type, extend
+[PasswordSessionWs](https://github.com/Coreoz/Plume-admin/blob/master/plume-admin-ws/src/main/java/com/coreoz/plume/admin/webservices/session/PasswordSessionWs.java)
+and provide a `WebSessionConfig`:
 
 ```java
 @Path("/client/session")
 @Singleton
-public class ClientSessionWs extends AbstractSessionWs<ClientWebSession> {
+public class ClientSessionWs extends PasswordSessionWs<ClientWebSession> {
 
   @Inject
   public ClientSessionWs(AdminUserService adminUserService,
-      JwtSessionSigner jwtSessionSigner,
       AdminConfigurationService configurationService,
-      AdminSecurityConfigurationService adminSecurityConfigurationService,
-      Clock clock) {
-    super(
-      adminUserService,
-      jwtSessionSigner,
-      configurationService,
-      adminSecurityConfigurationService,
-      clock,
-      new WebSessionProvider<ClientWebSession>() {
-        @Override
-        public Class<ClientWebSession> sessionClass() {
-          return ClientWebSession.class;
-        }
+      AuthSessionTokenHandler authSessionTokenHandler) {
+    super(adminUserService, configurationService, authSessionTokenHandler, new ClientWebSessionConfig());
+  }
 
-        @Override
-        public ClientWebSession createSession(AuthenticatedUser user, String hashedFingerprint) {
-          return new ClientWebSession()
-            .setUserId(user.getUser().getId())
-            .setUserName(user.getUser().getUserName())
-            .setPermissions(user.getPermissions())
-            .setHashedFingerprint(hashedFingerprint);
-        }
-      }
-    );
+  @PUT
+  @Consumes(MediaType.TEXT_PLAIN)
+  public Response renew(String webSessionSerialized) {
+    return renewSession(webSessionSerialized);
+  }
+}
+
+class ClientWebSessionConfig implements WebSessionConfig<ClientWebSession> {
+  @Override
+  public Class<ClientWebSession> sessionClass() {
+    return ClientWebSession.class;
   }
 
   @Override
-  protected long authenticatedUserId(ClientWebSession parsedSession) {
+  public ClientWebSession createSession(AuthenticatedUser user, String hashedFingerprint) {
+    return new ClientWebSession()
+      .setUserId(user.getUser().getId())
+      .setUserName(user.getUser().getUserName())
+      .setPermissions(user.getPermissions())
+      .setHashedFingerprint(hashedFingerprint);
+  }
+
+  @Override
+  public long authenticatedUserId(ClientWebSession parsedSession) {
     return parsedSession.getUserId();
-  }
-
-  @Override
-  protected String hashedFingerprint(ClientWebSession parsedSession) {
-    return parsedSession.getHashedFingerprint();
   }
 }
 ```
+
+`ClientWebSession` must implement `WebSessionPermission`. If you want the fingerprint to be verified
+when the token is read, it must also implement `WebSessionFingerprint` and the security config must
+declare a fingerprint extractor (see section 2).
+
+The workflow is built from three layers, all in the `webservices.session` package:
+
+| Class | Role | Endpoints |
+|---|---|---|
+| `SessionWsSupport<T>` | Session base: `issueSession(AuthenticatedUser)`, `renewSession(String)`. No authentication logic. | none |
+| `PasswordSessionWs<T>` | The above + password authentication (credentials, brute-force protection) | `POST` |
+| `SessionWs` | The `WebSessionAdmin` administration web-service, which extends `PasswordSessionWs` | `POST`, `PUT renew` |
+
+Only password authentication is implemented today. Because `SessionWsSupport` carries no authentication
+logic, another mode can be added by extending it directly: call `issueSession(...)` once the user is
+authenticated, and expose `renewSession(...)` on your own endpoint. No password-specific code is
+inherited.
+
+**The renewal endpoint is never inherited.** `SessionWsSupport` only provides
+`protected renewSession(String)`; each web-service declares its own endpoint, so it can pick its path
+and HTTP verb.
+
+**The token representation itself is replaceable.** `AuthSessionTokenHandler` owns everything related
+to the token: JWT serialization and signature, expiration, and the fingerprint cookie. It is not
+generic — the session type is carried by the `WebSessionConfig` argument — so it is injected directly,
+without any `TypeLiteral`, and a single instance serves every session type:
+
+```java
+public interface AuthSessionTokenHandler {
+  <T extends WebSessionPermission> Response generateUserSession(AuthenticatedUser user, WebSessionConfig<T> config);
+  <T extends WebSessionPermission> Optional<T> readUserSession(String webSessionSerialized, WebSessionConfig<T> config);
+}
+```
+
+The default implementation is `JwtAuthSessionTokenHandler`. Replace it globally with:
+
+```java
+bind(AuthSessionTokenHandler.class).to(MyAuthSessionTokenHandler.class);
+```
+
+`generateUserSession` is used by both login and renew: a brand new token **and a brand new fingerprint
+cookie** are issued on each call. `readUserSession` returns an empty `Optional` when the token is
+invalid or expired.
 
 
 ### 5. Multiple session types in the same application

@@ -6,7 +6,6 @@ import com.coreoz.plume.admin.db.daos.AdminUserDao;
 import com.coreoz.plume.admin.services.configuration.AdminConfigurationService;
 import com.coreoz.plume.admin.services.configuration.AdminSecurityConfigurationService;
 import com.coreoz.plume.admin.services.role.AdminRoleService;
-import com.coreoz.plume.services.time.TimeProvider;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
@@ -34,16 +33,18 @@ public class TestModule extends AbstractModule {
                 // Configuration
                 AdminSecurityConfigurationService adminSecurityConfigurationService = Mockito.mock(AdminSecurityConfigurationService.class);
                 Mockito.when(adminSecurityConfigurationService.jwtSecret()).thenReturn("32<#pfs]Z£a<>5@W3TFX5.t)h{)C%,QQO~=[ZN!~17xf@j'\\@[");
+                Mockito.when(adminSecurityConfigurationService.sessionUseFingerprintCookie()).thenReturn(true);
+                Mockito.when(adminSecurityConfigurationService.sessionFingerprintCookieHttpsOnly()).thenReturn(false);
                 bind(AdminSecurityConfigurationService.class).toInstance(adminSecurityConfigurationService);
-                AdminConfigurationService AdminConfigurationService = Mockito.mock(AdminConfigurationService.class);
-                Mockito.when(AdminConfigurationService.loginMaxAttempts()).thenReturn(5);
-                Mockito.when(AdminConfigurationService.loginBlockedDuration()).thenReturn(Duration.ofSeconds(5));
-                Mockito.when(AdminConfigurationService.sessionRefreshDurationInMillis()).thenReturn(5000L);
-                Mockito.when(AdminConfigurationService.sessionExpireDurationInMillis()).thenReturn(15000L);
-                Mockito.when(AdminConfigurationService.sessionInactiveDurationInMillis()).thenReturn(120000L);
-                Mockito.when(AdminConfigurationService.loginTimeingProtectorMaxSamples()).thenReturn(10);
-                Mockito.when(AdminConfigurationService.loginTimeingProtectorSamplingRate()).thenReturn(0.22);
-                bind(AdminConfigurationService.class).toInstance(AdminConfigurationService);
+                AdminConfigurationService adminConfigurationService = Mockito.mock(AdminConfigurationService.class);
+                Mockito.when(adminConfigurationService.loginMaxAttempts()).thenReturn(5);
+                Mockito.when(adminConfigurationService.loginBlockedDuration()).thenReturn(Duration.ofSeconds(5));
+                Mockito.when(adminConfigurationService.sessionRefreshDurationInMillis()).thenReturn(5000L);
+                Mockito.when(adminConfigurationService.sessionExpireDurationInMillis()).thenReturn(15000L);
+                Mockito.when(adminConfigurationService.sessionInactiveDurationInMillis()).thenReturn(120000L);
+                Mockito.when(adminConfigurationService.loginTimeingProtectorMaxSamples()).thenReturn(10);
+                Mockito.when(adminConfigurationService.loginTimeingProtectorSamplingRate()).thenReturn(0.22);
+                bind(AdminConfigurationService.class).toInstance(adminConfigurationService);
 
                 // Services & DAOs
                 bind(AdminRoleDao.class).toInstance(Mockito.mock(AdminRoleDao.class));
